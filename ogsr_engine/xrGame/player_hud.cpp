@@ -1799,6 +1799,9 @@ u32 player_hud::script_anim_play(u8 hand, LPCSTR hud_section, LPCSTR anm_name, b
 
 void player_hud::script_anim_stop()
 {
+    if (script_anim_part == u8(-1))
+        return;
+
     u8 part = script_anim_part;
     script_anim_part = u8(-1);
     script_anim_item_model = nullptr;
