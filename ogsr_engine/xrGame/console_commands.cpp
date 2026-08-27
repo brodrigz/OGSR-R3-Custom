@@ -46,6 +46,13 @@
 
 string_path g_last_saved_game;
 
+// Radiophobia 3 gameplay-difficulty controls recovered from the shipped engine.
+float hit_modifier = 1.f;
+float g_dispersion_base = 1.f;
+float g_dispersion_factor = 1.f;
+float f_weapon_deterioration = 1.f;
+float f_power_loss_bias = 0.25f;
+
 extern u64 g_qwStartGameTime;
 extern u64 g_qwEStartGameTime;
 
@@ -216,6 +223,18 @@ public:
     }
     virtual void Info(TInfo& I) { strcpy_s(I, "game difficulty"); }
 };
+
+// Radiophobia 3 keeps gameplay and economy difficulty as two independent
+// four-step token settings. These commands existed in Radiophobia's 3.490
+// engine build and are consumed by its options and game_difficulties scripts.
+static u32 g_rad3_game_diff = 2;
+static u32 g_rad3_economy_diff = 2;
+
+static xr_token rad3_game_difficulty_token[] = {
+    {"gdiff_1", 1}, {"gdiff_2", 2}, {"gdiff_3", 3}, {"gdiff_4", 4}, {nullptr, 0}};
+
+static xr_token rad3_economy_difficulty_token[] = {
+    {"econ_1", 1}, {"econ_2", 2}, {"econ_3", 3}, {"econ_4", 4}, {nullptr, 0}};
 
 static xr_vector<xr_token>* pLanguagesToken{};
 static u32 LanguageID{};
@@ -1469,6 +1488,13 @@ void CCC_RegisterCommands()
     // game
     //CMD3(CCC_Mask, "g_always_run", &psActorFlags, AF_ALWAYSRUN);
     CMD1(CCC_GameDifficulty, "g_game_difficulty");
+    CMD3(CCC_Token, "g_rad3_game_diff", &g_rad3_game_diff, rad3_game_difficulty_token);
+    CMD3(CCC_Token, "g_rad3_economy_diff", &g_rad3_economy_diff, rad3_economy_difficulty_token);
+    CMD4(CCC_Float, "g_hit_pwr_modif", &hit_modifier, 0.5f, 3.f);
+    CMD4(CCC_Float, "g_dispersion_base", &g_dispersion_base, 0.f, 5.f);
+    CMD4(CCC_Float, "g_dispersion_factor", &g_dispersion_factor, 0.1f, 10.f);
+    CMD4(CCC_Float, "wpn_degradation", &f_weapon_deterioration, 0.1f, 2.f);
+    CMD4(CCC_Float, "power_loss_bias", &f_power_loss_bias, 0.f, 1.f);
     CMD1(CCC_GameLanguage, "g_language");
 
     CMD3(CCC_Mask, "g_dof_zoom", &psActorFlags, AF_DOF_ZOOM);

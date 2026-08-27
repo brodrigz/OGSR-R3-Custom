@@ -65,6 +65,9 @@ const u32 FIRE_MAKE_SENSE_INTERVAL = 10000;
 
 constexpr float start_fire_angle_difference = PI_DIV_8;
 
+extern float g_dispersion_base;
+extern float g_dispersion_factor;
+
 float CAI_Stalker::GetWeaponAccuracy() const
 {
     float base = PI / 180.f;
@@ -77,26 +80,26 @@ float CAI_Stalker::GetWeaponAccuracy() const
         if (movement().movement_type() == eMovementTypeWalk)
         {
             if (movement().body_state() == eBodyStateStand)
-                return m_fDispBase + base * m_disp_walk_stand;
-            return m_fDispBase + base * m_disp_walk_crouch;
+                return m_fDispBase + base * (g_dispersion_factor * m_disp_walk_stand + g_dispersion_base);
+            return m_fDispBase + base * (g_dispersion_factor * m_disp_walk_crouch + g_dispersion_base);
         }
         if (movement().movement_type() == eMovementTypeRun)
         {
             if (movement().body_state() == eBodyStateStand)
-                return m_fDispBase + base * m_disp_run_stand;
-            return m_fDispBase + base * m_disp_run_crouch;
+                return m_fDispBase + base * (g_dispersion_factor * m_disp_run_stand + g_dispersion_base);
+            return m_fDispBase + base * (g_dispersion_factor * m_disp_run_crouch + g_dispersion_base);
         }
     }
 
     if (movement().body_state() == eBodyStateStand)
     {
         if (zoom_state())
-            return m_fDispBase + base * m_disp_stand_stand_zoom;
-        return m_fDispBase + base * m_disp_stand_stand;
+            return m_fDispBase + base * (g_dispersion_factor * m_disp_stand_stand_zoom + g_dispersion_base);
+        return m_fDispBase + base * (g_dispersion_factor * m_disp_stand_stand + g_dispersion_base);
     }
     if (zoom_state())
-        return m_fDispBase + base * m_disp_stand_crouch_zoom;
-    return m_fDispBase + base * m_disp_stand_crouch;
+        return m_fDispBase + base * (g_dispersion_factor * m_disp_stand_crouch_zoom + g_dispersion_base);
+    return m_fDispBase + base * (g_dispersion_factor * m_disp_stand_crouch + g_dispersion_base);
 }
 
 void CAI_Stalker::g_fireParams(CHudItem* pHudItem, Fvector& P, Fvector& D, const bool for_cursor)

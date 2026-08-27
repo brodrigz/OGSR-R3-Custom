@@ -271,6 +271,8 @@ void CBulletManager::StaticObjectHit(CBulletManager::_event& E)
 }
 
 static bool g_clear = false;
+extern float hit_modifier;
+
 void CBulletManager::DynamicObjectHit(CBulletManager::_event& E)
 {
     //только для динамических объектов
@@ -330,6 +332,9 @@ void CBulletManager::DynamicObjectHit(CBulletManager::_event& E)
     //отправить хит пораженному объекту
     if (E.bullet.flags.allow_sendhit && !E.Repeated)
     {
+        if (E.bullet.parent_id == 0)
+            power *= hit_modifier;
+
         /*
                 NET_Packet		P;
         //		CGameObject::u_EventGen	(P,(AddStatistic)? GE_HIT_STATISTIC : GE_HIT,E.R.O->ID());
