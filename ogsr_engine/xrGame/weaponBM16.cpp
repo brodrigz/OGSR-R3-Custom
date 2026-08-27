@@ -46,7 +46,9 @@ void CWeaponBM16::OnShot()
     }
     else
     {
-        PlaySound(*m_pSndShotCurrent, get_LastFP(), true);
+        // Radiophobia routes BM16-family shots through the layered collection.
+        // The old direct HUD_SOUND is not populated by the layered sound loader.
+        m_layered_sounds.PlaySound(*m_sSndShotCurrent, get_LastFP(), H_Root(), !!GetHUDmode());
 
         Fvector vel;
         PHGetLinearVell(vel);

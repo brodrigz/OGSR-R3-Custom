@@ -63,6 +63,7 @@ public:
     virtual void PlayAnimIdle();
     virtual void PlayAnimShoot();
     virtual void PlayAnimModeSwitch();
+    virtual void PlayAnimFireModeSwitch(bool opt);
 
     HUD_SOUND sndShotG;
     HUD_SOUND sndReloadG;

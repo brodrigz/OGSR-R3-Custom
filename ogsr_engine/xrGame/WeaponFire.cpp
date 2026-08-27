@@ -15,7 +15,9 @@
 #include "level_bullet_manager.h"
 #include "../xr_3da/IGame_Persistent.h"
 
-float CWeapon::GetWeaponDeterioration() { return conditionDecreasePerShot; };
+extern float f_weapon_deterioration;
+
+float CWeapon::GetWeaponDeterioration() { return f_weapon_deterioration * conditionDecreasePerShot; };
 
 void CWeapon::FireTrace(const Fvector& P, const Fvector& D)
 {

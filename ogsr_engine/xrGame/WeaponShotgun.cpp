@@ -37,7 +37,8 @@ void CWeaponShotgun::Load(LPCSTR section)
 {
     inherited::Load(section);
 
-    // Звук и анимация для выстрела дуплетом
+    // Звук и анимация для выстрела дуплетом.  This remains a dedicated
+    // HUD_SOUND in the R3 binary; it is not part of the layered shot set.
     HUD_SOUND::LoadSound(section, "snd_shoot_duplet", sndShotBoth, m_eSoundShotBoth);
 
     if (pSettings->line_exist(section, "tri_state_reload"))
@@ -71,6 +72,23 @@ void CWeaponShotgun::OnShot()
 
     if (!m_sndBreech.sounds.empty())
         PlaySound((IsMisfire() && !m_sndBreechJammed.sounds.empty()) ? m_sndBreechJammed : m_sndBreech, get_LastFP());
+}
+
+void CWeaponShotgun::PlaySoundShot()
+{
+    if (iAmmoElapsed <= 1 && AnimationExist("anm_shoot_last"))
+    {
+        string128 alias;
+        xr_strcpy(alias, *m_sSndShotCurrent);
+        xr_strcat(alias, ParentIsActor() ? "ActorLast" : "Last");
+        if (m_layered_sounds.FindSoundItem(alias, false))
+        {
+            m_layered_sounds.PlaySound(alias, get_LastFP(), H_Root(), !!GetHUDmode());
+            return;
+        }
+    }
+
+    inherited::PlaySoundShot();
 }
 
 void CWeaponShotgun::Fire2Start()

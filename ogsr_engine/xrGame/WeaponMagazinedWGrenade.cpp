@@ -1,5 +1,6 @@
 #include "stdafx.h"
 #include "weaponmagazinedwgrenade.h"
+#include "Actor.h"
 #include "HUDManager.h"
 #include "entity.h"
 #include "ParticlesObject.h"
@@ -636,6 +637,30 @@ void CWeaponMagazinedWGrenade::PlayAnimReload()
     }
     else
         inherited::PlayAnimReload();
+}
+
+void CWeaponMagazinedWGrenade::PlayAnimFireModeSwitch(bool opt)
+{
+    if (!IsGrenadeLauncherAttached())
+    {
+        inherited::PlayAnimFireModeSwitch(opt);
+        return;
+    }
+
+    if (m_bGrenadeMode || !m_bHasDifferentFireModes || m_aFireModes.size() < 2 || IsPending())
+        return;
+
+    if (opt && ((m_nextFireMode && m_iCurFireMode + 1 == m_aFireModes.size()) || (!m_nextFireMode && m_iCurFireMode == 0)))
+        return;
+
+    if (AnimationExist("anm_fire_modes_w_gl") && (!ParentIsActor() || !(g_actor->get_state() & mcSprint)))
+    {
+        SetPending(TRUE);
+        PlayHUDMotion(iAmmoElapsed == 0 && AnimationExist("anm_fire_modes_w_gl_empty") ? "anm_fire_modes_w_gl_empty" : "anm_fire_modes_w_gl", true, GetState(), true);
+    }
+
+    UpdateFireMode();
+    PlaySound(sndFireModes, get_LastFP());
 }
 
 void CWeaponMagazinedWGrenade::PlayAnimIdle()

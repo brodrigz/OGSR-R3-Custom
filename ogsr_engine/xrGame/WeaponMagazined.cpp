@@ -1,4 +1,6 @@
 #include "stdafx.h"
+
+extern float f_weapon_deterioration;
 #include "hudmanager.h"
 #include "WeaponMagazined.h"
 #include "weaponBM16.h"
@@ -38,6 +40,7 @@ CWeaponMagazined::CWeaponMagazined(LPCSTR name, ESoundTypes eSoundType) : CWeapo
     m_eSoundReload = ESoundTypes(SOUND_TYPE_WEAPON_RECHARGING | eSoundType);
 
     m_pSndShotCurrent = NULL;
+    m_sSndShotCurrent = "sndShot";
     m_sSilencerFlameParticles = m_sSilencerSmokeParticles = NULL;
 
     m_bFireSingleShot = false;
@@ -88,8 +91,7 @@ void CWeaponMagazined::StopHUDSounds()
     HUD_SOUND::StopSound(sndAimStart);
     HUD_SOUND::StopSound(sndAimEnd);
 
-    HUD_SOUND::StopSound(sndShot);
-    HUD_SOUND::StopSound(sndSilencerShot);
+    m_layered_sounds.StopAllSounds();
 
     inherited::StopHUDSounds();
 }
@@ -128,7 +130,12 @@ void CWeaponMagazined::Load(LPCSTR section)
     // Sounds
     HUD_SOUND::LoadSound(section, "snd_draw", sndShow, m_eSoundShow);
     HUD_SOUND::LoadSound(section, "snd_holster", sndHide, m_eSoundHide);
-    HUD_SOUND::LoadSound(section, "snd_shoot", sndShot, m_eSoundShot);
+    m_layered_sounds.LoadSound(section, "snd_shoot", "sndShot", false, m_eSoundShot);
+    m_layered_sounds.LoadSound(section, "snd_shoot_actor", "sndShotActor", false, m_eSoundShot);
+    m_layered_sounds.LoadSound(section, "snd_shoot_misfire", "sndShotMisfire", false, m_eSoundShot);
+    m_layered_sounds.LoadSound(section, "snd_shoot_misfire_actor", "sndShotMisfireActor", false, m_eSoundShot);
+    m_layered_sounds.LoadSound(section, "snd_shoot_last", "sndShotLast", false, m_eSoundShot);
+    m_layered_sounds.LoadSound(section, "snd_shoot_last_actor", "sndShotActorLast", false, m_eSoundShot);
     HUD_SOUND::LoadSound(section, "snd_empty", sndEmptyClick, m_eSoundEmptyClick);
 
     if (pSettings->line_exist(section, "snd_reload_empty"))
@@ -162,6 +169,7 @@ void CWeaponMagazined::Load(LPCSTR section)
         HUD_SOUND::LoadSound(section, "snd_aim_end", sndAimEnd, m_eSoundHide);
 
     m_pSndShotCurrent = &sndShot;
+    m_sSndShotCurrent = "sndShot";
 
     //звуки и партиклы глушителя, еслит такой есть
     if (m_eSilencerStatus == ALife::eAddonAttachable)
@@ -170,7 +178,12 @@ void CWeaponMagazined::Load(LPCSTR section)
             m_sSilencerFlameParticles = pSettings->r_string(section, "silencer_flame_particles");
         if (pSettings->line_exist(section, "silencer_smoke_particles"))
             m_sSilencerSmokeParticles = pSettings->r_string(section, "silencer_smoke_particles");
-        HUD_SOUND::LoadSound(section, "snd_silncer_shot", sndSilencerShot, m_eSoundShot);
+        m_layered_sounds.LoadSound(section, "snd_silncer_shot", "sndSilencerShot", false, m_eSoundShot);
+        m_layered_sounds.LoadSound(section, "snd_silncer_shot_actor", "sndSilencerShotActor", false, m_eSoundShot);
+        m_layered_sounds.LoadSound(section, "snd_silncer_shot_misfire", "sndSilencerShotMisfire", false, m_eSoundShot);
+        m_layered_sounds.LoadSound(section, "snd_silncer_shot_misfire_actor", "sndSilencerShotMisfireActor", false, m_eSoundShot);
+        m_layered_sounds.LoadSound(section, "snd_silncer_shot_last", "sndSilencerShotLast", false, m_eSoundShot);
+        m_layered_sounds.LoadSound(section, "snd_silncer_shot_last_actor", "sndSilencerShotActorLast", false, m_eSoundShot);
     }
     //  [7/20/2005]
     if (pSettings->line_exist(section, "dispersion_start"))
@@ -700,10 +713,7 @@ void CWeaponMagazined::UpdateSounds()
         sndShow.set_position(get_LastFP());
     if (sndHide.playing())
         sndHide.set_position(get_LastFP());
-    if (sndShot.playing())
-        sndShot.set_position(get_LastFP());
-    if (sndSilencerShot.playing())
-        sndSilencerShot.set_position(get_LastFP());
+    m_layered_sounds.SetPosition(*m_sSndShotCurrent, get_LastFP());
     if (sndReload.playing())
         sndReload.set_position(get_LastFP());
     if (sndReloadPartly.playing())
@@ -817,7 +827,7 @@ void CWeaponMagazined::OnShot()
         Actor()->set_state_wishful(Actor()->get_state_wishful() & (~mcSprint));
 
     // Sound
-    PlaySound(*m_pSndShotCurrent, get_LastFP(), true);
+    PlaySoundShot();
 
     // Camera
     AddShotEffector();
@@ -841,6 +851,32 @@ void CWeaponMagazined::OnShot()
     StartSmokeParticles(get_LastFP(), vel);
 
     update_visual_bullet_textures();
+}
+
+void CWeaponMagazined::PlaySoundShot()
+{
+    const auto try_play = [&](LPCSTR suffix) {
+        string128 alias;
+        xr_strcpy(alias, *m_sSndShotCurrent);
+        xr_strcat(alias, suffix);
+        if (!m_layered_sounds.FindSoundItem(alias, false))
+            return false;
+
+        m_layered_sounds.PlaySound(alias, get_LastFP(), H_Root(), !!GetHUDmode());
+        return true;
+    };
+
+    if (ParentIsActor())
+    {
+        if (IsMisfire() && try_play("MisfireActor"))
+            return;
+        if (try_play("Actor"))
+            return;
+    }
+    if (IsMisfire() && try_play("Misfire"))
+        return;
+
+    m_layered_sounds.PlaySound(*m_sSndShotCurrent, get_LastFP(), H_Root(), !!GetHUDmode());
 }
 
 void CWeaponMagazined::OnEmptyClick()
@@ -1367,6 +1403,7 @@ void CWeaponMagazined::InitAddons()
         m_sFlameParticlesCurrent = m_sSilencerFlameParticles;
         m_sSmokeParticlesCurrent = m_sSilencerSmokeParticles;
         m_pSndShotCurrent = &sndSilencerShot;
+        m_sSndShotCurrent = "sndSilencerShot";
 
         //сила выстрела
         LoadFireParams(*cNameSect(), "");
@@ -1381,6 +1418,7 @@ void CWeaponMagazined::InitAddons()
         m_sFlameParticlesCurrent = m_sFlameParticles;
         m_sSmokeParticlesCurrent = m_sSmokeParticles;
         m_pSndShotCurrent = &sndShot;
+        m_sSndShotCurrent = "sndShot";
 
         //сила выстрела
         LoadFireParams(*cNameSect(), "");
@@ -1677,24 +1715,38 @@ bool CWeaponMagazined::SwitchMode()
 
 void CWeaponMagazined::OnNextFireMode(bool opt)
 {
-    if (m_aFireModes.size() < 2)
-        return;
-    if (opt && m_iCurFireMode + 1 == m_aFireModes.size())
-        return;
-    m_iCurFireMode = (m_iCurFireMode + 1 + m_aFireModes.size()) % m_aFireModes.size();
-    SetQueueSize(GetCurrentFireMode());
-    PlaySound(sndFireModes, get_LastFP());
+    m_nextFireMode = true;
+    PlayAnimFireModeSwitch(opt);
 }
 
 void CWeaponMagazined::OnPrevFireMode(bool opt)
 {
-    if (m_aFireModes.size() < 2)
+    m_nextFireMode = false;
+    PlayAnimFireModeSwitch(opt);
+}
+
+void CWeaponMagazined::PlayAnimFireModeSwitch(bool opt)
+{
+    if (!m_bHasDifferentFireModes || m_aFireModes.size() < 2 || IsPending())
         return;
-    if (opt && m_iCurFireMode == 0)
+
+    if (opt && ((m_nextFireMode && m_iCurFireMode + 1 == m_aFireModes.size()) || (!m_nextFireMode && m_iCurFireMode == 0)))
         return;
-    m_iCurFireMode = (m_iCurFireMode - 1 + m_aFireModes.size()) % m_aFireModes.size();
-    SetQueueSize(GetCurrentFireMode());
+
+    if (AnimationExist("anm_fire_modes") && (!ParentIsActor() || !(g_actor->get_state() & mcSprint)))
+    {
+        SetPending(TRUE);
+        PlayHUDMotion(iAmmoElapsed == 0 && AnimationExist("anm_fire_modes_empty") ? "anm_fire_modes_empty" : "anm_fire_modes", true, GetState(), true);
+    }
+
+    UpdateFireMode();
     PlaySound(sndFireModes, get_LastFP());
+}
+
+void CWeaponMagazined::UpdateFireMode()
+{
+    m_iCurFireMode = (m_iCurFireMode + (m_nextFireMode ? 1 : -1) + m_aFireModes.size()) % m_aFireModes.size();
+    SetQueueSize(GetCurrentFireMode());
 }
 
 void CWeaponMagazined::OnH_A_Chield()
@@ -1724,13 +1776,13 @@ float CWeaponMagazined::GetWeaponDeterioration()
     if (!m_bHasDifferentFireModes || m_iPrefferedFireMode == -1 || u32(GetCurrentFireMode()) <= u32(m_iPrefferedFireMode))
     {
         if (IsSilencerAttached() && SilencerAttachable())
-            return conditionDecreasePerShotSilencer;
+            return f_weapon_deterioration * conditionDecreasePerShotSilencer;
         else
             return inherited::GetWeaponDeterioration();
     }
     if (IsSilencerAttached() && SilencerAttachable())
-        return m_iShotNum * conditionDecreasePerShotSilencer;
-    return m_iShotNum * conditionDecreasePerShot;
+        return f_weapon_deterioration * m_iShotNum * conditionDecreasePerShotSilencer;
+    return f_weapon_deterioration * m_iShotNum * conditionDecreasePerShot;
 }
 
 void CWeaponMagazined::save(NET_Packet& output_packet)

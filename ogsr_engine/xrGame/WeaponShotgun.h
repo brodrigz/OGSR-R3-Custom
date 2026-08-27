@@ -21,6 +21,7 @@ public:
     virtual void Fire2Start();
     virtual void Fire2End();
     virtual void OnShot();
+    virtual void PlaySoundShot() override;
     virtual void OnShotBoth();
     virtual void switch2_Fire();
     virtual void switch2_Fire2();

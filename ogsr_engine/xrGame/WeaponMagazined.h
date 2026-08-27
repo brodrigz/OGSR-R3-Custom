@@ -31,8 +31,10 @@ protected:
     HUD_SOUND sndTactItemOn;
     HUD_SOUND sndAimStart, sndAimEnd;
     HUD_SOUND sndItemOn;
+    HUD_SOUND_COLLECTION_LAYERED m_layered_sounds;
     //звук текущего выстрела
     HUD_SOUND* m_pSndShotCurrent;
+    shared_str m_sSndShotCurrent;
 
     virtual void StopHUDSounds();
 
@@ -64,6 +66,7 @@ protected:
     virtual void switch2_Showing();
 
     virtual void OnShot();
+    virtual void PlaySoundShot();
 
     virtual void OnEmptyClick();
 
@@ -152,6 +155,7 @@ protected:
     string16 m_sCurFireMode;
     int m_iPrefferedFireMode;
     u32 m_fire_zoomout_time = u32(-1);
+    bool m_nextFireMode{};
 
     //переменная блокирует использование
     //только разных типов патронов
@@ -175,6 +179,8 @@ public:
     virtual void OnZoomChanged();
     virtual void OnNextFireMode(bool = false);
     virtual void OnPrevFireMode(bool = false);
+    virtual void PlayAnimFireModeSwitch(bool opt);
+    virtual void UpdateFireMode();
     virtual bool HasFireModes() { return m_bHasDifferentFireModes; };
     virtual int GetCurrentFireMode() { return m_bHasDifferentFireModes ? m_aFireModes[m_iCurFireMode] : 1; };
     virtual LPCSTR GetCurrentFireModeStr() { return m_sCurFireMode; };
