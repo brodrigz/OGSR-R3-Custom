@@ -16,6 +16,7 @@
 #include "string_table.h"
 #include "object_broker.h"
 #include "player_hud.h"
+#include "ui_base.h"
 
 using namespace luabind;
 
@@ -80,6 +81,33 @@ LPCSTR generate_id()
     return r.c_str();
 }
 
+Fvector2 world2ui(Fvector position, bool hud, bool allow_offscreen)
+{
+    Fmatrix world, projected;
+    world.identity();
+    world.c.set(position);
+
+    const Fmatrix& transform = hud ? Device.mFullTransform_hud : Device.mFullTransform;
+    projected.mul(transform, world);
+
+    const float clip_w = projected._44;
+    if (_abs(clip_w) <= EPS_S)
+        return Fvector2().set(-9999.f, 0.f);
+
+    const float x = projected._41 / clip_w;
+    const float y = projected._42 / clip_w;
+    const float z = projected._43 / clip_w;
+
+    if (!allow_offscreen && (z < 0.f || clip_w < 0.f || _abs(x) > 1.f || _abs(y) > 1.f))
+        return Fvector2().set(-9999.f, 0.f);
+
+    return Fvector2().set((1.f + x) * 0.5f * UI_BASE_WIDTH, (1.f - y) * 0.5f * UI_BASE_HEIGHT);
+}
+
+Fvector2 world2ui(Fvector position, bool hud) { return world2ui(position, hud, false); }
+
+Fvector2 world2ui(Fvector position) { return world2ui(position, false, false); }
+
 
 void game_sv_GameState::script_register(lua_State* L)
 {
@@ -141,6 +169,10 @@ void game_sv_GameState::script_register(lua_State* L)
        //def("set_next_hud_motion_speed", SetNextHudMotionSpeed),
 
        def("generate_id", &generate_id),
+
+       def("world2ui", (Fvector2 (*)(Fvector, bool, bool))&world2ui),
+       def("world2ui", (Fvector2 (*)(Fvector, bool))&world2ui),
+       def("world2ui", (Fvector2 (*)(Fvector))&world2ui),
 
        def("StringHasUTF8", &StringHasUTF8), def("StringToUTF8", &StringToUTF8), def("StringFromUTF8", &StringFromUTF8)
     )];
