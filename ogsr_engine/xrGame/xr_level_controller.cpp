@@ -39,6 +39,9 @@ xr_vector<_action> actions = {
                                                                                                     DEF_ACTION("quick_save", kQUICK_SAVE) DEF_ACTION("quick_load", kQUICK_LOAD)
 
                                                                                                         DEF_ACTION("hide_hud", kHIDEHUD) DEF_ACTION("show_hud", kSHOWHUD)
+
+                                                                                                            DEF_ACTION("wpn_zoom_alter", kWPN_ZOOM_ALTER)
+                                                                                                                DEF_ACTION("wpn_bore", kWPN_BORE) DEF_ACTION("wpn_13", kWPN_13)
 };
 
 xr_vector<_binding> g_key_bindings;

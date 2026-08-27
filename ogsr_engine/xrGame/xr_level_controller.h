@@ -71,6 +71,12 @@ enum EGameActions
     kHIDEHUD,
     kSHOWHUD,
 
+    // Radiophobia 3 appends these private actions after the stock 3.490 range.
+    // Keep the complete tail so numeric action IDs and binding-vector indices agree.
+    kWPN_ZOOM_ALTER,
+    kWPN_BORE,
+    kWPN_13,
+
     kLASTACTION = u32(-3),
     kNOTBINDED = u32(-2),
     kFORCEDWORD = u32(-1)

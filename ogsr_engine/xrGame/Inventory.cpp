@@ -599,6 +599,16 @@ bool CInventory::Action(s32 cmd, u32 flags)
         }
     }
     break;
+    case kWPN_13: {
+        if (flags & CMD_START)
+        {
+            if (GetActiveSlot() == THIRD_WEAPON_SLOT && ActiveItem())
+                Activate(NO_ACTIVE_SLOT);
+            else
+                Activate(THIRD_WEAPON_SLOT, eKeyAction);
+        }
+    }
+    break;
     case kACTIVE_JOBS:
     case kMAP:
     case kCONTACTS: {
