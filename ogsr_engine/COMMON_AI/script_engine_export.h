@@ -162,4 +162,5 @@
 #include "../xr_3da/camerabase.h"
 #include "script_rq_result.h"
 #include "EffectorZoomInertion.h"
+#include "script_wallmarks_manager.h"
 #endif

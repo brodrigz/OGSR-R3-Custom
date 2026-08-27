@@ -181,8 +181,12 @@ public:
     virtual void add_StaticWallmark(const wm_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V) = 0;
     //	Prefer this function when possible
     virtual void add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V) = 0;
+    virtual void add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V,
+        bool random_rotation, float ttl) = 0;
     //	Prefer this function when possible
     virtual void add_SkeletonWallmark(Fmatrix* xf, IKinematics* obj, IWallMarkArray* pArray, Fvector& start, Fvector& dir, float size) = 0;
+    virtual void add_SkeletonWallmark(Fmatrix* xf, IKinematics* obj, IWallMarkArray* pArray, Fvector& start,
+        Fvector& dir, float size, bool random_rotation, float ttl) = 0;
 
     virtual void clear_static_wallmarks() = 0;
 

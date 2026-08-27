@@ -1189,6 +1189,7 @@
     </CustomBuildStep>
     <ClInclude Include="ExplosiveItem.h" />
     <ClInclude Include="wallmark_manager.h" />
+    <ClInclude Include="script_wallmarks_manager.h" />
     <ClInclude Include="searchlight.h" />
     <ClInclude Include="trade.h" />
     <ClInclude Include="CustomZone.h" />
@@ -2131,6 +2132,8 @@
     <ClCompile Include="ExplosiveItem.cpp" />
     <ClCompile Include="ExplosiveScript.cpp" />
     <ClCompile Include="wallmark_manager.cpp" />
+    <ClCompile Include="script_wallmarks_manager.cpp" />
+    <ClCompile Include="script_wallmarks_script.cpp" />
     <ClCompile Include="searchlight.cpp" />
     <ClCompile Include="trade.cpp" />
     <ClCompile Include="trade2.cpp" />

@@ -31,6 +31,8 @@ struct wallmark_static_queue_item
     Fvector contact_point{};
     ref_shader shader{};
     float size{};
+    bool random_rotation{true};
+    float ttl{};
 };
 } // namespace WallmarksEngine
 
@@ -107,6 +109,7 @@ CWallmarksEngine::static_wallmark* CWallmarksEngine::static_wm_allocate()
     }
 
     W->ttl = ps_r__WallmarkTTL;
+    W->initial_ttl = W->ttl;
     W->verts.clear();
     return W;
 }
@@ -116,7 +119,7 @@ void CWallmarksEngine::static_wm_destroy(CWallmarksEngine::static_wallmark* W) {
 // render
 void CWallmarksEngine::static_wm_render(const CWallmarksEngine::static_wallmark* W, FVF::LIT*& V)
 {
-    const float a = 1 - (W->ttl / ps_r__WallmarkTTL);
+    const float a = 1 - (W->ttl / W->initial_ttl);
     int aC = iFloor(a * 255.f);
     clamp(aC, 0, 255);
     const u32 C = color_rgba(128, 128, 128, aC);
@@ -268,12 +271,14 @@ void CWallmarksEngine::add_static_wallmark_internal(const WallmarksEngine::wallm
     // build 3D ortho-frustum
     Fmatrix mView, mRot;
     BuildMatrix(mView, 1 / q.size, q.contact_point);
-    mRot.rotateZ(::Random.randF(deg2rad(-20.f), deg2rad(20.f)));
+    mRot.rotateZ(q.random_rotation ? ::Random.randF(deg2rad(-20.f), deg2rad(20.f)) : 0.f);
     mView.mulA_43(mRot);
     sml_clipper.CreateFromMatrix(mView, FRUSTUM_P_LRTB);
 
     // create wallmark
     static_wallmark* W = static_wm_allocate();
+    W->ttl = q.ttl > EPS ? q.ttl : ps_r__WallmarkTTL;
+    W->initial_ttl = W->ttl;
 
     {
         ZoneScopedN("RecurseTri");
@@ -330,25 +335,27 @@ void CWallmarksEngine::add_static_wallmark_internal(const WallmarksEngine::wallm
     //}
 }
 
-void CWallmarksEngine::AddStaticWallmark(CDB::TRI* pTri, const Fvector* pVerts, const Fvector& contact_point, const ref_shader& sh, const float wm_size)
+void CWallmarksEngine::AddStaticWallmark(CDB::TRI* pTri, const Fvector* pVerts, const Fvector& contact_point,
+    const ref_shader& sh, const float wm_size, const bool random_rotation, const float ttl)
 {
     // optimization cheat: don't allow wallmarks more than 100 m from viewer/actor
     if (contact_point.distance_to_sqr(Device.vCameraPosition) > _sqr(100.f))
         return;
 
-    static_items_to_add.emplace_back(pTri, pVerts, contact_point, sh, wm_size);
+    static_items_to_add.emplace_back(pTri, pVerts, contact_point, sh, wm_size, random_rotation, ttl);
 
     // make sure to submit for next parallel call
     Device.add_to_seq_parallel(fastdelegate::MakeDelegate(this, &CWallmarksEngine::add_static_wallmarks_async));
 }
 
-void CWallmarksEngine::AddSkeletonWallmark(Fmatrix* xf, CKinematics* obj, const ref_shader& sh, const Fvector& start, const Fvector& dir, const float size)
+void CWallmarksEngine::AddSkeletonWallmark(Fmatrix* xf, CKinematics* obj, const ref_shader& sh,
+    const Fvector& start, const Fvector& dir, const float size, const bool random_rotation, const float ttl)
 {
     // optimization cheat: don't allow wallmarks more than 50 m from viewer/actor
     if (xf->c.distance_to_sqr(Device.vCameraPosition) > _sqr(50.f))
         return;
 
-    obj->AddWallmark(xf, start, dir, sh, size);
+    obj->AddWallmark(xf, start, dir, sh, size, random_rotation, ttl);
 }
 
 void CWallmarksEngine::AppendSkeletonWallmark(intrusive_ptr<CSkeletonWallmark> wm)

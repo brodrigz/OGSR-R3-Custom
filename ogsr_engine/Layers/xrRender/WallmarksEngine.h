@@ -23,6 +23,7 @@ public:
         Fsphere bounds;
         xr_vector<FVF::LIT> verts;
         float ttl;
+        float initial_ttl;
     };
     DEFINE_VECTOR(static_wallmark*, StaticWMVec, StaticWMVecIt);
     DEFINE_VECTOR(wm_slot*, WMSlotVec, WMSlotVecIt);
@@ -64,9 +65,11 @@ public:
     CWallmarksEngine();
     ~CWallmarksEngine();
 
-    void AddStaticWallmark(CDB::TRI* pTri, const Fvector* pVerts, const Fvector& contact_point, const ref_shader& sh, float wm_size);
+    void AddStaticWallmark(CDB::TRI* pTri, const Fvector* pVerts, const Fvector& contact_point, const ref_shader& sh,
+        float wm_size, bool random_rotation = true, float ttl = 0.f);
 
-    void AddSkeletonWallmark(Fmatrix* xf, CKinematics* obj, const ref_shader& sh, const Fvector& start, const Fvector& dir, float size);
+    void AddSkeletonWallmark(Fmatrix* xf, CKinematics* obj, const ref_shader& sh, const Fvector& start,
+        const Fvector& dir, float size, bool random_rotation = true, float ttl = 0.f);
     void AppendSkeletonWallmark(intrusive_ptr<CSkeletonWallmark> wm);
 
     void add_static_wallmarks_async();

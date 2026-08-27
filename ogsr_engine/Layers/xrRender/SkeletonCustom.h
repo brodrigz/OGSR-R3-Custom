@@ -21,6 +21,7 @@ class CSkeletonWallmark : public intrusive_base // 4+4+4+12+4+16+16 = 60 + 4 = 6
     ref_shader m_Shader; // 4
     Fvector3 m_ContactPoint; // 12		model space
     float m_fTimeStart; // 4
+    float m_fTTL;
 public:
 #ifdef DEBUG
     u32 used_in_render;
@@ -38,7 +39,8 @@ public:
 public:
     Fsphere m_Bounds{}; // 16		world space
 public:
-    CSkeletonWallmark(CKinematics* p, const Fmatrix* m, ref_shader s, const Fvector& cp, const float ts) : m_Parent(p), m_XForm(m), m_Shader(s), m_ContactPoint(cp), m_fTimeStart(ts)
+    CSkeletonWallmark(CKinematics* p, const Fmatrix* m, ref_shader s, const Fvector& cp, const float ts,
+        const float ttl) : m_Parent(p), m_XForm(m), m_Shader(s), m_ContactPoint(cp), m_fTimeStart(ts), m_fTTL(ttl)
     {
 #ifdef DEBUG
         used_in_render = u32(-1);
@@ -55,6 +57,7 @@ public:
     IC u32 VCount() { return m_Faces.size() * 3; }
     IC bool Similar(const ref_shader& sh, const Fvector& cp, const float eps) { return (m_Shader == sh) && m_ContactPoint.similar(cp, eps); }
     IC float TimeStart() { return m_fTimeStart; }
+    IC float TTL() { return m_fTTL; }
     IC const Fmatrix* XFORM() { return m_XForm; }
     IC const Fvector3& ContactPoint() { return m_ContactPoint; }
     IC ref_shader Shader() { return m_Shader; }
@@ -114,6 +117,8 @@ protected:
 
         ref_shader shader{};
         float size{};
+        bool random_rotation{true};
+        float ttl{};
 
         void add_wallmark_internal(CKinematics* parent);
     };
@@ -159,7 +164,8 @@ public:
 
 public:
     // wallmarks
-    void AddWallmark(Fmatrix* parent_xform, const Fvector3& start, const Fvector3& dir, const ref_shader& shader, float size);
+    void AddWallmark(Fmatrix* parent_xform, const Fvector3& start, const Fvector3& dir, const ref_shader& shader,
+        float size, bool random_rotation = true, float ttl = 0.f);
     void CalculateWallmarks(bool hud);
     void RenderWallmark(intrusive_ptr<CSkeletonWallmark> wm, FVF::LIT*& verts);
     void ClearWallmarks();

@@ -4713,6 +4713,9 @@
     <ClInclude Include="wallmark_manager.h">
       <Filter>Core\Client\Objects\items &amp; weapons\Explosives</Filter>
     </ClInclude>
+    <ClInclude Include="script_wallmarks_manager.h">
+      <Filter>Core\Client\Objects\items &amp; weapons\Explosives</Filter>
+    </ClInclude>
     <ClInclude Include="searchlight.h">
       <Filter>Core\Client\Objects\searchlight</Filter>
     </ClInclude>
@@ -7823,6 +7826,12 @@
       <Filter>Core\Client\Objects\items &amp; weapons\Explosives</Filter>
     </ClCompile>
     <ClCompile Include="wallmark_manager.cpp">
+      <Filter>Core\Client\Objects\items &amp; weapons\Explosives</Filter>
+    </ClCompile>
+    <ClCompile Include="script_wallmarks_manager.cpp">
+      <Filter>Core\Client\Objects\items &amp; weapons\Explosives</Filter>
+    </ClCompile>
+    <ClCompile Include="script_wallmarks_script.cpp">
       <Filter>Core\Client\Objects\items &amp; weapons\Explosives</Filter>
     </ClCompile>
     <ClCompile Include="searchlight.cpp">

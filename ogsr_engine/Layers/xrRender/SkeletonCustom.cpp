@@ -738,7 +738,9 @@ void CKinematics::wallmark_calculate_details::add_wallmark_internal(CKinematics*
     }
 
     // ok. allocate wallmark
-    intrusive_ptr<CSkeletonWallmark> wm = xr_new<CSkeletonWallmark>(parent, parent_xform, shader, cp, Device.fTimeGlobal);
+    const float wallmark_ttl = ttl > EPS ? ttl : ps_r__WallmarkTTL;
+    intrusive_ptr<CSkeletonWallmark> wm =
+        xr_new<CSkeletonWallmark>(parent, parent_xform, shader, cp, Device.fTimeGlobal, wallmark_ttl);
     wm->m_LocalBounds.set(cp, size * 2.f);
     wm->XFORM()->transform_tiny(wm->m_Bounds.P, cp);
     wm->m_Bounds.R = wm->m_LocalBounds.R;
@@ -750,7 +752,7 @@ void CKinematics::wallmark_calculate_details::add_wallmark_internal(CKinematics*
     // build UV projection matrix
     Fmatrix mView, mRot;
     BuildMatrix(mView, 1 / (0.9f * size), normal, cp);
-    mRot.rotateZ(::Random.randF(deg2rad(-20.f), deg2rad(20.f)));
+    mRot.rotateZ(random_rotation ? ::Random.randF(deg2rad(-20.f), deg2rad(20.f)) : 0.f);
     mView.mulA_43(mRot);
 
     // fill vertices
@@ -784,11 +786,12 @@ void CKinematics::wallmark_calculate_details::add_wallmark_internal(CKinematics*
     }
 }
 
-void CKinematics::AddWallmark(Fmatrix* parent_xform, const Fvector3& start, const Fvector3& dir, const ref_shader& shader, const float size)
+void CKinematics::AddWallmark(Fmatrix* parent_xform, const Fvector3& start, const Fvector3& dir,
+    const ref_shader& shader, const float size, const bool random_rotation, const float ttl)
 {
     ZoneScoped;
 
-    wallmarks_to_add.emplace_back(parent_xform, start, dir, shader, size);
+    wallmarks_to_add.emplace_back(parent_xform, start, dir, shader, size, random_rotation, ttl);
 
     Device.add_to_seq_parallel(fastdelegate::MakeDelegate(this, &CKinematics::AddWallmarkAsync));
 }
@@ -817,7 +820,7 @@ void CKinematics::CalculateWallmarks(const bool hud) // called on render
     if (!wallmarks.empty())
     {
         std::erase_if(wallmarks, [&](const auto& wm) {
-            if ((Device.fTimeGlobal - wm->TimeStart()) / ps_r__WallmarkTTL >= 1.f)
+            if ((Device.fTimeGlobal - wm->TimeStart()) / wm->TTL() >= 1.f)
             {
                 return true; // remove wallmark
             }
@@ -849,7 +852,7 @@ void CKinematics::RenderWallmark(intrusive_ptr<CSkeletonWallmark> wm, FVF::LIT*&
     for (u32 f_idx = 0; f_idx < wm->m_Faces.size(); f_idx++)
     {
         const CSkeletonWallmark::WMFace F = wm->m_Faces[f_idx];
-        const float w = (Device.fTimeGlobal - wm->TimeStart()) / ps_r__WallmarkTTL;
+        const float w = (Device.fTimeGlobal - wm->TimeStart()) / wm->TTL();
         for (u32 k = 0; k < 3; k++)
         {
             Fvector P;
