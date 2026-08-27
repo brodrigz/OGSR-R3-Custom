@@ -101,6 +101,7 @@ protected:
     bool m_bAutoApply;
     SPPInfo pp_affected;
     void UpdateDeffered();
+    bool RemoveCamEffectorActive(ECamEffectorType type);
 
     virtual void UpdateCamEffectors();
     virtual void UpdatePPEffectors();
@@ -130,7 +131,6 @@ public:
     void RemovePPEffector(EEffectorPPType type);
     void RemoveAllPPEffector();
 
-    // demonized: removecameffector by pointer
     void RemoveCamEffector(CEffectorCam* ef);
 
     IC const Fvector& Position() const { return m_cam_info.p; }

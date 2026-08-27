@@ -169,6 +169,9 @@ CCameraManager::~CCameraManager()
     for (auto& it : m_EffectorsCam)
         xr_delete(it);
 
+    for (auto& it : m_EffectorsCam_added_deffered)
+        xr_delete(it);
+
     for (auto& it : m_EffectorsPP)
         xr_delete(it);
 }
@@ -177,9 +180,12 @@ CEffectorCam* CCameraManager::GetCamEffector(ECamEffectorType type)
 {
     for (auto& it : m_EffectorsCam)
         if (it->eType == type)
-        {
             return it;
-        }
+
+    for (auto& it : m_EffectorsCam_added_deffered)
+        if (it->eType == type)
+            return it;
+
     return nullptr;
 }
 
@@ -191,41 +197,74 @@ CEffectorCam* CCameraManager::AddCamEffector(CEffectorCam* ef)
 
 void CCameraManager::UpdateDeffered()
 {
-    auto it = m_EffectorsCam_added_deffered.begin();
-    auto it_e = m_EffectorsCam_added_deffered.end();
-    for (; it != it_e; ++it)
+    while (!m_EffectorsCam_added_deffered.empty())
     {
-        RemoveCamEffector((*it)->eType);
+        CEffectorCam* effector = m_EffectorsCam_added_deffered.front();
+        m_EffectorsCam_added_deffered.pop_front();
 
-        if ((*it)->AbsolutePositioning())
-            m_EffectorsCam.push_front(*it);
+        RemoveCamEffectorActive(effector->eType);
+
+        if (effector->AbsolutePositioning())
+            m_EffectorsCam.push_front(effector);
         else
-            m_EffectorsCam.push_back(*it);
+            m_EffectorsCam.push_back(effector);
 
-        OnEffectorAdded(*it);
+        OnEffectorAdded(effector);
+    }
+}
+
+bool CCameraManager::RemoveCamEffectorActive(ECamEffectorType type)
+{
+    for (auto it = m_EffectorsCam.begin(); it != m_EffectorsCam.end(); ++it)
+    {
+        CEffectorCam* effector = *it;
+        if (effector->eType != type)
+            continue;
+
+        OnEffectorReleased(effector);
+        m_EffectorsCam.erase(it);
+        xr_delete(effector);
+        return true;
     }
 
-    m_EffectorsCam_added_deffered.clear();
+    return false;
 }
 
 void CCameraManager::RemoveCamEffector(ECamEffectorType type)
 {
-    for (auto it = m_EffectorsCam.begin(); it != m_EffectorsCam.end(); ++it)
-        if ((*it)->eType == type)
+    while (RemoveCamEffectorActive(type))
+    {
+    }
+
+    for (auto it = m_EffectorsCam_added_deffered.begin(); it != m_EffectorsCam_added_deffered.end();)
+    {
+        CEffectorCam* effector = *it;
+        if (effector->eType == type)
         {
-            OnEffectorReleased(*it);
-            xr_delete(*it);
-            m_EffectorsCam.erase(it);
-            return;
+            OnEffectorReleased(effector);
+            it = m_EffectorsCam_added_deffered.erase(it);
+            xr_delete(effector);
         }
+        else
+            ++it;
+    }
 }
 
 void CCameraManager::RemoveAllCamEffector()
 {
-    while (!m_EffectorsCam.empty())
+    for (auto& effector : m_EffectorsCam)
     {
-        RemoveCamEffector(m_EffectorsCam.back()->eType);
+        OnEffectorReleased(effector);
+        xr_delete(effector);
     }
+    m_EffectorsCam.clear();
+
+    for (auto& effector : m_EffectorsCam_added_deffered)
+    {
+        OnEffectorReleased(effector);
+        xr_delete(effector);
+    }
+    m_EffectorsCam_added_deffered.clear();
 }
 
 CEffectorPP* CCameraManager::GetPPEffector(EEffectorPPType type)
@@ -535,16 +574,29 @@ void CCameraManager::Dump()
 }
 
 
-// demonized: removecameffector by pointer
 void CCameraManager::RemoveCamEffector(CEffectorCam* ef)
 {
+    if (!ef)
+        return;
+
     for (auto it = m_EffectorsCam.begin(); it != m_EffectorsCam.end(); ++it)
     {
-        CEffectorCam* cam = (*it);
-        if (cam == ef)
+        if (*it == ef)
         {
-            OnEffectorReleased(cam);
+            OnEffectorReleased(ef);
             m_EffectorsCam.erase(it);
+            xr_delete(ef);
+            return;
+        }
+    }
+
+    for (auto it = m_EffectorsCam_added_deffered.begin(); it != m_EffectorsCam_added_deffered.end(); ++it)
+    {
+        if (*it == ef)
+        {
+            OnEffectorReleased(ef);
+            m_EffectorsCam_added_deffered.erase(it);
+            xr_delete(ef);
             return;
         }
     }
