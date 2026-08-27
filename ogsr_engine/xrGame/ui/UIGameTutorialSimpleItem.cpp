@@ -9,6 +9,9 @@
 #include "../UIGameSp.h"
 #include "../HUDManager.h"
 #include "../level.h"
+#include "../Actor.h"
+#include "../Inventory.h"
+#include "../PDA.h"
 #include "UIPdaWnd.h"
 #include "UIInventoryWnd.h"
 #include "UITalkWnd.h"
@@ -247,7 +250,23 @@ void CUISequenceSimpleItem::Start()
         }
         if (ui_game_sp)
         {
-            if ((!ui_game_sp->PdaMenu->IsShown() && bShowPda) || (ui_game_sp->PdaMenu->IsShown() && !bShowPda))
+            bool use_3d_pda = false;
+            if (bShowPda)
+            {
+                if (CActor* actor = Actor())
+                {
+                    if (CPda* pda = actor->GetPDA(); pda && pda->Is3DPDA() && psActorFlags.test(AF_3D_PDA))
+                    {
+                        use_3d_pda = true;
+                        if (actor->inventory().GetActiveSlot() != PDA_SLOT)
+                            actor->inventory().Activate(PDA_SLOT, eKeyAction);
+                        else if (!ui_game_sp->PdaMenu->IsShown())
+                            ui_game_sp->ShowHidePda(true);
+                    }
+                }
+            }
+
+            if (!use_3d_pda && ((!ui_game_sp->PdaMenu->IsShown() && bShowPda) || (ui_game_sp->PdaMenu->IsShown() && !bShowPda)))
                 HUD().GetUI()->StartStopMenu(ui_game_sp->PdaMenu, true);
         }
     }
