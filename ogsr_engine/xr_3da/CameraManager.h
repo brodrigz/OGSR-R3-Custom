@@ -142,6 +142,8 @@ public:
 
     IC float Aspect() const { return m_cam_info.fAspect; }
 
+    bool ShouldDrawHud() const;
+
     IC void camera_Matrix(Fmatrix& M) { M.set(m_cam_info.r, m_cam_info.n, m_cam_info.d, m_cam_info.p); }
     inline void SetVPNear(const float val) { m_cam_info.fNear = val; }
 

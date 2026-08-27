@@ -6,6 +6,7 @@
 #include "../xr_3da/ObjectAnimator.h"
 #include "object_broker.h"
 #include "actor.h"
+#include "../xr_3da/IGame_Level.h"
 
 void AddEffector(CActor* A, int type, const shared_str& sect_name)
 {
@@ -203,6 +204,77 @@ BOOL CAnimatorCamEffector::ProcessCam(SCamEffectorInfo& info)
     if (m_fov > 0.0f)
         info.fFov = m_fov;
 
+    return TRUE;
+}
+
+CScriptCamEffector::CScriptCamEffector(CActor* owner, ECamEffectorType type)
+    : inherited(type, flt_max), m_owner(owner), m_smoothing(1), m_refresh_generation(0), m_processed_generation(0),
+      m_last_processed_frame(u32(-1)), m_missed_updates(0), m_initialized(false), m_hud_draw(false)
+{
+    m_position.set(0.f, 0.f, 0.f);
+    m_hpb.set(0.f, 0.f, 0.f);
+    m_camera.identity();
+}
+
+void CScriptCamEffector::SetTarget(const Fvector& position, const Fvector& hpb, u32 smoothing, bool hud_draw, bool hud_affect)
+{
+    m_position.set(position);
+    m_hpb.set(hpb);
+    m_smoothing = _max(1u, smoothing);
+    m_hud_draw = hud_draw;
+    SetHudAffect(hud_affect);
+    ++m_refresh_generation;
+}
+
+BOOL CScriptCamEffector::Valid() { return m_owner && Actor() == m_owner; }
+
+BOOL CScriptCamEffector::ProcessCam(SCamEffectorInfo& info)
+{
+    if (!Valid())
+        return FALSE;
+
+    if (m_last_processed_frame != Device.dwFrame)
+    {
+        m_last_processed_frame = Device.dwFrame;
+
+        if (m_processed_generation != m_refresh_generation)
+        {
+            m_processed_generation = m_refresh_generation;
+            m_missed_updates = 0;
+        }
+        else if (g_pGameLevel && g_pGameLevel->bReady && !Device.dwPrecacheFrame && !Device.Paused())
+        {
+            // Script-owned live cameras must be refreshed. A short grace period
+            // covers callback ordering without leaving an orphaned camera behind.
+            if (++m_missed_updates > 3)
+                return FALSE;
+        }
+    }
+
+    Fmatrix target;
+    target.setHPB(m_hpb.x, m_hpb.y, m_hpb.z).translate_over(m_position);
+
+    if (!m_initialized || m_smoothing == 1)
+    {
+        m_camera.set(target);
+        m_initialized = true;
+    }
+    else
+    {
+        const float factor = 1.f / float(m_smoothing);
+        Fquaternion source_rotation, target_rotation, result_rotation;
+        source_rotation.set(m_camera);
+        target_rotation.set(target);
+        result_rotation.slerp(source_rotation, target_rotation, factor);
+
+        const Fvector source_position = m_camera.c;
+        m_camera.rotation(result_rotation);
+        m_camera.c.lerp(source_position, target.c, factor);
+    }
+
+    info.d.set(m_camera.k);
+    info.n.set(m_camera.j);
+    info.p.set(m_camera.c);
     return TRUE;
 }
 

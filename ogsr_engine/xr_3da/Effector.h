@@ -28,7 +28,8 @@ public:
     virtual ~CEffectorCam(){};
     void SetType(ECamEffectorType type) { eType = type; }
     void SetHudAffect(bool val) { bHudAffect = val; }
-    bool GetHudAffect() { return bHudAffect; }
+    bool GetHudAffect() const { return bHudAffect; }
+    virtual bool HudDraw() const { return true; }
     IC ECamEffectorType GetType() { return eType; }
     virtual BOOL Valid() { return fLifeTime > 0.0f; }
 

@@ -1249,7 +1249,8 @@ extern BOOL g_ShowAnimationInfo;
 // HUD
 void CActor::OnHUDDraw(CCustomHUD* hud, u32 context_id, IRenderable* root)
 {
-    g_player_hud->render_hud(context_id, root);
+    if (Cameras().ShouldDrawHud())
+        g_player_hud->render_hud(context_id, root);
 
 #if 0 // ndef NDEBUG
 	if (Level().CurrentControlEntity() == this && g_ShowAnimationInfo)

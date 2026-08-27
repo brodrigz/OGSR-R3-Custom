@@ -84,6 +84,32 @@ public:
     virtual void ProcessIfInvalid(SCamEffectorInfo& info);
 };
 
+class CScriptCamEffector final : public CEffectorCam
+{
+    using inherited = CEffectorCam;
+
+    CActor* m_owner;
+    Fvector m_position;
+    Fvector m_hpb;
+    Fmatrix m_camera;
+    u32 m_smoothing;
+    u32 m_refresh_generation;
+    u32 m_processed_generation;
+    u32 m_last_processed_frame;
+    u32 m_missed_updates;
+    bool m_initialized;
+    bool m_hud_draw;
+
+public:
+    CScriptCamEffector(CActor* owner, ECamEffectorType type);
+
+    void SetTarget(const Fvector& position, const Fvector& hpb, u32 smoothing, bool hud_draw, bool hud_affect);
+    virtual BOOL Valid() override;
+    virtual BOOL ProcessCam(SCamEffectorInfo& info) override;
+    virtual bool AbsolutePositioning() override { return true; }
+    virtual bool HudDraw() const override { return m_hud_draw; }
+};
+
 class CAnimatorCamLerpEffector : public CAnimatorCamEffector
 {
 protected:

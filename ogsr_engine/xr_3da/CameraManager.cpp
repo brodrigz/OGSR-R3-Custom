@@ -267,6 +267,19 @@ void CCameraManager::RemoveAllCamEffector()
     m_EffectorsCam_added_deffered.clear();
 }
 
+bool CCameraManager::ShouldDrawHud() const
+{
+    for (const CEffectorCam* effector : m_EffectorsCam)
+        if (!effector->HudDraw())
+            return false;
+
+    for (const CEffectorCam* effector : m_EffectorsCam_added_deffered)
+        if (!effector->HudDraw())
+            return false;
+
+    return true;
+}
+
 CEffectorPP* CCameraManager::GetPPEffector(EEffectorPPType type)
 {
     for (auto& it : m_EffectorsPP)

@@ -596,6 +596,56 @@ float add_cam_effector2(LPCSTR fn, int id, bool cyclic, LPCSTR cb_func)
 
 void remove_cam_effector(int id) { Actor()->Cameras().RemoveCamEffector((ECamEffectorType)id); }
 
+static ECamEffectorType script_camera_id = ECamEffectorType(-1);
+
+void set_cam_custom_position_direction(Fvector& position, Fvector& hpb, u32 smoothing, bool hud_draw, bool hud_affect)
+{
+    CActor* actor = Actor();
+    if (!actor)
+        return;
+
+    CScriptCamEffector* effector = nullptr;
+    if (script_camera_id != ECamEffectorType(-1))
+        effector = smart_cast<CScriptCamEffector*>(actor->Cameras().GetCamEffector(script_camera_id));
+
+    if (!effector)
+    {
+        script_camera_id = actor->Cameras().RequestCamEffectorId();
+        effector = xr_new<CScriptCamEffector>(actor, script_camera_id);
+        actor->Cameras().AddCamEffector(effector);
+    }
+
+    effector->SetTarget(position, hpb, smoothing, hud_draw, hud_affect);
+}
+
+void set_cam_custom_position_direction(Fvector& position, Fvector& hpb, u32 smoothing, bool hud_draw)
+{
+    set_cam_custom_position_direction(position, hpb, smoothing, hud_draw, false);
+}
+
+void set_cam_custom_position_direction(Fvector& position, Fvector& hpb, u32 smoothing)
+{
+    set_cam_custom_position_direction(position, hpb, smoothing, false, false);
+}
+
+void set_cam_custom_position_direction(Fvector& position, Fvector& hpb)
+{
+    set_cam_custom_position_direction(position, hpb, 1, false, false);
+}
+
+void remove_cam_custom_position_direction()
+{
+    CActor* actor = Actor();
+    if (actor && script_camera_id != ECamEffectorType(-1))
+    {
+        CEffectorCam* effector = actor->Cameras().GetCamEffector(script_camera_id);
+        if (smart_cast<CScriptCamEffector*>(effector))
+            actor->Cameras().RemoveCamEffector(effector);
+    }
+
+    script_camera_id = ECamEffectorType(-1);
+}
+
 float get_snd_volume() { return psSoundVFactor; }
 
 void set_snd_volume(float v)
@@ -1100,6 +1150,11 @@ void CLevel::script_register(lua_State* L)
 
             def("iterate_sounds", &iterate_sounds1), def("iterate_sounds", &iterate_sounds2), def("physics_world", &physics_world), def("get_snd_volume", &get_snd_volume),
             def("set_snd_volume", &set_snd_volume), def("add_cam_effector", &add_cam_effector), def("add_cam_effector2", &add_cam_effector2),
+            def("set_cam_custom_position_direction", (void (*)(Fvector&, Fvector&, u32, bool, bool))&set_cam_custom_position_direction),
+            def("set_cam_custom_position_direction", (void (*)(Fvector&, Fvector&, u32, bool))&set_cam_custom_position_direction),
+            def("set_cam_custom_position_direction", (void (*)(Fvector&, Fvector&, u32))&set_cam_custom_position_direction),
+            def("set_cam_custom_position_direction", (void (*)(Fvector&, Fvector&))&set_cam_custom_position_direction),
+            def("remove_cam_custom_position_direction", &remove_cam_custom_position_direction),
             def("remove_cam_effector", &remove_cam_effector), def("add_pp_effector", &add_pp_effector), def("set_pp_effector_factor", &set_pp_effector_factor),
             def("set_pp_effector_factor", &set_pp_effector_factor2), def("remove_pp_effector", &remove_pp_effector),
 
