@@ -157,7 +157,13 @@ void CStepManager::update()
                 GET_RANDOM(mtl_pair->StepSounds).play_no_feedback(m_object, 0, 0, &sound_pos, &m_step_info.params.step[i].power);
 
                 if (actor)
-                    actor->callback(GameObject::eOnActorFootStep)(actor->lua_game_object(), m_step_info.params.step[i].power);
+                {
+                    // Radiophobia's callback contract is (actor, ground material name, step power).
+                    // Its signal bridge depends on all three values for gear, casing, rain, and exoskeleton sounds.
+                    const SGameMtl* ground_material = GMLib.GetMaterialByID(mtl_pair->GetMtl1());
+                    actor->callback(GameObject::eOnActorFootStep)(
+                        actor->lua_game_object(), *ground_material->m_Name, m_step_info.params.step[i].power);
+                }
             }
 
             // Играть партиклы
