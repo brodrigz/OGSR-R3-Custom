@@ -267,10 +267,14 @@ public:
 
     // wallmarks
     virtual void add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V);
+    virtual void add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V,
+        bool random_rotation, float ttl);
     virtual void add_StaticWallmark(const wm_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V);
 
     virtual void append_SkeletonWallmark(intrusive_ptr<CSkeletonWallmark> wm);
     virtual void add_SkeletonWallmark(Fmatrix* xf, IKinematics* obj, IWallMarkArray* pArray, Fvector& start, Fvector& dir, float size);
+    virtual void add_SkeletonWallmark(Fmatrix* xf, IKinematics* obj, IWallMarkArray* pArray, Fvector& start,
+        Fvector& dir, float size, bool random_rotation, float ttl);
 
     virtual void clear_static_wallmarks();
 
@@ -365,6 +369,8 @@ protected:
 
     virtual void add_StaticWallmark(ref_shader& S, const Fvector& P, float s, CDB::TRI* T, Fvector* V);
     virtual void add_SkeletonWallmark(Fmatrix* xf, CKinematics* obj, ref_shader& sh, Fvector& start, Fvector& dir, float size);
+    virtual void add_SkeletonWallmark(Fmatrix* xf, CKinematics* obj, ref_shader& sh, Fvector& start, Fvector& dir,
+        float size, bool random_rotation, float ttl);
 
     void ExportLights();
     void UpdateSectors();

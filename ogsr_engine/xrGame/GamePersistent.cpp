@@ -27,6 +27,7 @@
 #endif // MASTER_GOLD
 
 #include "ai_debug.h"
+#include "script_wallmarks_manager.h"
 
 static void* ode_alloc(size_t size) { return xr_malloc(size); }
 static void* ode_realloc(void* ptr, size_t oldsize, size_t newsize) { return xr_realloc(ptr, newsize); }
@@ -126,6 +127,7 @@ void CGamePersistent::OnAppStart()
 {
     // load game materials
     GMLib.Load();
+    m_script_wallmarks_manager = xr_new<ScriptWallmarksManager>();
     init_game_globals();
     __super::OnAppStart();
     m_pUI_core = xr_new<ui_core>();
@@ -144,7 +146,15 @@ void CGamePersistent::OnAppEnd()
 
     clean_game_globals();
 
+    xr_delete(m_script_wallmarks_manager);
+
     GMLib.Unload();
+}
+
+ScriptWallmarksManager& CGamePersistent::GetWallmarksManager()
+{
+    VERIFY(m_script_wallmarks_manager);
+    return *m_script_wallmarks_manager;
 }
 
 void CGamePersistent::PreStart(LPCSTR op)

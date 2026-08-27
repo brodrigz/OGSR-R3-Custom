@@ -1004,3 +1004,27 @@ void CRender::End()
 
     Target->reset_target_dimensions();
 }
+
+void CRender::add_SkeletonWallmark(Fmatrix* xf, CKinematics* obj, ref_shader& sh, Fvector& start, Fvector& dir,
+    float size, bool random_rotation, float ttl)
+{
+    Wallmarks->AddSkeletonWallmark(xf, obj, sh, start, dir, size, random_rotation, ttl);
+}
+
+void CRender::add_SkeletonWallmark(Fmatrix* xf, IKinematics* obj, IWallMarkArray* pArray, Fvector& start,
+    Fvector& dir, float size, bool random_rotation, float ttl)
+{
+    dxWallMarkArray* pWMA = smart_cast<dxWallMarkArray*>(pArray);
+    ref_shader* pShader = pWMA->dxGenerateWallmark();
+    if (pShader)
+        add_SkeletonWallmark(xf, smart_cast<CKinematics*>(obj), *pShader, start, dir, size, random_rotation, ttl);
+}
+
+void CRender::add_StaticWallmark(IWallMarkArray* pArray, const Fvector& P, float s, CDB::TRI* T, Fvector* V,
+    bool random_rotation, float ttl)
+{
+    dxWallMarkArray* pWMA = smart_cast<dxWallMarkArray*>(pArray);
+    ref_shader* pShader = pWMA->dxGenerateWallmark();
+    if (pShader)
+        Wallmarks->AddStaticWallmark(T, V, P, *pShader, s, random_rotation, ttl);
+}

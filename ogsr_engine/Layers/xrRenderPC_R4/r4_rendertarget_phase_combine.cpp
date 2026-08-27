@@ -228,10 +228,8 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
     if (!need_heatvision)
         phase_lut(cmd_list);
 
-/*
     if (scope_fake_radius > 0.f)
         phase_fakescope(cmd_list); // crookr
-*/
 
 #pragma todo("Simp: эффект шлема багует в прицеле, надо бы придумать решение получше")
     extern bool Is3dssZoomed;

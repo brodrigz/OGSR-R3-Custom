@@ -6,6 +6,7 @@ class CUICursor;
 class CParticlesObject;
 class CUISequencer;
 class ui_core;
+class ScriptWallmarksManager;
 
 class CGamePersistent : public IGame_Persistent, public IEventReceiver
 {
@@ -28,6 +29,7 @@ class CGamePersistent : public IGame_Persistent, public IEventReceiver
     EVENT eQuickLoad;
 
     fastdelegate::FastDelegate<void()> m_intro_event;
+    ScriptWallmarksManager* m_script_wallmarks_manager{};
 
     void start_logo_intro();
     void update_logo_intro();
@@ -77,6 +79,7 @@ public:
     virtual void SetTip();
 
     bool OnKeyboardPress(int dik);
+    ScriptWallmarksManager& GetWallmarksManager();
 };
 
 IC CGamePersistent& GamePersistent() { return *((CGamePersistent*)g_pGamePersistent); }

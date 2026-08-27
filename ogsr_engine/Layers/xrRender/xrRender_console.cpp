@@ -131,11 +131,12 @@ float ps_r2_ssaLOD_A = 64.f;
 float ps_r2_ssaLOD_B = 48.f;
 
 // crookr
-int scope_fake_enabled = 0;
+int scope_fake_enabled = 1;
 
 float scope_fake_power = 0.66f;
 float scope_fake_radius = 0;
 float scope_fake_interp = 0.15f;
+float legacy_r2_ls_bloom_kernel_scale = 0.7f;
 
 Fvector4 ps_scope1_params = Fvector4().set(0.2f, 1.f, 1.f, 0.0f); // inner blur, outer blur, brightness, ___
 Fvector4 ps_scope2_params = Fvector4().set(0.0066f, 0.66f, 0.25f, 0.25f); // chroma abber, fog attack(aim), fog attack(move), fog max travel
@@ -858,19 +859,11 @@ void xrRender_initconsole()
     // B - прозрачность краев виньетки  0, 1, 2, 3
     CMD4(CCC_Float, "r_pnv_alfa_vignete", &ps_pnv_params_4_2, 0.f, 3.f); // 0 - blur, 1 - black, 2 - image overlay
 
-/*
-    //CMD4(CCC_Integer, "r__fakescope", &scope_fake_enabled, 0, 1); // crookr for fake scope
+    CMD4(CCC_Integer, "r__fakescope", &scope_fake_enabled, 0, 1); // crookr for fake scope
     CMD4(CCC_Float, "fake_scope_radius", &scope_fake_radius, 0, 1); // crookr for fake scope
     CMD4(CCC_Float, "fake_scope_power", &scope_fake_power, 0, 1); // crookr for fake scope
     CMD4(CCC_Float, "fake_scope_interp", &scope_fake_interp, 0, 1); // crookr for fake scope
-
-    constexpr Fvector4 tw_min{};
-    constexpr Fvector4 tw_max{10.f, 10.f, 10.f, 10.f};
-
-    CMD4(CCC_Vector4, "fake_scope_params_1", &ps_scope1_params, tw_min, tw_max); // crookr for fake scope
-    CMD4(CCC_Vector4, "fake_scope_params_2", &ps_scope2_params, tw_min, tw_max); // crookr for fake scope
-    CMD4(CCC_Vector4, "fake_scope_params_3", &ps_scope3_params, tw_min, tw_max); // crookr for fake scope
-*/
+    CMD4(CCC_Float, "r2_ls_bloom_kernel_scale", &legacy_r2_ls_bloom_kernel_scale, 0, 1); // legacy fakelens compatibility
 
     // Screen Space Shaders
     CMD4(CCC_Vector3, "ssfx_shadows", &ps_ssfx_shadows, Fvector3().set(128, 1536, 0), Fvector3().set(1536, 4096, 0));
