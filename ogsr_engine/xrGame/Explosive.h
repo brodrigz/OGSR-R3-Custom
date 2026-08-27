@@ -14,6 +14,7 @@
 #include "DamageSource.h"
 #include "wallmark_manager.h"
 #include "ParticlesObject.h"
+#include "HudSound.h"
 class IRender_Light;
 DEFINE_VECTOR(CPhysicsShellHolder*, BLASTED_OBJECTS_V, BLASTED_OBJECTS_I);
 class CExplosive : public IDamageSource
@@ -69,7 +70,11 @@ public:
     bool IsReadyToExplode() { return !!m_explosion_flags.test(flReadyToExplode); };
 
 protected:
-    bool IsSoundPlaying() { return !!sndExplode._feedback(); }
+    bool IsSoundPlaying()
+    {
+        HUD_SOUND* sound = m_layered_sounds.FindSoundItem("sndExplode", false);
+        return sound && sound->playing();
+    }
 
 private:
     void PositionUpdate();
@@ -141,6 +146,7 @@ protected:
 
     //звуки
     ref_sound sndExplode;
+    HUD_SOUND_COLLECTION_LAYERED m_layered_sounds;
     ESoundTypes m_eSoundExplode;
 
     //размер отметки на стенах

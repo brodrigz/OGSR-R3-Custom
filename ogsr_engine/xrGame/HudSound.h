@@ -7,7 +7,7 @@
 
 struct HUD_SOUND
 {
-    HUD_SOUND() { m_activeSnd = NULL; }
+    HUD_SOUND() : m_activeSnd(NULL), m_b_exclusive(false) {}
     ~HUD_SOUND() { m_activeSnd = NULL; }
 
     ////////////////////////////////////
@@ -49,6 +49,51 @@ struct HUD_SOUND
         float volume; //громкость
         float freq; //коэффициент частоты
     };
+    shared_str m_alias;
     SSnd* m_activeSnd;
+    bool m_b_exclusive;
     xr_vector<SSnd> sounds;
+
+    bool operator==(LPCSTR alias) const { return xr_strcmp(m_alias.c_str(), alias) == 0; }
+};
+
+class CInifile;
+
+class HUD_SOUND_COLLECTION
+{
+public:
+    ~HUD_SOUND_COLLECTION();
+
+    shared_str m_alias;
+    xr_vector<HUD_SOUND> m_sound_items;
+
+    HUD_SOUND* FindSoundItem(LPCSTR alias, bool assert_if_missing);
+    void PlaySound(LPCSTR alias, const Fvector& position, const CObject* parent, bool hud_mode,
+        bool looped = false, u8 index = u8(-1));
+    void StopSound(LPCSTR alias);
+    void StopAllSounds();
+    void SetPosition(LPCSTR alias, const Fvector& position);
+    void LoadSound(LPCSTR section, LPCSTR line, LPCSTR alias, bool exclusive = false,
+        int type = sg_SourceType);
+    void LoadSound(const CInifile* ini, LPCSTR section, LPCSTR line, LPCSTR alias, bool exclusive = false,
+        int type = sg_SourceType);
+};
+
+class HUD_SOUND_COLLECTION_LAYERED
+{
+    xr_vector<HUD_SOUND_COLLECTION> m_sound_layered_items;
+
+public:
+    ~HUD_SOUND_COLLECTION_LAYERED();
+
+    HUD_SOUND* FindSoundItem(LPCSTR alias, bool assert_if_missing);
+    void PlaySound(LPCSTR alias, const Fvector& position, const CObject* parent, bool hud_mode,
+        bool looped = false, u8 index = u8(-1));
+    void StopSound(LPCSTR alias);
+    void StopAllSounds();
+    void SetPosition(LPCSTR alias, const Fvector& position);
+    void LoadSound(LPCSTR section, LPCSTR line, LPCSTR alias, bool exclusive = false,
+        int type = sg_SourceType);
+    void LoadSound(const CInifile* ini, LPCSTR section, LPCSTR line, LPCSTR alias, bool exclusive = false,
+        int type = sg_SourceType);
 };
