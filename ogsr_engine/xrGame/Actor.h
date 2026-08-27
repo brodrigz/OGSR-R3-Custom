@@ -738,6 +738,8 @@ public:
     void RepackAmmo();
 
     bool IsDetectorActive() const;
+    void HideDetector();
+    void ShowDetector();
 
 private:
     // иммунитеты от препаратов, применяемые для ослабления хита

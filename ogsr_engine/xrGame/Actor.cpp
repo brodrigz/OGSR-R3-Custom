@@ -1866,3 +1866,15 @@ bool CActor::IsDetectorActive() const
 
     return false;
 }
+
+void CActor::HideDetector()
+{
+    if (auto det = smart_cast<CCustomDetector*>(inventory().ItemFromSlot(DETECTOR_SLOT)))
+        det->HideDetector(true);
+}
+
+void CActor::ShowDetector()
+{
+    if (auto det = smart_cast<CCustomDetector*>(inventory().ItemFromSlot(DETECTOR_SLOT)))
+        det->ShowDetector(true);
+}
