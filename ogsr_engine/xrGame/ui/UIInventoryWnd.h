@@ -94,6 +94,7 @@ protected:
     CUIDragDropListEx* m_pUIBagList;
     CUIDragDropListEx* m_pUIBeltList;
 
+    CUIDragDropListEx* m_pUIThirdWeaponList;
     CUIDragDropListEx* m_pUIPistolList;
     CUIDragDropListEx* m_pUIAutomaticList;
     CUIOutfitDragDropList* m_pUIOutfitList;

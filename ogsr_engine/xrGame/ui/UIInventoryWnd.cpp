@@ -37,8 +37,9 @@ using namespace InventoryUtilities;
 CUIInventoryWnd* g_pInvWnd = NULL;
 
 CUIInventoryWnd::CUIInventoryWnd()
-    : m_pUIBagList(nullptr), m_pUIBeltList(nullptr), m_pUIPistolList(nullptr), m_pUIAutomaticList(nullptr), m_pUIKnifeList(nullptr), m_pUIHelmetList(nullptr),
-      m_pUIBIODetList(nullptr), m_pUINightVisionList(nullptr), m_pUIDetectorList(nullptr), m_pUITorchList(nullptr), m_pUIBinocularList(nullptr), m_pUIOutfitList(nullptr)
+    : m_pUIBagList(nullptr), m_pUIBeltList(nullptr), m_pUIThirdWeaponList(nullptr), m_pUIPistolList(nullptr), m_pUIAutomaticList(nullptr), m_pUIKnifeList(nullptr),
+      m_pUIHelmetList(nullptr), m_pUIBIODetList(nullptr), m_pUINightVisionList(nullptr), m_pUIDetectorList(nullptr), m_pUITorchList(nullptr),
+      m_pUIBinocularList(nullptr), m_pUIOutfitList(nullptr)
 {
     m_iCurrentActiveSlot = NO_ACTIVE_SLOT;
     UIRank = NULL;
@@ -141,6 +142,12 @@ void CUIInventoryWnd::Init()
     xml_init.InitDragDropListEx(uiXml, "dragdrop_pistol", 0, m_pUIPistolList);
     BindDragDropListEnents(m_pUIPistolList);
 
+    m_pUIThirdWeaponList = xr_new<CUIDragDropListEx>();
+    AttachChild(m_pUIThirdWeaponList);
+    m_pUIThirdWeaponList->SetAutoDelete(true);
+    xml_init.InitDragDropListEx(uiXml, "dragdrop_third", 0, m_pUIThirdWeaponList);
+    BindDragDropListEnents(m_pUIThirdWeaponList);
+
     m_pUIAutomaticList = xr_new<CUIDragDropListEx>();
     AttachChild(m_pUIAutomaticList);
     m_pUIAutomaticList->SetAutoDelete(true);
@@ -193,6 +200,7 @@ void CUIInventoryWnd::Init()
         m_slots_array[KNIFE_SLOT] = m_pUIKnifeList;
     m_slots_array[FIRST_WEAPON_SLOT] = m_pUIPistolList;
     m_slots_array[SECOND_WEAPON_SLOT] = m_pUIAutomaticList;
+    m_slots_array[THIRD_WEAPON_SLOT] = m_pUIThirdWeaponList;
     if (Core.Features.test(xrCore::Feature::ogse_new_slots))
     {
         m_slots_array[APPARATUS_SLOT] = m_pUIBinocularList;

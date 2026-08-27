@@ -80,6 +80,13 @@ void CUIInventoryWnd::InitInventory()
         m_pUIPistolList->SetItem(itm);
     }
 
+    _itm = m_pInv->m_slots[THIRD_WEAPON_SLOT].m_pIItem;
+    if (_itm)
+    {
+        CUICellItem* itm = create_cell_item(_itm);
+        m_pUIThirdWeaponList->SetItem(itm);
+    }
+
     if (Core.Features.test(xrCore::Feature::ogse_new_slots))
     {
         _itm = m_pInv->m_slots[KNIFE_SLOT].m_pIItem;
@@ -380,8 +387,8 @@ bool CUIInventoryWnd::OnItemSelected(CUICellItem* itm)
 {
     SetCurrentItem(itm);
 
-    itm->ColorizeItems({m_pUIBagList, m_pUIBeltList, m_pUIPistolList, m_pUIAutomaticList, m_pUIKnifeList, m_pUIHelmetList, m_pUIBIODetList, m_pUINightVisionList, m_pUIDetectorList,
-                        m_pUITorchList, m_pUIBinocularList, m_pUIOutfitList});
+    itm->ColorizeItems({m_pUIBagList, m_pUIBeltList, m_pUIThirdWeaponList, m_pUIPistolList, m_pUIAutomaticList, m_pUIKnifeList, m_pUIHelmetList, m_pUIBIODetList,
+                        m_pUINightVisionList, m_pUIDetectorList, m_pUITorchList, m_pUIBinocularList, m_pUIOutfitList});
     return false;
 }
 
@@ -529,6 +536,7 @@ void CUIInventoryWnd::ClearAllLists()
 {
     m_pUIBagList->ClearAll(true);
     m_pUIBeltList->ClearAll(true);
+    m_pUIThirdWeaponList->ClearAll(true);
     m_pUIOutfitList->ClearAll(true);
     m_pUIPistolList->ClearAll(true);
     if (Core.Features.test(xrCore::Feature::ogse_new_slots))
