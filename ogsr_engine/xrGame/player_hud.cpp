@@ -48,20 +48,31 @@ void player_hud_motion_container::load(bool has_separated_hands, IKinematicsAnim
 
             if (has_separated_hands)
             {
-                if (_GetItemCount(anm.c_str()) == 1)
+                const u32 item_count = _GetItemCount(anm.c_str());
+                if (item_count == 1)
                 {
                     pm.m_base_name = anm;
                     pm.m_additional_name = anm;
                 }
                 else
                 {
-                    R_ASSERT2(_GetItemCount(anm.c_str()) == 2, anm.c_str());
+                    // Radiophobia 3 weapon configs also use the legacy form
+                    // "hands_motion, item_motion, speed_multiplier".
+                    R_ASSERT2(item_count == 2 || item_count == 3, anm.c_str());
                     string512 str_item;
                     _GetItem(anm.c_str(), 0, str_item);
                     pm.m_base_name = str_item;
 
                     _GetItem(anm.c_str(), 1, str_item);
                     pm.m_additional_name = str_item;
+
+                    if (item_count == 3)
+                    {
+                        _GetItem(anm.c_str(), 2, str_item);
+                        const float k = static_cast<float>(atof(str_item));
+                        if (!fsimilar(k, 1.f) && k > 0.001f)
+                            pm.params.speed_k = k;
+                    }
                 }
             }
             else
