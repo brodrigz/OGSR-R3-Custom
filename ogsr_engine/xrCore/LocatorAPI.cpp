@@ -1000,6 +1000,14 @@ bool CLocatorAPI::check_for_file(LPCSTR path, LPCSTR _fname, string_path& fname_
     return (true);
 }
 
+#ifdef DEBUG
+static bool ShouldTraceScriptOpen(const char* path)
+{
+    static const bool enabled = strstr(Core.Params, "-trace_script_resolve") != nullptr;
+    return enabled && path && strstr(path, ".script");
+}
+#endif
+
 template <typename T>
 T* CLocatorAPI::r_open_impl(LPCSTR path, LPCSTR _fname)
 {
@@ -1019,6 +1027,24 @@ T* CLocatorAPI::r_open_impl(LPCSTR path, LPCSTR _fname)
     }
 
     T* R = nullptr;
+
+#ifdef DEBUG
+    if (ShouldTraceScriptOpen(fname))
+    {
+        if (VFS_STANDARD_FILE == desc->vfs)
+        {
+            LPCSTR actual_name = desc->real_file_path.empty() ? fname : desc->real_file_path.c_str();
+            Msg("[script-resolve] open path=[%s] origin=[physical] actual=[%s]", fname, actual_name);
+        }
+        else
+        {
+            const char* archive_path =
+                desc->vfs < archives.size() ? archives[desc->vfs].path.c_str() : "<invalid-vfs-index>";
+            Msg("[script-resolve] open path=[%s] origin=[archive] archive=[%s] vfs=[%llu]", fname,
+                archive_path, static_cast<unsigned long long>(desc->vfs));
+        }
+    }
+#endif
 
     // OK, analyse
     if (VFS_STANDARD_FILE == desc->vfs)

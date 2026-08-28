@@ -182,6 +182,14 @@ static const char* ExtractFileName(const char* fname)
     return result;
 }
 
+#ifdef DEBUG
+static bool IsScriptResolveTraceEnabled()
+{
+    static const bool enabled = strstr(Core.Params, "-trace_script_resolve") != nullptr;
+    return enabled;
+}
+#endif
+
 void CScriptEngine::CollectScriptFiles(const char* path)
 {
     if (!strlen(path))
@@ -212,7 +220,16 @@ void CScriptEngine::CollectScriptFiles(const char* path)
             strcpy_s(buff, fstart);
             _strlwr_s(buff);
             const char* nspace = strtok(buff, ".");
+#ifdef DEBUG
+            const auto [script, inserted] = xray_scripts.emplace(nspace, fname);
+            if (IsScriptResolveTraceEnabled())
+            {
+                Msg("[script-resolve] collect namespace=[%s] candidate=[%s] selected=[%s] inserted=[%s]", nspace,
+                    fname, script->second.c_str(), inserted ? "yes" : "no");
+            }
+#else
             xray_scripts.emplace(nspace, fname);
+#endif
         }
     });
     FS.file_list_close(files);
@@ -232,8 +249,16 @@ bool CScriptEngine::LookupScript(string_path& fname, const char* base)
     if (it != xray_scripts.end())
     {
         strcpy_s(fname, it->second.c_str());
+#ifdef DEBUG
+        if (IsScriptResolveTraceEnabled())
+            Msg("[script-resolve] lookup namespace=[%s] result=[%s]", lc_base, fname);
+#endif
         return true;
     }
+#ifdef DEBUG
+    if (IsScriptResolveTraceEnabled())
+        Msg("[script-resolve] lookup namespace=[%s] result=[missing]", lc_base);
+#endif
     return false;
 }
 
