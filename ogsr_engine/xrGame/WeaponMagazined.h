@@ -79,6 +79,7 @@ protected:
 
 protected:
     virtual void ReloadMagazine();
+    void CompleteReload();
     void ApplySilencerKoeffs();
 
     virtual void state_Fire(float dt);
@@ -102,6 +103,7 @@ protected:
 
 public:
     virtual void UpdateCL();
+    virtual void Hide(bool now = false) override;
     virtual BOOL net_Spawn(CSE_Abstract* DC);
     virtual void net_Destroy();
     virtual void net_Export(CSE_Abstract* E);

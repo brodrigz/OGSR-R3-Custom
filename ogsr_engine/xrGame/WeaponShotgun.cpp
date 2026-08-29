@@ -8,6 +8,17 @@
 #include "actor.h"
 #include "../xr_3da/x_ray.h"
 
+#ifdef DEBUG
+namespace
+{
+bool ShouldTraceReload()
+{
+    static const bool enabled = strstr(Core.Params, "-trace_reload") != nullptr;
+    return enabled;
+}
+}
+#endif
+
 CWeaponShotgun::CWeaponShotgun(void) : CWeaponCustomPistol("TOZ34")
 {
     m_eSoundShotBoth = ESoundTypes(SOUND_TYPE_WEAPON_SHOOTING);
@@ -342,6 +353,11 @@ void CWeaponShotgun::OnAnimationEnd(u32 state)
     if (!m_bTriStateReload || state != eReload)
         return inherited::OnAnimationEnd(state);
 
+#ifdef DEBUG
+    if (ShouldTraceReload() && ParentIsActor())
+        Msg("[reload-diag] tri-animation-end weapon=%s substate=%u ammo_before=%d/%d", cNameSect().c_str(), m_sub_state, iAmmoElapsed, iMagazineSize);
+#endif
+
     auto ProcessReloadEnd = [this] {
         if (IsMisfire())
         {
@@ -365,6 +381,10 @@ void CWeaponShotgun::OnAnimationEnd(u32 state)
     }
     case eSubstateReloadInProcess: {
         AddCartridge(1);
+#ifdef DEBUG
+        if (ShouldTraceReload() && ParentIsActor())
+            Msg("[reload-diag] tri-cartridge-added weapon=%s ammo_after=%d/%d", cNameSect().c_str(), iAmmoElapsed, iMagazineSize);
+#endif
         if (m_stop_triStateReload || !HaveCartridgeInInventory(1) || m_magazine.size() >= iMagazineSize)
             m_sub_state = eSubstateReloadEnd;
 
@@ -381,6 +401,12 @@ void CWeaponShotgun::OnAnimationEnd(u32 state)
 void CWeaponShotgun::Reload()
 {
     OnZoomOut();
+#ifdef DEBUG
+    if (ShouldTraceReload() && ParentIsActor())
+        Msg("[reload-diag] request weapon=%s ammo=%d/%d tri_state=%s state=%u", cNameSect().c_str(), iAmmoElapsed, iMagazineSize,
+            m_bTriStateReload ? "yes" : "no", GetState());
+#endif
+
     if (m_bTriStateReload)
     {
         m_stop_triStateReload = false;

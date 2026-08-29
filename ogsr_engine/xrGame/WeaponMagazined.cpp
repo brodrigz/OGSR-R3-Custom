@@ -31,6 +31,45 @@ extern float f_weapon_deterioration;
 
 CUIXml* g_wpnScopeXml = NULL;
 
+namespace
+{
+bool HasUsableReloadCommitMark(const CMotionDef* motion_def)
+{
+    if (!motion_def)
+        return false;
+
+    for (const motion_marks& mark : motion_def->marks)
+    {
+        if (!mark.is_empty() && xr_strcmp(mark.name.c_str(), "lmg_reload") != 0)
+            return true;
+    }
+
+    return false;
+}
+
+#ifdef DEBUG
+bool ShouldTraceReload()
+{
+    static const bool enabled = strstr(Core.Params, "-trace_reload") != nullptr;
+    return enabled;
+}
+
+u32 UsableMotionMarkCount(const CMotionDef* motion_def)
+{
+    if (!motion_def)
+        return 0;
+
+    u32 count = 0;
+    for (const motion_marks& mark : motion_def->marks)
+    {
+        if (!mark.is_empty())
+            ++count;
+    }
+    return count;
+}
+#endif
+}
+
 CWeaponMagazined::CWeaponMagazined(LPCSTR name, ESoundTypes eSoundType) : CWeapon(name)
 {
     m_eSoundShow = ESoundTypes(SOUND_TYPE_ITEM_TAKING | eSoundType);
@@ -326,6 +365,12 @@ int CWeaponMagazined::CheckAmmoBeforeReload(u32& v_ammoType)
 void CWeaponMagazined::Reload()
 {
     inherited::Reload();
+
+#ifdef DEBUG
+    if (ShouldTraceReload() && ParentIsActor())
+        Msg("[reload-diag] request weapon=%s ammo=%d/%d tri_state=%s state=%u", cNameSect().c_str(), iAmmoElapsed, iMagazineSize,
+            IsTriStateReload() ? "yes" : "no", GetState());
+#endif
 
     TryReload();
 }
@@ -893,12 +938,15 @@ void CWeaponMagazined::OnAnimationEnd(u32 state)
     switch (state)
     {
     case eReload:
-        ReloadMagazine();
-        HUD_SOUND::StopSound(sndReload);
-        HUD_SOUND::StopSound(sndReloadPartly);
-        HUD_SOUND::StopSound(sndReloadJammed);
-        HUD_SOUND::StopSound(sndReloadJammedLast);
-        bullet_update = true;
+#ifdef DEBUG
+        if (ShouldTraceReload() && ParentIsActor())
+            Msg("[reload-diag] animation-end weapon=%s ammo_before=%d/%d", cNameSect().c_str(), iAmmoElapsed, iMagazineSize);
+#endif
+        CompleteReload();
+#ifdef DEBUG
+        if (ShouldTraceReload() && ParentIsActor())
+            Msg("[reload-diag] animation-end-complete weapon=%s ammo_after=%d/%d", cNameSect().c_str(), iAmmoElapsed, iMagazineSize);
+#endif
         SwitchState(eIdle);
         break; // End of reload animation
     case eHiding: SwitchState(eHidden); break; // End of Hide
@@ -914,6 +962,63 @@ void CWeaponMagazined::OnAnimationEnd(u32 state)
     case eFire2: SwitchState(eIdle); break;
     default: inherited::OnAnimationEnd(state);
     }
+}
+
+void CWeaponMagazined::CompleteReload()
+{
+    ReloadMagazine();
+    HUD_SOUND::StopSound(sndReload);
+    HUD_SOUND::StopSound(sndReloadPartly);
+    HUD_SOUND::StopSound(sndReloadJammed);
+    HUD_SOUND::StopSound(sndReloadJammedLast);
+    bullet_update = true;
+}
+
+void CWeaponMagazined::Hide(bool now)
+{
+    // Item-use animations hide the active weapon.  If the visible reload is
+    // already effectively complete, preserve that completed magazine instead
+    // of discarding it with the final animation tail.  Tri-state reloads add
+    // individual cartridges at their own animation boundaries and must keep
+    // their original interruption semantics.
+    constexpr float late_reload_completion_fraction = 0.85f;
+    const bool feature_enabled = Core.Features.test(xrCore::Feature::complete_late_reload_on_hide);
+    const bool actor_owned = ParentIsActor();
+    const bool regular_reload = !IsTriStateReload();
+    const bool reload_state = GetState() == eReload;
+    const bool reload_motion_running = m_bStopAtEndAnimIsRunning && m_startedMotionState == eReload;
+    const bool valid_motion_time = m_dwMotionEndTm > m_dwMotionStartTm;
+    const bool has_reload_commit_mark = HasUsableReloadCommitMark(m_current_motion_def);
+    const float reload_fraction = valid_motion_time ?
+        clampr(float(Device.dwTimeGlobal - m_dwMotionStartTm) / float(m_dwMotionEndTm - m_dwMotionStartTm), 0.f, 1.f) : 0.f;
+    const bool is_late_regular_reload = feature_enabled && actor_owned && regular_reload && reload_state && reload_motion_running && valid_motion_time &&
+        !has_reload_commit_mark && reload_fraction >= late_reload_completion_fraction;
+
+#ifdef DEBUG
+    if (ShouldTraceReload() && actor_owned && reload_state)
+    {
+        Msg("[reload-diag] hide weapon=%s ammo=%d/%d now=%s tri_state=%s motion=%s marks=%u commit_mark=%s progress=%.3f threshold=%.3f "
+            "feature=%s running=%s valid_time=%s decision=%s",
+            cNameSect().c_str(), iAmmoElapsed, iMagazineSize, now ? "yes" : "no", IsTriStateReload() ? "yes" : "no",
+            m_current_motion.c_str() ? m_current_motion.c_str() : "<none>", UsableMotionMarkCount(m_current_motion_def),
+            has_reload_commit_mark ? "yes" : "no", reload_fraction,
+            late_reload_completion_fraction, feature_enabled ? "on" : "off", reload_motion_running ? "yes" : "no", valid_motion_time ? "yes" : "no",
+            is_late_regular_reload ? "complete" : "cancel");
+    }
+#endif
+
+    if (is_late_regular_reload)
+    {
+        StopCurrentAnimWithoutCallback();
+        CompleteReload();
+
+#ifdef DEBUG
+        if (ShouldTraceReload())
+            Msg("[reload-diag] hide-complete weapon=%s ammo_after=%d/%d", cNameSect().c_str(), iAmmoElapsed, iMagazineSize);
+#endif
+    }
+
+    inherited::Hide(now);
 }
 
 void CWeaponMagazined::switch2_Idle()
@@ -1018,6 +1123,17 @@ void CWeaponMagazined::switch2_Reload()
 
     PlayReloadSound();
     PlayAnimReload();
+
+#ifdef DEBUG
+    if (ShouldTraceReload() && ParentIsActor())
+    {
+        const u32 duration_ms = m_dwMotionEndTm > m_dwMotionStartTm ? m_dwMotionEndTm - m_dwMotionStartTm : 0;
+        Msg("[reload-diag] begin weapon=%s ammo=%d/%d tri_state=%s motion=%s duration_ms=%u marks=%u commit_mark=%s", cNameSect().c_str(), iAmmoElapsed,
+            iMagazineSize, IsTriStateReload() ? "yes" : "no", m_current_motion.c_str() ? m_current_motion.c_str() : "<none>", duration_ms,
+            UsableMotionMarkCount(m_current_motion_def), HasUsableReloadCommitMark(m_current_motion_def) ? "yes" : "no");
+    }
+#endif
+
     SetPending(TRUE);
     bullet_update = false;
 }
@@ -1630,6 +1746,16 @@ void CWeaponMagazined::OnMotionMark(u32 state, const motion_marks& M)
 
     if (state == eReload)
     {
+#ifdef DEBUG
+        if (ShouldTraceReload() && ParentIsActor())
+        {
+            const float reload_fraction = m_dwMotionEndTm > m_dwMotionStartTm ?
+                clampr(float(Device.dwTimeGlobal - m_dwMotionStartTm) / float(m_dwMotionEndTm - m_dwMotionStartTm), 0.f, 1.f) : 0.f;
+            Msg("[reload-diag] motion-mark weapon=%s name=%s ammo_before=%d/%d progress=%.3f", cNameSect().c_str(), M.name.c_str(), iAmmoElapsed,
+                iMagazineSize, reload_fraction);
+        }
+#endif
+
         if (bHasBulletsToHide && xr_strcmp(M.name.c_str(), "lmg_reload") == 0)
         {
             auto ammo_type = m_ammoType;
@@ -1646,6 +1772,11 @@ void CWeaponMagazined::OnMotionMark(u32 state, const motion_marks& M)
         else
         {
             ReloadMagazine();
+
+#ifdef DEBUG
+            if (ShouldTraceReload() && ParentIsActor())
+                Msg("[reload-diag] motion-mark-complete weapon=%s ammo_after=%d/%d", cNameSect().c_str(), iAmmoElapsed, iMagazineSize);
+#endif
         }
     }
 }

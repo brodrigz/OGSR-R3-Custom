@@ -11,6 +11,12 @@ This fork rebases Radiophobia 3 version 1.20 engine contracts onto current OGSR 
 
 Examples of reusable surfaces in this fork include script wallmark placement, layered HUD sounds, actor-owned script cameras, world-to-UI projection, HUD item override animations, and detector visibility controls.
 
+## Late reload completion
+
+Set `complete_late_reload_on_hide = true` in `[features]` to let an actor's ordinary magazine reload finish when the weapon is hidden during its last fifteen percent. This is intended for quick item-use animations that temporarily hide the active weapon. It is player-only, disabled by default, applies only when the resolved hands reload has no usable commit mark, and deliberately excludes tri-state shell reloads.
+
+Builds compiled with `DEBUG` retain opt-in reload tracing. Start such an engine with `-trace_reload` to log actor reload requests, resolved motion marks, animation completion, tri-state cartridge commits, and late-hide decisions. Release builds contain no reload diagnostic logging.
+
 ## Script-resolution diagnostics
 
 Debug builds support an opt-in script resolver trace. Start a Debug engine with:
