@@ -37,6 +37,7 @@ local function models_scope_reticle(rendertarget_name, shader, t_base, t_second,
 	shader:dx10texture("s_reflection", "shaders\\scope_utility\\reflection")
 	shader:dx10texture("s_heat_map", "shaders\\scope_utility\\heat_map")
 	shader:dx10sampler("smp_base")
+    shader:dx10sampler("smp_nofilter")
 end
 
 function element_2(...)

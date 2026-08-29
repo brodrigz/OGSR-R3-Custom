@@ -13,7 +13,6 @@ class ENGINE_API CBoneInstance;
 // callback
 typedef void BoneCallbackFunction(CBoneInstance* P);
 typedef BoneCallbackFunction* BoneCallback;
-// typedef void  (* BoneCallback)		(CBoneInstance* P);
 
 //*** Bone Instance *******************************************************************************
 #pragma pack(push, 8)
@@ -262,7 +261,7 @@ struct ECORE_API SJointIKData
         break_force = 0.f;
         break_torque = 0.f;
     }
-    void clamp_by_limits(Fvector& dest_xyz);
+
     void Export(IWriter& F)
     {
         F.w_u32(type);
@@ -313,19 +312,19 @@ struct ECORE_API SJointIKData
 class IBoneData
 {
 public:
-    //virtual IBoneData& GetChild(u16 id) = 0;
-    //virtual const IBoneData& GetChild(u16 id) const = 0;
-    //virtual u16 GetSelfID() const = 0;
-    //virtual u16 GetNumChildren() const = 0;
+    virtual IBoneData& GetChild(u16 id) = 0;
+    virtual const IBoneData& GetChild(u16 id) const = 0;
+    virtual u16 GetSelfID() const = 0;
+    virtual u16 GetNumChildren() const = 0;
 
     virtual const SJointIKData& get_IK_data() const = 0;
-    //virtual const Fmatrix& get_bind_transform() const = 0;
-    //virtual const SBoneShape& get_shape() const = 0;
-    //virtual const Fobb& get_obb() const = 0;
-    //virtual const Fvector& get_center_of_mass() const = 0;
-    //virtual float get_mass() const = 0;
-    //virtual u16 get_game_mtl_idx() const = 0;
-    //virtual u16 GetParentID() const = 0;
+    virtual const Fmatrix& get_bind_transform() const = 0;
+    virtual const SBoneShape& get_shape() const = 0;
+    virtual const Fobb& get_obb() const = 0;
+    virtual const Fvector& get_center_of_mass() const = 0;
+    virtual float get_mass() const = 0;
+    virtual u16 get_game_mtl_idx() const = 0;
+    virtual u16 GetParentID() const = 0;
     virtual float lo_limit(u8 k) const = 0;
     virtual float hi_limit(u8 k) const = 0;
 };
@@ -371,7 +370,7 @@ public:
     };
     SJointIKData IK_data;
     shared_str game_mtl;
-    //SBoneShape shape;
+    SBoneShape shape{};
 
     float mass;
     Fvector center_of_mass;
@@ -434,43 +433,33 @@ public:
     //    mot_length = rest_length;
     //}
 
-    // IO
-    void Save(IWriter& F);
-    void Load_0(IReader& F);
-    void Load_1(IReader& F);
-
     IC float engine_lo_limit(u8 k) const { return -IK_data.limits[k].limit.y; }
     IC float engine_hi_limit(u8 k) const { return -IK_data.limits[k].limit.x; }
 
     IC float editor_lo_limit(u8 k) const { return IK_data.limits[k].limit.x; }
     IC float editor_hi_limit(u8 k) const { return IK_data.limits[k].limit.y; }
 
-    void SaveData(IWriter& F);
-    void LoadData(IReader& F);
-    void ResetData();
-    void CopyData(CBone* bone);
-
 private:
-    //IBoneData& GetChild(u16 id) { return *children[id]; }
-    //const IBoneData& GetChild(u16 id) const { return *children[id]; }
-    //u16 GetSelfID() const { return (u16)SelfID; }
-    //u16 GetNumChildren() const { return u16(children.size()); }
-    const SJointIKData& get_IK_data() const { return IK_data; }
-    //const Fmatrix& get_bind_transform() const { return local_rest_transform; }
-    //const SBoneShape& get_shape() const { return shape; }
-    //const Fobb& get_obb() const;
-    //const Fvector& get_center_of_mass() const { return center_of_mass; }
-    //float get_mass() const { return mass; }
-    //u16 get_game_mtl_idx() const;
-    //u16 GetParentID() const
-    //{
-    //    if (parent)
-    //        return u16(parent->SelfID);
-    //    else
-    //        return u16(-1);
-    //};
-    float lo_limit(u8 k) const { return engine_lo_limit(k); }
-    float hi_limit(u8 k) const { return engine_hi_limit(k); }
+    IBoneData& GetChild(u16 id) override { return *children[id]; }
+    const IBoneData& GetChild(u16 id) const override { return *children[id]; }
+    u16 GetSelfID() const override { return (u16)SelfID; }
+    u16 GetNumChildren() const override { return u16(children.size()); }
+    const SJointIKData& get_IK_data() const override { return IK_data; }
+    const Fmatrix& get_bind_transform() const override { return local_rest_transform; }
+    const SBoneShape& get_shape() const override { return shape; }
+    const Fobb& get_obb() const override;
+    const Fvector& get_center_of_mass() const override { return center_of_mass; }
+    float get_mass() const override { return mass; }
+    u16 get_game_mtl_idx() const override;
+    u16 GetParentID() const override
+    {
+        if (parent)
+            return u16(parent->SelfID);
+        else
+            return u16(-1);
+    };
+    float lo_limit(u8 k) const override { return engine_lo_limit(k); }
+    float hi_limit(u8 k) const override { return engine_hi_limit(k); }
 };
 
 //*** Shared Bone Data ****************************************************************************
@@ -525,18 +514,18 @@ public:
     void CalculateM2B(const Fmatrix& Parent);
 
 private:
-    //IBoneData& GetChild(u16 id);
-    //const IBoneData& GetChild(u16 id) const;
-    //u16 GetNumChildren() const;
-    const SJointIKData& get_IK_data() const { return IK_data; }
-    //const Fmatrix& get_bind_transform() const { return bind_transform; }
-    //const SBoneShape& get_shape() const { return shape; }
-    //const Fobb& get_obb() const { return obb; }
-    //const Fvector& get_center_of_mass() const { return center_of_mass; }
-    //float get_mass() const { return mass; }
-    //u16 get_game_mtl_idx() const { return game_mtl_idx; }
-    float lo_limit(u8 k) const { return IK_data.limits[k].limit.x; }
-    float hi_limit(u8 k) const { return IK_data.limits[k].limit.y; }
+    IBoneData& GetChild(u16 id) override;
+    const IBoneData& GetChild(u16 id) const override;
+    u16 GetNumChildren() const override;
+    const SJointIKData& get_IK_data() const override { return IK_data; }
+    const Fmatrix& get_bind_transform() const override { return bind_transform; }
+    const SBoneShape& get_shape() const override { return shape; }
+    const Fobb& get_obb() const override { return obb; }
+    const Fvector& get_center_of_mass() const override { return center_of_mass; }
+    float get_mass() const override { return mass; }
+    u16 get_game_mtl_idx() const override { return game_mtl_idx; }
+    float lo_limit(u8 k) const override { return IK_data.limits[k].limit.x; }
+    float hi_limit(u8 k) const override { return IK_data.limits[k].limit.y; }
 
 public:
     virtual u32 mem_usage()

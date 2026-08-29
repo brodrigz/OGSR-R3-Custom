@@ -5,7 +5,14 @@ struct xr_token;
 
 XRCORE_API int _GetItemCount(LPCSTR, char separator = ',');
 
-XRCORE_API LPSTR _GetItem(LPCSTR, int, LPSTR, char separator = ',', LPCSTR = "", bool trim = true);
+XRCORE_API LPSTR __GetItem(LPCSTR, int, LPSTR, const size_t dst_size, char separator = ',', LPCSTR = "", bool trim = true);
+
+template <size_t count>
+inline LPSTR _GetItem(LPCSTR src, int index, char (&dst)[count], char separator = ',', LPCSTR def = "", bool trim = true)
+{
+    return __GetItem(src, index, dst, count, separator, def, trim);
+}
+
 XRCORE_API LPCSTR _GetItem(LPCSTR, int, xr_string& p, char separator = ',', LPCSTR = "", bool trim = true);
 
 XRCORE_API LPSTR _GetItems(LPCSTR, int, int, LPSTR, char separator = ',');

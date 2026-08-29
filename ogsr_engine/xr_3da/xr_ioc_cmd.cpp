@@ -10,6 +10,7 @@
 #include "SkeletonMotions.h"
 #include "IGame_Persistent.h"
 #include "LightAnimLibrary.h"
+#include "IInputReceiver.h"
 
 int psLUA_GCSTEP{128}; // 10;
 int psLUA_GCTIMEOUT{2000}, psLUA_GCTIMEOUT_MIN{2000}; // in micro seconds
@@ -242,7 +243,7 @@ void CCC_LoadCFG::Execute(LPCSTR args)
     {
         while (!F->eof())
         {
-            if (F->tell() == 0 && strstr(cfg_full_name, "user.ltx"))
+            if (F->tell() == 0 && strstr(cfg_full_name, fsgame::user_ltx))
             {
                 // Костыль от ситуации когда в редких случаях почему-то у игроков бьётся user.ltx - оказывается набит нулями, в результате чего игра не
                 // запускается. Не понятно почему так происходит, поэтому сделал тут обработку такой ситуации.
@@ -525,7 +526,7 @@ void CCC_Register()
     CMD3(CCC_Token, "r_fps_lock", &g_dwFPSlimit, FpsLockToken);
 
     CMD3(CCC_Mask, "rs_v_sync", &psDeviceFlags, rsVSync);
-    //CMD3(CCC_Mask, "rs_fullscreen", &psDeviceFlags, rsFullscreen);
+    CMD3(CCC_Mask, "rs_fullscreen", &psDeviceFlags, rsFullscreen);
     //CMD3(CCC_Mask, "rs_refresh_60hz", &psDeviceFlags, rsRefresh60hz);
     CMD3(CCC_Mask, "rs_stats", &psDeviceFlags, rsStatistic);
     CMD4(CCC_Float, "rs_vis_distance", &psVisDistance, 0.4f, 1.1f);
@@ -628,7 +629,10 @@ void CCC_Register()
     CMD4(CCC_Integer, "lua_gctimeout", &psLUA_GCTIMEOUT_MIN, 1000, 16000);
 
     extern BOOL bLevelEnvModExport;
-    CMD4(CCC_Integer, "level_env_mod_export", &bLevelEnvModExport, FALSE, TRUE);
+    CMD2(CCC_Bool, "level_env_mod_export", &bLevelEnvModExport);
 
     CMD3(CCC_Mask, "ssfx_hud_raindrops", &psDeviceFlags, rs_SSFX_HUD_RAINDROPS);
+
+    extern BOOL g_console_show_always;
+    CMD2(CCC_Bool, "g_console_show_always", &g_console_show_always);
 };

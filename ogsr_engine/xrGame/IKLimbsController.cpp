@@ -78,12 +78,11 @@ void y_shift_bones(IKinematics* K, float shift)
 float CIKLimbsController::LegLengthShiftLimit(float current_shift, const SCalculateData cd[max_size])
 {
     float shift_down = -phInfinity;
-    const u16 sz = (u16)_bone_chains.size();
+    const u16 sz = static_cast<u16>(_bone_chains.size());
     for (u16 j = 0; sz > j; ++j)
         if (cd[j].state.foot_step)
         {
-            float s_down = cd[j].m_limb->ObjShiftDown(current_shift, cd[j]);
-            if (shift_down < s_down)
+            if (const float s_down = cd[j].m_limb->ObjShiftDown(current_shift, cd[j]); _valid(s_down) && shift_down < s_down)
                 shift_down = s_down;
         }
     return shift_down;
@@ -91,32 +90,49 @@ float CIKLimbsController::LegLengthShiftLimit(float current_shift, const SCalcul
 static const float static_shift_object_speed = .2f;
 float CIKLimbsController::StaticObjectShift(const SCalculateData cd[max_size])
 {
-    const float current_shift = _object_shift.shift();
+    float current_shift = _object_shift.shift();
+
+    if (!_valid(current_shift))
+    {
+#ifdef DEBUG
+        Msg("! IK: reset invalid object shift for %s", m_object->cName().c_str());
+#endif
+        _object_shift.reset();
+        current_shift = 0.f;
+    }
 
     u16 cnt = 0;
     float shift_up = 0;
-    const u16 sz = (u16)_bone_chains.size();
+    const u16 sz = static_cast<u16>(_bone_chains.size());
     for (u16 j = 0; sz > j; ++j)
         if (cd[j].state.foot_step)
         {
-            float s_up = cd[j].cl_shift.y + current_shift;
-            if (0.f < s_up)
+            if (const float s_up = cd[j].cl_shift.y + current_shift; _valid(s_up) && 0.f < s_up)
             {
                 shift_up += s_up;
                 ++cnt;
             }
         }
+
     if (0 < cnt)
         shift_up /= cnt;
-    float shift_down = LegLengthShiftLimit(current_shift, cd);
-    float shift = 0;
-    if (shift_down > 0.f)
-        shift = -shift_down;
-    else if (-shift_down < shift_up)
+    const float shift_down = LegLengthShiftLimit(current_shift, cd);
+    float shift;
+    if (shift_down > 0.f || -shift_down < shift_up)
         shift = -shift_down;
     else
         shift = shift_up;
-    VERIFY(_valid(shift));
+
+    if (!_valid(shift))
+    {
+#ifdef DEBUG
+        Msg("! IK: reset invalid object shift for %s", m_object->cName().c_str());
+#endif
+        _object_shift.reset();
+
+        return 0.f;
+    }
+
     _object_shift.set_taget(shift, _abs(current_shift - shift) / static_shift_object_speed);
     return shift;
 }

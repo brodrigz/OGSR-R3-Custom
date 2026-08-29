@@ -179,6 +179,7 @@ public:
 void ISpatial_DB::q_ray(xr_vector<ISpatial*>& R, u32 _o, u32 _mask, const Fvector& _start, const Fvector& _dir, float _range)
 {
     ZoneScoped;
+    ZoneValue(static_cast<uint64_t>(_range));
 
     std::shared_lock lock{spatial_db_mtx};
 

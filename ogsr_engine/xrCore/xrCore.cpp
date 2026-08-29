@@ -30,10 +30,8 @@ void xrCore::_initialize(LPCSTR _ApplicationName, LogCallback cb, BOOL init_fs,
     strcpy_s(ApplicationName, _ApplicationName);
     if (0 == init_counter)
     {
-#ifdef XRCORE_STATIC
         // https://stackoverflow.com/questions/85122/how-to-make-thread-sleep-less-than-a-millisecond-on-windows/31411628#31411628
         ZwSetTimerResolution(1, true, &actualResolution);
-#endif
 
         strcpy_s(Params, sizeof(Params), GetCommandLine());
 
@@ -125,9 +123,7 @@ void xrCore::_destroy()
 
         CoUninitialize();
 
-#ifdef XRCORE_STATIC
         ZwSetTimerResolution(actualResolution, true, &actualResolution);
-#endif
     }
 }
 
@@ -165,34 +161,3 @@ constexpr const char* xrCore::GetBuildConfiguration()
 #endif
 #endif
 }
-
-#ifndef XRCORE_STATIC
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD ul_reason_for_call, LPVOID lpvReserved)
-{
-    switch (ul_reason_for_call)
-    {
-    case DLL_PROCESS_ATTACH:
-        /*
-            По сути это не рекомендуемый Microsoft, но повсеместно используемый способ повышения точности
-            соблюдения и измерения временных интревалов функциями Sleep, QueryPerformanceCounter,
-            timeGetTime и GetTickCount.
-            Функция действует на всю операционную систему в целом (!) и нет необходимости вызывать её при
-            старте нового потока. Вызов timeEndPeriod специалисты Microsoft считают обязательным.
-            Есть подозрения, что Windows сама устанавливает максимальную точность при старте таких
-            приложений как, например, игры. Тогда есть шанс, что вызов timeBeginPeriod здесь бессмысленен.
-            Недостатком данного способа является то, что он приводит к общему замедлению работы как
-            текущего приложения, так и всей операционной системы.
-            Ещё можно посмотреть ссылки:
-            https://msdn.microsoft.com/en-us/library/vs/alm/dd757624(v=vs.85).aspx
-            https://users.livejournal.com/-winnie/151099.html
-            https://github.com/tebjan/TimerTool
-        */
-        timeBeginPeriod(1);
-        break;
-    case DLL_PROCESS_DETACH:
-        timeEndPeriod(1);
-        break;
-    }
-    return TRUE;
-}
-#endif // XRCORE_STATIC

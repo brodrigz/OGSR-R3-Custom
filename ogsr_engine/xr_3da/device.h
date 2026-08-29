@@ -275,6 +275,7 @@ public:
     void start(bool b_user_input);
     void stop();
     virtual void OnRender();
+    bool IsActive() const { return b_registered; }
 
     bool b_registered;
     bool b_need_user_input{};

@@ -233,6 +233,7 @@ void CCF_Skeleton::Calculate()
 BOOL CCF_Skeleton::_RayQuery(const collide::ray_defs& Q, collide::rq_results& R)
 {
     ZoneScoped;
+    ZoneValue(static_cast<uint64_t>(Q.range));
 
     // не будет тут обновлять стейт костей если мы не на основном потоке.
     // он тут или с прошлого кадра уже есть или даже если чуть кривой - не важно
@@ -282,6 +283,7 @@ CCF_Shape::CCF_Shape(CObject* _owner) : ICollisionForm(_owner, cftShape) {}
 BOOL CCF_Shape::_RayQuery(const collide::ray_defs& Q, collide::rq_results& R)
 {
     ZoneScoped;
+    ZoneValue(static_cast<uint64_t>(Q.range));
 
     // Convert ray into local model space
     Fvector dS, dD;

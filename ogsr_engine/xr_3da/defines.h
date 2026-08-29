@@ -26,7 +26,7 @@ ENGINE_API extern BOOL bDebug;
 // psDeviceFlags
 enum
 {
-    //rsFullscreen = (1ul << 0ul),
+    rsFullscreen = 1ul << 0ul,
     rsClearBB = (1ul << 1ul),
     rsVSync = (1ul << 2ul),
     //rsWireframe = (1ul << 3ul),
@@ -37,7 +37,7 @@ enum
     //rsConstantFPS = (1ul << 8ul),
     //rsDrawStatic = (1ul << 9ul),
     //rsDrawDynamic = (1ul << 10ul),
-    rsDisableObjectsAsCrows = (1ul << 11ul),
+    //rsDisableObjectsAsCrows = (1ul << 11ul),
     //rsOcclusionDraw = (1ul << 12ul),
     //rsRefresh60hz = (1ul << 13ul),
     rsHWInfo = (1ul << 14ul),

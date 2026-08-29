@@ -30,18 +30,21 @@ SGS* CResourceManager::_CreateGS(LPCSTR Name) { return CreateShader<SGS>(Name); 
 
 void CResourceManager::_DeleteGS(const SGS* GS) { DestroyShader(GS); }
 
-template <class T>
-BOOL reclaim(xr_vector<T*>& vec, const T* ptr)
+namespace
 {
-    auto it = vec.begin();
-    auto end = vec.end();
-    for (; it != end; ++it)
-        if (*it == ptr)
-        {
-            vec.erase(it);
-            return TRUE;
-        }
-    return FALSE;
+    template <class T>
+    bool reclaim(xr_vector<T*>& vec, const T* ptr)
+    {
+        auto it = vec.begin();
+        auto end = vec.end();
+        for (; it != end; ++it)
+            if (*it == ptr)
+            {
+                vec.erase(it);
+                return true;
+            }
+        return false;
+    }
 }
 
 //--------------------------------------------------------------------------------------------------------------
@@ -106,20 +109,13 @@ void CResourceManager::_DeletePass(const SPass* P)
 //--------------------------------------------------------------------------------------------------------------
 SVS* CResourceManager::_CreateVS(LPCSTR _name)
 {
-    string_path name;
-    xr_strcpy(name, _name);
-    if (0 == RImplementation.m_skinning)
-        xr_strcat(name, "_0");
-    if (1 == RImplementation.m_skinning)
-        xr_strcat(name, "_1");
-    if (2 == RImplementation.m_skinning)
-        xr_strcat(name, "_2");
-    if (3 == RImplementation.m_skinning)
-        xr_strcat(name, "_3");
-    if (4 == RImplementation.m_skinning)
-        xr_strcat(name, "_4");
-    const LPSTR N = LPSTR(name);
-    const map_VS::iterator I = m_vs.find(N);
+    xr_string res_name = _name;
+    if (Render->shader_option_skinning() >= 0)
+        res_name += "_" + std::to_string(Render->shader_option_skinning());
+    //res_name += RImplementation.GetShaderOptions();
+
+    LPCSTR name = res_name.c_str();
+    auto I = m_vs.find(name);
     if (I != m_vs.end())
         return I->second;
     else
@@ -157,13 +153,7 @@ SVS* CResourceManager::_CreateVS(LPCSTR _name)
         LPCSTR c_target = "vs_5_0";
         LPCSTR c_entry = "main";
 
-        // xrSimpodin: Для воды снизил версию до 4.1 потому что с ней фиксится баг с неподвижной водой. Не понятно почему так происходит и проблема решается таким странным
-        // способом. Можно было бы сменить c_entry на main_vs_4_1 но там куча шейдеров для воды сделано через инклуды и они не позволяют так сделать.
-        if (!strncmp(shName, "water", strlen("water")))
-        {
-            c_target = "vs_4_1";
-        }
-        else if (strbuf.find("main_vs_4_1") != decltype(strbuf)::npos)
+        if (strbuf.find("main_vs_4_1") != decltype(strbuf)::npos)
         {
             c_target = "vs_4_1";
             c_entry = "main_vs_4_1";
@@ -189,25 +179,27 @@ void CResourceManager::_DeleteVS(const SVS* vs)
 {
     if (0 == (vs->dwFlags & xr_resource_flagged::RF_REGISTERED))
         return;
-    const LPSTR N = LPSTR(*vs->cName);
-    const map_VS::iterator I = m_vs.find(N);
+
+    // R_ASSERT(Device.OnMainThread());
+
+    auto I = m_vs.find(vs->cName.c_str());
     if (I != m_vs.end())
     {
         m_vs.erase(I);
 
         for (const auto& iDecl : v_declarations)
         {
-            xr_map<ID3DBlob*, ID3DInputLayout*>::iterator iLayout = iDecl->vs_to_layout.find(vs->signature->signature);
+            auto iLayout = iDecl->vs_to_layout.find(vs->signature->signature);
             if (iLayout != iDecl->vs_to_layout.end())
             {
                 //	Release vertex layout
                 _RELEASE(iLayout->second);
-                iDecl->vs_to_layout.erase(iLayout);
+                iDecl->vs_to_layout.unsafe_erase(iLayout);
             }
         }
-        return;
     }
-    Msg("! ERROR: Failed to find compiled vertex-shader '%s'", *vs->cName);
+    else
+        Msg("! ERROR: Failed to find compiled vertex-shader [%s]", vs->cName.c_str());
 }
 
 //--------------------------------------------------------------------------------------------------------------
@@ -252,14 +244,7 @@ SPS* CResourceManager::_CreatePS(LPCSTR _name)
         LPCSTR c_target = "ps_5_0";
         LPCSTR c_entry = "main";
 
-        // xrSimpodin: Для воды снизил версию до 4.1 потому что с ней фиксится баг с неподвижной водой. Не понятно почему так происходит и проблема решается таким странным
-        // способом.
-        // Можно было бы сменить c_entry на main_ps_4_1 но там куча шейдеров для воды сделано через инклуды и они не позволяют так сделать.
-        if (!strncmp(shName, "water", strlen("water")))
-        {
-            c_target = "ps_4_1";
-        }
-        else if (strbuf.find("main_ps_4_1") != decltype(strbuf)::npos)
+        if (strbuf.find("main_ps_4_1") != decltype(strbuf)::npos)
         {
             c_target = "ps_4_1";
             c_entry = "main_ps_4_1";
@@ -611,17 +596,19 @@ dx10ConstantBuffer* CResourceManager::_CreateConstantBuffer(u32 context_id, ID3D
         }
     }
 
+    pTempBuffer->m_context_id = context_id;
     pTempBuffer->dwFlags |= xr_resource_flagged::RF_REGISTERED;
     v_constant_buffer[context_id].push_back(pTempBuffer);
     return pTempBuffer;
 }
-bool CResourceManager::_DeleteConstantBuffer(u32 context_id, const dx10ConstantBuffer* pBuffer)
+
+void CResourceManager::_DeleteConstantBuffer(u32 context_id, const dx10ConstantBuffer* pBuffer)
 {
     if (0 == (pBuffer->dwFlags & xr_resource_flagged::RF_REGISTERED))
-        return true;
+        return;
     if (reclaim(v_constant_buffer[context_id], pBuffer))
-        return true;
-    return false;
+        return;
+    Msg("! ERROR: Failed to find compiled constant buffer '%s' in context [%u]", pBuffer->cName.c_str(), context_id);
 }
 
 SInputSignature* CResourceManager::_CreateInputSignature(ID3DBlob* pBlob)

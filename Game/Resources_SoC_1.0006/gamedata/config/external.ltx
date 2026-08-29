@@ -17,10 +17,6 @@ forcibly_equivalent_slots = false
 ; Добавляет пункты переместить в каждый доступный слот.
 slots_extend_menu = true
 
-; Эффект раскачки оружия при движении.
-; Для работы требуется секция с названием wpn_bobbing_effector. Пример настроек находится чуть ниже.
-wpn_bobbing = true
-
 ; Показывать полоску состояния предметов в инвентаре, на его иконке.
 ; Включает поддержку аттрибута condition_progress_bar для dragdrop элементов
 ; и статиков condition_progess_bar и cell_item_text.
@@ -82,7 +78,7 @@ gd_master_only = false
 
 ; Включить авторастягиваемые прицельные сетки. Для этой опции текстуры прицельных сеток должны иметь разрешение 1600x1000 (либо любое другое с таким же соотношением?).
 ; Текстуры сеток будут автоматически подстраиваться под любое разрешение экрана.
-scope_textures_autoresize = true
+scope_textures_autoresize = false
 
 ; Поддержка текстурных прицелов в ЗП стиле, когда scope_texture указывает на структуру в scopes.xml
 ; Поддержка расширена в виде wpn_crosshair_fallback, который будет использоваться для всех прицелов, который не нашли в scopes.xml
@@ -233,7 +229,7 @@ select_mode_1342 = true
 ;spot_type = red_location
 
 
-; Настройки для wpn_bobbing
+; Настройки для эффекта раскачки оружия при движении, который включается по консольной команде g_weapon_bobbing
 [wpn_bobbing_effector]
 controller_amplitude = 0.002
 limp_amplitude = 0.011

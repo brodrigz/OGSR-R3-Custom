@@ -145,8 +145,6 @@ public:
 
 public:
     // options
-    bool hud_loading{};
-    s32 m_skinning;
     u32 m_SMAPSize;
 
     // data
@@ -163,7 +161,12 @@ public:
     virtual void level_Load(IReader*) = 0;
     virtual void level_Unload() = 0;
 
-    void shader_option_skinning(s32 mode) { m_skinning = mode; }
+    void shader_option_skinning(s32 mode);
+    s32 shader_option_skinning();
+
+    void shader_option_hud_loading(bool t);
+    bool shader_option_hud_loading();
+
     virtual HRESULT shader_compile(LPCSTR name, DWORD const* pSrcData, UINT SrcDataLen, LPCSTR pFunctionName, LPCSTR pTarget, DWORD Flags, void*& result) = 0;
 
     // Information

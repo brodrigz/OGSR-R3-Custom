@@ -5,6 +5,8 @@
 
 #include "../xrRenderDX10/StateManager/dx10State.h"
 
+#include <concurrent_unordered_map.h>
+
 #pragma pack(push, 4)
 
 //////////////////////////////////////////////////////////////////////////
@@ -88,7 +90,7 @@ typedef resptr_core<SState, resptr_base<SState>> ref_state;
 struct ECORE_API SDeclaration : public xr_resource_flagged
 {
     //	Maps input signature to input layout
-    xr_map<ID3DBlob*, ID3DInputLayout*> vs_to_layout;
+    concurrency::concurrent_unordered_map<ID3DBlob*, ID3DInputLayout*> vs_to_layout;
     xr_vector<D3D_INPUT_ELEMENT_DESC> dx10_dcl_code;
 
     //	Use this for DirectX10 to cache DX9 declaration for comparison purpose only

@@ -133,7 +133,7 @@ CInventory* CTrade::GetPartnerInventory() { return &GetTradeInv(pPartner); }
 
 CInventoryOwner* CTrade::GetPartner() { return pPartner.inv_owner; }
 
-u32 CTrade::GetItemPrice(PIItem pItem, bool b_buying)
+u32 CTrade::GetItemPrice(PIItem pItem, bool b_buying) const
 {
     // computing base_cost
     float base_cost = (float)pItem->Cost();

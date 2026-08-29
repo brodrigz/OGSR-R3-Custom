@@ -316,7 +316,7 @@ void CHudItem::UpdateCL()
         }
     }
 
-    AllowHudBobbing((Core.Features.test(xrCore::Feature::wpn_bobbing) && allow_bobbing) || (g_actor && g_actor->PsyAuraAffect));
+    AllowHudBobbing((psActorFlags.test(AF_WEAPON_BOBBING) && allow_bobbing) || (g_actor && g_actor->PsyAuraAffect));
 
     TimeLockAnimation();
 }

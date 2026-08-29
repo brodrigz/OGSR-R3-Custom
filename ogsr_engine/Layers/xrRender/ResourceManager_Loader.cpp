@@ -139,10 +139,8 @@ void CResourceManager::LoadShaderLtxFile(LPCSTR fname)
 
     CInifile ini(ini_path);
 
-    for (const auto& it : ini.sections())
+    for (const auto& name : ini.sections_ordered() | std::views::keys)
     {
-        auto& name = it.first;
-
         const CLASS_ID cls = ini.r_clsid(name, "class");
         const u16 version = ini.r_u16(name, "version");
 

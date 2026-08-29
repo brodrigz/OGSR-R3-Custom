@@ -39,6 +39,20 @@ IGame_Level::~IGame_Level()
     Device.seqFrame.Remove(this);
     CCameraManager::ResetPP();
 
+    ///////////////////////////////////////////
+    Sound->set_geometry_occ(nullptr);
+    Sound->set_handler(nullptr);
+
+    /*
+    Device.DumpResourcesMemoryUsage();
+
+    u32 m_base = 0, c_base = 0, m_lmaps = 0, c_lmaps = 0;
+    if (Device.m_pRender)
+        Device.m_pRender->ResourcesGetMemoryUsage(m_base, c_base, m_lmaps, c_lmaps);
+
+    Msg("* [ D3D ]: textures[%d K]", (m_base + m_lmaps) / 1024);
+    */
+
     g_pGameLevel = nullptr;
 
     xr_delete(g_hud);
@@ -59,7 +73,6 @@ void IGame_Level::net_Stop()
 }
 
 //-------------------------------------------------------------------------------------------
-
 BOOL IGame_Level::Load(u32 dwNum)
 {
     // Initialize level data

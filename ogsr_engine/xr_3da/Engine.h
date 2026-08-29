@@ -4,19 +4,8 @@
 
 #pragma once
 
-// you must define ENGINE_BUILD then building the engine itself
-// and not define it if you are about to build DLL
-#ifdef XRENGINE_STATIC
 #define DLL_API
 #define ENGINE_API
-#elif defined ENGINE_BUILD
-#define DLL_API __declspec(dllimport)
-#define ENGINE_API __declspec(dllexport)
-#else
-#define DLL_API __declspec(dllexport)
-#define ENGINE_API __declspec(dllimport)
-#endif
-
 #define ECORE_API
 
 // TODO: this should be in render configuration

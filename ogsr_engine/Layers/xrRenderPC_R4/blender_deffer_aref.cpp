@@ -115,6 +115,7 @@ void CBlender_deffer_aref::Compile(CBlender_Compile& C)
             break;
 
         case SE_R2_SHADOW: // smap
+        case SE_R2_SHADOW_LIGHTS:
             C.r_Pass("shadow_direct_base_aref", "shadow_direct_base_aref", FALSE, TRUE, TRUE, FALSE);
             C.r_dx10Texture("s_base", C.L_textures[0]);
             C.r_dx10Sampler("smp_base");

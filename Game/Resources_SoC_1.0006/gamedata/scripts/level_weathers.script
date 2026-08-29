@@ -1,6 +1,6 @@
 
 
-local MIN_WIND, MAX_WIND, WIND_STEP, WIND_UPDATE_MINUTES = 300, 900, 50, 1
+local MIN_WIND, MAX_WIND, WIND_STEP, WIND_UPDATE_MINUTES = 150, 650, 50, 1
 
 if not math.clamp then
 	math.clamp = function( n, min, max )

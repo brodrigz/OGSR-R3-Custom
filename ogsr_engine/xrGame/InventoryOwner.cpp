@@ -327,17 +327,13 @@ void CInventoryOwner::spawn_supplies()
     if (use_bolts())
         Level().spawn_item("bolt", game_object->Position(), game_object->ai_location().level_vertex_id(), game_object->ID());
 
-    if (!ai().get_alife())
-    {
-        CSE_Abstract* abstract = Level().spawn_item("device_pda", game_object->Position(), game_object->ai_location().level_vertex_id(), game_object->ID(), true);
-        CSE_ALifeItemPDA* pda = smart_cast<CSE_ALifeItemPDA*>(abstract);
-        R_ASSERT(pda);
-        pda->m_original_owner = (u16)game_object->ID();
-        NET_Packet P;
-        abstract->Spawn_Write(P, TRUE);
-        Level().Send(P, net_flags(TRUE));
-        F_entity_Destroy(abstract);
-    }
+    // эта штука в игре реально никогда не вызывается из за ai().get_alife()
+    // реально спаун отрабатывает через CSE_ALifeObject spawn_supplies
+
+    if (ai().get_alife())
+        return;
+
+    FATAL(__FUNCTION__ " call!");
 }
 
 extern const xr_token* GetLanguagesToken();

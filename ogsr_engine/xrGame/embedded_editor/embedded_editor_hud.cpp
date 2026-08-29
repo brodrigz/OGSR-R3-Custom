@@ -51,6 +51,7 @@ void CImGuiHudEditorWnd::Render()
 		ImGui::DragFloat3("fire_point 0",					(float*)&item->m_measures.m_fire_point_offset[0],	drag_intensity, NULL, NULL, "%.6f");
 		ImGui::DragFloat3("fire_point2 0",					(float*)&item->m_measures.m_fire_point2_offset[0],	drag_intensity, NULL, NULL, "%.6f");
 		ImGui::DragFloat3("shell_point 0",					(float*)&item->m_measures.m_shell_point_offset[0],	drag_intensity, NULL, NULL, "%.6f");
+        ImGui::DragFloat3("shoot_point 0",                  (float*)&item->m_measures.m_shoot_point_offset[0],  drag_intensity, NULL, NULL, "%.6f");
 
         if (Wpn)
         {
@@ -84,6 +85,7 @@ void CImGuiHudEditorWnd::Render()
 		ImGui::DragFloat3("fire_point 1",			(float*)&item->m_measures.m_fire_point_offset[0],	drag_intensity, NULL, NULL, "%.6f");
 		ImGui::DragFloat3("fire_point2 1",			(float*)&item->m_measures.m_fire_point2_offset[0],	drag_intensity, NULL, NULL, "%.6f");
 		ImGui::DragFloat3("shell_point 1",			(float*)&item->m_measures.m_shell_point_offset[0],	drag_intensity, NULL, NULL, "%.6f");
+
     }
 
     if (ImGui::Button("Save"))

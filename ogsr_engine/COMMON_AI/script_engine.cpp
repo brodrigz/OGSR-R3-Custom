@@ -442,14 +442,13 @@ void CScriptEngine::LogTable(lua_State* l, LPCSTR S, int level)
 
 void CScriptEngine::LogVariable(lua_State* l, const char* name, int level)
 {
-    const char* type;
-    int ntype = lua_type(l, -1);
-    type = lua_typename(l, ntype);
+    const int ntype = lua_type(l, -1);
+    const char* type = lua_typename(l, ntype);
 
     auto tabBuffer = std::make_unique<char[]>(level + 1);
     memset(tabBuffer.get(), '\t', level);
 
-    char value[128];
+    string128 value{};
 
     switch (ntype)
     {
@@ -461,7 +460,7 @@ void CScriptEngine::LogVariable(lua_State* l, const char* name, int level)
 
     case LUA_TBOOLEAN: xr_sprintf(value, "%s", lua_toboolean(l, -1) ? "true" : "false"); break;
 
-    case LUA_TSTRING: xr_sprintf(value, "%.127s", lua_tostring(l, -1)); break;
+    case LUA_TSTRING: std::snprintf(value, sizeof(value), "%s", lua_tostring(l, -1)); break;
 
     case LUA_TTABLE:
         if (level <= 3)
@@ -472,7 +471,7 @@ void CScriptEngine::LogVariable(lua_State* l, const char* name, int level)
         }
         else
         {
-            xr_sprintf(value, "[...]");
+            xr_strcpy(value, "[...]");
         }
         break;
 
@@ -498,9 +497,10 @@ void CScriptEngine::LogVariable(lua_State* l, const char* name, int level)
             // Dump class and element pointer if available
             if (const auto objectClass = obj->crep())
             {
-                auto cpp_name = objectClass->type()->name();
+                const char* cpp_name = objectClass->type()->name();
+                const char* class_name = objectClass->name();
 
-                xr_sprintf(value, "(%s): %p", cpp_name ? cpp_name : objectClass->name(), obj->ptr());
+                std::snprintf(value, sizeof(value), "(%s): %p", cpp_name ? cpp_name : (class_name ? class_name : "nullptr"), obj->ptr());
             }
             else
                 xr_strcpy(value, "[not available]");

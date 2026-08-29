@@ -27,10 +27,13 @@ constexpr LPCSTR screenshots = "$screenshots$";
 constexpr LPCSTR logs = "$logs$";
 
 constexpr LPCSTR mod_dir = "$mod_dir$";
+constexpr const char* localization_dir{"$localization$"};
 
 constexpr LPCSTR game_sounds_reference = "$game_sounds_reference$";
 constexpr LPCSTR game_textures_reference = "$game_textures_reference$";
 constexpr LPCSTR game_meshes_reference = "$game_meshes_reference$";
+
+constexpr const char* user_ltx{"user_ogsr.ltx"};
 }
 
 namespace fsgame::level_files

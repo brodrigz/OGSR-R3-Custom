@@ -32,12 +32,12 @@ void CEnvironment::RenderClouds(CBackend& cmd_list)
     m_pRender->RenderClouds(cmd_list, *this);
 }
 
-void CEnvironment::RenderFlares(CBackend& cmd_list)
+void CEnvironment::RenderFlares(CBackend& cmd_list, BOOL bSun, BOOL bFlares, BOOL bGradient)
 {
     if (nullptr == g_pGameLevel)
         return;
-    // 1
-    eff_LensFlare->Render(cmd_list, FALSE, TRUE, TRUE);
+
+    eff_LensFlare->Render(cmd_list, bSun, bFlares, bGradient);
 }
 
 void CEnvironment::RenderLast(CBackend& cmd_list)

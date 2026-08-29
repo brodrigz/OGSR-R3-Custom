@@ -415,11 +415,6 @@ void CLensFlare::OnFrame(shared_str id)
 
 void CLensFlare::Render(CBackend& cmd_list, BOOL bSun, BOOL bFlares, BOOL bGradient)
 {
-#pragma todo("Simp: движковый флар отключен, т.к сейчас сделан шейдерный.")
-    //extern int ps_lens_flare;
-    //if (!ps_lens_flare)
-        bFlares = false;
-
     if (!bRender)
         return;
     if (!m_Current)

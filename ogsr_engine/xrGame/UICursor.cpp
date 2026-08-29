@@ -75,16 +75,15 @@ void CUICursor::UpdateCursorPosition(const int _dx, const int _dy)
 
     if (m_b_use_win_cursor)
     {
-        Ivector2 pti{};
+        const bool is_fs = psDeviceFlags.test(rsFullscreen);
 
-        GetCursorPos((LPPOINT)&pti);
+        POINT pti{};
+        GetCursorPos(&pti);
+        if (Device.m_hWnd)
+            ScreenToClient(Device.m_hWnd, &pti);
 
-        HWND hwnd = Device.m_hWnd;
-        if (hwnd)
-            ScreenToClient(hwnd, (LPPOINT)&pti);
-
-        vPos.x = (float)pti.x * (UI_BASE_WIDTH / (float)Device.dwWidth);
-        vPos.y = (float)pti.y * (UI_BASE_HEIGHT / (float)Device.dwHeight);
+        vPos.x = static_cast<float>(pti.x) * (UI_BASE_WIDTH / static_cast<float>(is_fs ? screen_size_x : Device.dwWidth));
+        vPos.y = static_cast<float>(pti.y) * (UI_BASE_HEIGHT / static_cast<float>(is_fs ? screen_size_y : Device.dwHeight));
     }
     else
     {
@@ -104,5 +103,5 @@ void CUICursor::SetUICursorPosition(const Fvector2& pos)
     const int x = iFloor(vPos.x / (UI_BASE_WIDTH / (float)Device.dwWidth));
     const int y = iFloor(vPos.y / (UI_BASE_HEIGHT / (float)Device.dwHeight));
 
-    SetCursorPos(x, y);
+    ::SetCursorPos(x, y);
 }

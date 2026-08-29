@@ -68,12 +68,6 @@ SDeclaration::~SDeclaration()
 {
     DEV->_DeleteDecl(this);
 
-    xr_map<ID3DBlob*, ID3DInputLayout*>::iterator iLayout;
-    iLayout = vs_to_layout.begin();
-    for (; iLayout != vs_to_layout.end(); ++iLayout)
-    {
-        //	Release vertex layout
-        _RELEASE(iLayout->second);
-    }
-
+    for (auto* layout : vs_to_layout | std::views::values)
+        _RELEASE(layout); // Release vertex layout
 }

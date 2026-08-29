@@ -69,10 +69,12 @@ public:
     IC void syncronize() const
     {
         if (S_READY != status)
+        {
             Log("! WARNING: syncronized CDB::query");
 
-        while (S_READY != status)
-            YieldProcessor();
+            while (S_READY != status)
+                YieldProcessor();
+        }
     }
 
     void build(const Fvector* V, const size_t Vcnt, const TRI* T, const size_t Tcnt, build_callback* bc = nullptr, void* bcp = nullptr);

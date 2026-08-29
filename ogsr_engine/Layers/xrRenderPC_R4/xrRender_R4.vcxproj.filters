@@ -634,6 +634,9 @@
     <ClInclude Include="..\xrRenderDX10\imgui\Stratum2_Bold.hpp">
       <Filter>imgui_render\fonts</Filter>
     </ClInclude>
+    <ClInclude Include="..\xrRenderDX10\imgui\imgui_styles.hpp">
+      <Filter>imgui_render</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">

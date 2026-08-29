@@ -708,11 +708,6 @@ void CConsole::Hide()
 		return;
 	}
 
-	//if (pInput->exclusive_mode())
-	//{
-	//	SetCursorPos(m_mouse_pos.x, m_mouse_pos.y);
-	//}
-
 	bVisible = false;
 	reset_selected_tip();
 	update_tips();

@@ -226,11 +226,9 @@ bool SoundEnvironment_LIB::Save(LPCSTR f_name) const
 
 void SoundEnvironment_LIB::LoadIni(CInifile* ini)
 {
-    for (const auto& it : ini->sections())
+    for (const auto& name : ini->sections_ordered() | std::views::keys)
     {
         CSoundRender_Environment* E = xr_new<CSoundRender_Environment>();
-
-        auto& name = it.first;
 
         E->loadIni(ini, name.c_str());
 

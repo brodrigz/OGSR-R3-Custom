@@ -29,12 +29,15 @@ void CTextureDescrMngr::LoadLTX()
         {
             auto& Sect = ini.r_section("association");
 
-            m_texture_details.reserve(m_texture_details.size() + Sect.Data.size());
-            m_detail_scalers.reserve(m_detail_scalers.size() + Sect.Data.size());
+            m_texture_details.reserve(m_texture_details.size() + Sect.Ordered_Data.size());
+            m_detail_scalers.reserve(m_detail_scalers.size() + Sect.Ordered_Data.size());
 
-            for (const auto& [key, value] : Sect.Data)
+            for (const auto& [key, value] : Sect.Ordered_Data)
             {
-                texture_desc& desc = m_texture_details[key];
+                auto low_key = key;
+                xr_strlwr(low_key);
+
+                texture_desc& desc = m_texture_details[low_key];
                 if (desc.m_assoc)
                     xr_delete(desc.m_assoc);
                 desc.m_assoc = xr_new<texture_assoc>();
@@ -61,11 +64,14 @@ void CTextureDescrMngr::LoadLTX()
         {
             auto& Sect = ini.r_section("specification");
 
-            m_texture_details.reserve(m_texture_details.size() + Sect.Data.size());
+            m_texture_details.reserve(m_texture_details.size() + Sect.Ordered_Data.size());
 
-            for (const auto& [key, value] : Sect.Data)
+            for (const auto& [key, value] : Sect.Ordered_Data)
             {
-                texture_desc& desc = m_texture_details[key];
+                auto low_key = key;
+                xr_strlwr(low_key);
+
+                texture_desc& desc = m_texture_details[low_key];
                 if (desc.m_spec)
                     xr_delete(desc.m_spec);
                 desc.m_spec = xr_new<texture_spec>();

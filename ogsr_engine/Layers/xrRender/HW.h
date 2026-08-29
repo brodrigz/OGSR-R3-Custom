@@ -53,6 +53,10 @@ public:
     virtual void OnAppActivate();
     virtual void OnAppDeactivate();
 
+    void SetFullscreenState(bool fullscreen);
+    void ApplyBorderlessFullscreen();
+    void ApplyWindowedMode();
+
     ICF ID3D11DeviceContext* get_context(u32 context_id) const
     {
         ASSERT_FMT(context_id < R__NUM_CONTEXTS, "wrong context id: [%u]", context_id);

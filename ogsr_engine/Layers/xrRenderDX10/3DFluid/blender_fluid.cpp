@@ -152,7 +152,7 @@ void BindConstants(CBlender_Compile& C)
 }
 void SetupSamplers(CBlender_Compile& C)
 {
-    int smp = C.r_dx10Sampler("samPointClamp");
+    u32 smp = C.r_dx10Sampler("samPointClamp");
     if (smp != u32(-1))
     {
         C.i_dx10Address(smp, D3DTADDRESS_CLAMP);

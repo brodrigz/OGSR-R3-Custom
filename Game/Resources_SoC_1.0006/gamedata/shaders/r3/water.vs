@@ -2,6 +2,11 @@
 #include "shared\waterconfig.h"
 #include "shared\watermove.h"
 
+uniform float4 wind_params;
+
+//#define NEW_WATER_MOVE
+#define W_WATER_SCALE 1.f //Чем меньше значение - тем вода более "растянута", чем больше - тем более "cжата"
+
 struct v_vert
 {
     float4 P : POSITION; // (float,float,float,1)
@@ -49,8 +54,16 @@ vf main(v_vert v)
 
     o.v2point_w = P - eye_position;
     o.tbase = unpack_tc_base(v.uv, v.T.w, v.B.w); // copy tc
+
+#ifdef NEW_WATER_MOVE
+    const float wind_speed = max(wind_params.y, 100.f);
+    o.tnorm0.xy = float2(o.tbase.x, o.tbase.y + timers.z * (wind_speed * 0.0005f)); //скорость течения
+    o.tnorm0.zw = float2(o.tbase.x, o.tbase.y + timers.z * (wind_speed * /*-*/0.0005f)); //Если убрать минус - течение будет в одну сторону, как у реки.
+    o.tnorm0 *= W_WATER_SCALE;
+#else
     o.tnorm0.xy = watermove_tc(o.tbase * W_DISTORT_BASE_TILE_0, P.xz, W_DISTORT_AMP_0);
     o.tnorm0.zw = watermove_tc(o.tbase * W_DISTORT_BASE_TILE_1, P.xz, W_DISTORT_AMP_1);
+#endif
 
     // Calculate the 3x3 transform from tangent space to eye-space
     // TangentToEyeSpace = object2eye * tangent2object

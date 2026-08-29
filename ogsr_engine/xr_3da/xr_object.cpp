@@ -418,3 +418,33 @@ void CObject::setDestroy(BOOL _destroy)
     else
         VERIFY(!g_pGameLevel->Objects.registered_object_to_destroy(this));
 }
+
+Fvector CObject::get_new_local_point_on_mesh(u16& bone_id) const
+{
+    bone_id = u16(-1);
+    return Fvector().random_dir().mul(.7f);
+}
+
+Fvector CObject::get_last_local_point_on_mesh(Fvector const& local_point, u16 const bone_id) const
+{
+    VERIFY(bone_id == u16(-1));
+
+    Fvector result;
+    // Fetch data
+    Fmatrix mE;
+    const Fmatrix& M = XFORM();
+    const Fbox& B = CFORM()->getBBox();
+
+    // Build OBB + Ellipse and X-form point
+    Fvector c, r;
+    Fmatrix T, mR, mS;
+    B.getcenter(c);
+    B.getradius(r);
+    T.translate(c);
+    mR.mul_43(M, T);
+    mS.scale(r);
+    mE.mul_43(mR, mS);
+    mE.transform_tiny(result, local_point);
+
+    return result;
+}

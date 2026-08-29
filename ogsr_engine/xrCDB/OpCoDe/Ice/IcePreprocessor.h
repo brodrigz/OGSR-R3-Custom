@@ -70,15 +70,8 @@
 		#define THIS_FILE			__FILE__
 	#endif
 
-	#ifndef ICE_NO_DLL
-		#ifdef ICECORE_EXPORTS
-			#define ICECORE_API			__declspec(dllexport)
-		#else
-			#define ICECORE_API			__declspec(dllimport)
-		#endif
-	#else
-			#define ICECORE_API
-	#endif
+#define ICECORE_API
+
 
 	// Don't override new/delete
 //	#define DEFAULT_NEWDELETE

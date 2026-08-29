@@ -12,23 +12,6 @@ function l_special  (shader, t_base, t_second, t_detail)
 	shader: dx10sampler ("smp_linear")
 end
 
---[[
-function normal_hq(shader, t_base, t_second, t_detail)
-  shader:begin    ("model_env_hq","model_env_hq")
-      : fog       (true)
-      : zb        (true,false)
-      : blend     (true,blend.srcalpha,blend.invsrcalpha)
-      : aref      (true,0)
-      : sorting   (3,true)
-  shader:sampler  ("s_base")       :texture    (t_base)
-  shader:sampler  ("s_env")        :texture    ("sky\\sky_5_cube") : clamp()
-  shader:sampler  ("s_lmap")       :texture  ("$user$projector")
-    : clamp    ()
-    : f_linear   ()
-    : project     (true)
-end
-]]
-
 function normal   (shader, t_base, t_second, t_detail)
   shader:begin    ("model_env_lq","model_env_lq")
       : fog       (true)
@@ -43,4 +26,5 @@ function normal   (shader, t_base, t_second, t_detail)
 
 	shader: dx10sampler ("smp_base")
 	shader: dx10sampler ("smp_rtlinear")
+    shader:dx10sampler("smp_nofilter")
 end

@@ -15,6 +15,7 @@
 #include "imgui_impl_dx11.h"
 #include "imgui_impl_win32.h"
 #include "imgui/Stratum2_Bold.hpp"
+#include "imgui/imgui_styles.hpp"
 
 #include <dxgi1_6.h>
 
@@ -110,7 +111,7 @@ void CHW::CreateSwapChain2(HWND hw)
     desc.AlphaMode = DXGI_ALPHA_MODE_IGNORE;
 
     desc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD; // DXGI_SWAP_EFFECT_FLIP_DISCARD or DXGI_SWAP_EFFECT_DISCARD
-    desc.Scaling = DXGI_SCALING_NONE;
+    desc.Scaling = DXGI_SCALING_STRETCH;
 
     desc.BufferCount = desc.SwapEffect == DXGI_SWAP_EFFECT_FLIP_DISCARD ? r_back_buffer_count : 1; // For DXGI_SWAP_EFFECT_FLIP_DISCARD we need at least two
     desc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
@@ -125,8 +126,7 @@ void CHW::CreateSwapChain2(HWND hw)
     DXGI_SWAP_CHAIN_FULLSCREEN_DESC fullscreen_desc{};
     fullscreen_desc.Windowed = true;
 
-    fullscreen_desc.RefreshRate.Numerator = 60;
-    fullscreen_desc.RefreshRate.Denominator = 1;
+    fullscreen_desc.RefreshRate = {0, 1};
 
     IDXGIFactory2* pFactory2{};
     m_pAdapter->GetParent(IID_PPV_ARGS(& pFactory2));
@@ -208,7 +208,7 @@ void CHW::CreateDevice(HWND m_hWnd)
      // Register immediate context in profiler
     profiler_ctx = TracyD3D11Context(pDevice, pContext);
 
-    UpdateWindowProps(m_hWnd);
+    SetFullscreenState(psDeviceFlags.test(rsFullscreen));
 
     const size_t memory = Desc.DedicatedVideoMemory;
     Msg("*     Texture memory: %d M", memory / (1024 * 1024));
@@ -267,7 +267,6 @@ void CHW::CreateDevice(HWND m_hWnd)
     FS.update_path(fname, fsgame::app_data_root, "imgui.ltx");
     CInifile imgui_custom_ltx{fname};
     const u32 style_idx = READ_IF_EXISTS(reinterpret_cast<CInifile*>(&imgui_custom_ltx), r_u32, "im_style", "theme_selected", 0);
-    void SetupStyle(const u32);
     SetupStyle(style_idx);
 
     ImGui_ImplWin32_Init(m_hWnd);
@@ -329,10 +328,9 @@ void CHW::ResetDevice(HWND m_hWnd)
     SelectResolution(desc.Width, desc.Height);
 
     CHK_DX(m_pSwapChain->ResizeTarget(&desc));
-    CHK_DX(m_pSwapChain->ResizeBuffers(cd.BufferCount, desc.Width, desc.Height, desc.Format
-        , DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING | DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT));
+    CHK_DX(m_pSwapChain->ResizeBuffers(cd.BufferCount, desc.Width, desc.Height, desc.Format, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING | DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT));
 
-    UpdateWindowProps(m_hWnd);
+    SetFullscreenState(psDeviceFlags.test(rsFullscreen));
 
     Device.ShowMainWindow();
 
@@ -364,14 +362,10 @@ void CHW::SelectResolution(u32& dwWidth, u32& dwHeight)
 
 void CHW::OnAppActivate()
 {
-    //const HWND insertPos = IsDebuggerPresent() ? HWND_NOTOPMOST : HWND_TOPMOST;
-
-    //SetWindowPos(Device.m_hWnd, insertPos, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 }
 
 void CHW::OnAppDeactivate()
 {
-    //SetWindowPos(Device.m_hWnd, HWND_NOTOPMOST , 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 }
 
 bool CHW::ThisInstanceIsGlobal() const
@@ -433,11 +427,10 @@ void CHW::DumpVideoMemoryUsage() const
 
 void CHW::UpdateWindowProps(HWND m_hWnd) const
 {
-    LONG_PTR dwWindowStyle = 0;
+    LONG_PTR dwWindowStyle{};
 
     // Set window properties depending on what mode were in.
     static const bool bBordersMode = !!strstr(Core.Params, "-draw_borders");
-    //dwWindowStyle = WS_VISIBLE;
     if (bBordersMode)
         dwWindowStyle |= WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_MINIMIZEBOX;
 
@@ -487,8 +480,7 @@ void CHW::UpdateWindowProps(HWND m_hWnd) const
         , m_rcWindowBounds.top + fYOffset
         , (m_rcWindowBounds.right - m_rcWindowBounds.left)
         , (m_rcWindowBounds.bottom - m_rcWindowBounds.top)
-        
-        , /*SWP_SHOWWINDOW | */SWP_NOCOPYBITS | SWP_DRAWFRAME);
+        , SWP_NOCOPYBITS | SWP_FRAMECHANGED);
 }
 
 struct _uniq_mode
@@ -609,4 +601,48 @@ void LogD3D11DebugMessages()
     {
         Msg("!![%s] Failed infoQueue", __FUNCTION__);
     }
+}
+
+void CHW::SetFullscreenState(bool fullscreen)
+{
+    if (!m_pSwapChain)
+        return;
+
+    if (fullscreen)
+    {
+        ApplyBorderlessFullscreen();
+    }
+    else
+    {
+        ApplyWindowedMode();
+    }
+}
+
+void CHW::ApplyBorderlessFullscreen()
+{
+    HMONITOR hMonitor = MonitorFromWindow(Device.m_hWnd, MONITOR_DEFAULTTOPRIMARY);
+    MONITORINFO mi{};
+    mi.cbSize = sizeof(MONITORINFO);
+    GetMonitorInfo(hMonitor, &mi);
+
+    const int desktopWidth = mi.rcMonitor.right - mi.rcMonitor.left;
+    const int desktopHeight = mi.rcMonitor.bottom - mi.rcMonitor.top;
+
+    LONG_PTR dwWindowStyle{};
+    SetWindowLongPtr(Device.m_hWnd, GWL_STYLE, dwWindowStyle);
+
+    SetWindowPos(Device.m_hWnd, HWND_NOTOPMOST, mi.rcMonitor.left, mi.rcMonitor.top, desktopWidth, desktopHeight, SWP_NOCOPYBITS | SWP_FRAMECHANGED);
+}
+
+void CHW::ApplyWindowedMode()
+{
+    const u32 gameWidth = psCurrentVidMode[0];
+    const u32 gameHeight = psCurrentVidMode[1];
+
+    CHK_DX(m_pSwapChain->ResizeBuffers(m_ChainDesc.BufferCount, gameWidth, gameHeight, m_ChainDesc.BufferDesc.Format, DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH | DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING | DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT));
+
+    m_ChainDesc.BufferDesc.Width = gameWidth;
+    m_ChainDesc.BufferDesc.Height = gameHeight;
+
+    UpdateWindowProps(Device.m_hWnd);
 }

@@ -332,8 +332,12 @@ static void save_mini_dump(_EXCEPTION_POINTERS* pExceptionInfo)
             ExInfo.ClientPointers = NULL;
 
             // write the dump
-            auto dump_flags = MINIDUMP_TYPE(MiniDumpNormal | MiniDumpFilterMemory | MiniDumpScanMemory);
-
+            auto dump_flags = (MINIDUMP_TYPE)(MiniDumpWithIndirectlyReferencedMemory | // Память, на которую указывают указатели со стека (вокруг места креша)
+                                                       MiniDumpWithProcessThreadData | // Информация о тредах процесса
+                                                       MiniDumpWithThreadInfo | // Доп. информация о тредах
+                                                       MiniDumpWithUnloadedModules | // Информация о загруженных DLL
+                                                       MiniDumpWithTokenInformation // Информация о режиме запуска процесса
+            );
             BOOL bOK = MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, dump_flags, &ExInfo, nullptr, nullptr);
             if (bOK)
                 Msg("--Saved dump file to [%s]", szDumpPath);
@@ -377,8 +381,39 @@ static void format_message(char* buffer, const size_t& buffer_size)
     }
 }
 
-static LONG WINAPI UnhandledFilter(_EXCEPTION_POINTERS* pExceptionInfo)
+#ifdef __SANITIZE_ADDRESS__
+extern "C" LONG __asan_unhandled_exception_filter(PEXCEPTION_POINTERS info);
+#endif
+
+static LONG WINAPI UnhandledFilter(PEXCEPTION_POINTERS pExceptionInfo)
 {
+#ifdef __SANITIZE_ADDRESS__
+    // In ASan builds, delegate to the ASan exception filter.
+    LONG status = __asan_unhandled_exception_filter(pExceptionInfo);
+    if (status != EXCEPTION_CONTINUE_SEARCH)
+        return status;
+#endif
+
+    // Tracks whether a thread has already entered UnhandledExceptionHandler.
+    static std::atomic<bool> have_crashed;
+
+    // This is a per-process handler. While this handler is being invoked, other
+    // threads are still executing as usual, so multiple threads could enter at
+    // the same time. Because we're in a crashing state, we shouldn't be doing
+    // anything that might cause allocations, call into kernel mode, etc. So, we
+    // don't want to take a critical section here to avoid simultaneous access to
+    // the global exception pointers in ExceptionInformation. Because the crash
+    // handler will record all threads, it's fine to simply have the second and
+    // subsequent entrants block here. They will soon be suspended by the crash
+    // handler, and then the entire process will be terminated below. This means
+    // that we won't save the exception pointers from the second and further
+    // crashes, but contention here is very unlikely, and we'll still have a stack
+    // that's blocked at this location.
+    if (have_crashed.exchange(true))
+    {
+        SleepEx(INFINITE, false);
+    }
+
     if (!error_after_dialog)
     {
         string1024 error_message;
@@ -397,6 +432,13 @@ static LONG WINAPI UnhandledFilter(_EXCEPTION_POINTERS* pExceptionInfo)
 
     return EXCEPTION_EXECUTE_HANDLER;
 }
+
+#ifndef __SANITIZE_ADDRESS__
+static LONG WINAPI vectored_handler(PEXCEPTION_POINTERS info)
+{
+    return info->ExceptionRecord->ExceptionCode == STATUS_HEAP_CORRUPTION ? UnhandledFilter(info) : EXCEPTION_CONTINUE_SEARCH;
+}
+#endif
 
 static void _terminate() //Вызывается при std::terminate()
 {
@@ -501,6 +543,15 @@ void xrDebug::_initialize()
     std::set_new_handler(&std_out_of_memory_handler);
 
     _set_purecall_handler(&pure_call_handler);
+
+    // Windows swallows heap corruption failures but we can intercept them with
+    // a vectored exception handler. Note that a vectored exception handler is
+    // not compatible with or generally helpful in ASAN builds (ASAN inserts a
+    // bad dereference at the beginning of the handler, leading to recursive
+    // invocation of the handler).
+#ifndef __SANITIZE_ADDRESS__
+    ::AddVectoredExceptionHandler(1ul, vectored_handler);
+#endif
 
     ::SetUnhandledExceptionFilter(UnhandledFilter);
 

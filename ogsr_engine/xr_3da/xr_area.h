@@ -7,6 +7,7 @@
 class ENGINE_API ISpatial;
 class ENGINE_API ICollisionForm;
 class ENGINE_API CObject;
+struct hdrCFORM;
 
 //-----------------------------------------------------------------------------------------------------------
 // Space Area

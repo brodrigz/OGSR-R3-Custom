@@ -107,13 +107,22 @@ void RELATION_REGISTRY::Action(CEntityAlive* from, CEntityAlive* to, ERelationAc
 
             //если мы атаковали персонажа или монстра, который
             //кого-то атаковал, то мы помогли тому, кто защищался
+            using GroupKey = std::tuple<int, int, int>;
+            xr_set<GroupKey> processed_groups;
             for (auto& it : fight_registry())
             {
                 if (it.attacker == to->ID() || it.defender == to->ID())
                 {
                     CAI_Stalker* defending_stalker = smart_cast<CAI_Stalker*>(Level().Objects.net_Find(it.attacker == to->ID() ? it.defender : it.attacker));
                     if (defending_stalker)
-                        Action(actor, defending_stalker, stalker ? FIGHT_HELP_HUMAN : FIGHT_HELP_MONSTER);
+                    {
+                        const GroupKey current_group = std::make_tuple(defending_stalker->g_Team(), defending_stalker->g_Squad(), defending_stalker->g_Group());
+                        if (!processed_groups.contains(current_group))
+                        {
+                            processed_groups.insert(current_group);
+                            Action(actor, defending_stalker, stalker ? FIGHT_HELP_HUMAN : FIGHT_HELP_MONSTER);
+                        }
+                    }
                 }
             }
         }

@@ -86,25 +86,24 @@ void CPortal::OnRender()
 //
 void CPortal::setup(const level_portal_data_t& data, const xr_vector<CSector*>& sectors)
 {
-    const auto* V = data.vertices.begin();
-    const auto vcnt = data.vertices.size();
     CSector* face = sectors[data.sector_front];
     CSector* back = sectors[data.sector_back];
 
     // calc sphere
     Fbox BB;
     BB.invalidate();
-    for (u32 v = 0; v < vcnt; v++)
-        BB.modify(V[v]);
+    for (const auto& v : data.vertices)
+        BB.modify(v);
     BB.getsphere(S.P, S.R);
 
-    poly.assign(V, vcnt);
+    const auto vcnt = data.vertices.size();
+    poly.assign(data.vertices.begin(), vcnt);
+
     pFace = face;
     pBack = back;
     r_marker = 0xffffffff;
 
-    Fvector N, T;
-    N.set(0, 0, 0);
+    Fvector N{}, T;
 
     u32 _cnt = 0;
     for (u32 i = 2; i < vcnt; i++)

@@ -37,10 +37,10 @@ void CPartition::load(IKinematics* V, LPCSTR model_name)
         xr_sprintf(buff, sizeof(buff), "part_%d", i);
 
         const auto& S = ini->r_section(buff);
-        if (!S.Data.empty())
+        if (!S.Ordered_Data.empty())
             P[i].bones.clear();
 
-        for (const auto& [k, v] : S.Data)
+        for (const auto& [k, v] : S.Ordered_Data)
         {
             if (k == part_name)
                 P[i].Name = v;

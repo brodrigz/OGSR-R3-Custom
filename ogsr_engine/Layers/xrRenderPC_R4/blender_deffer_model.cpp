@@ -143,6 +143,7 @@ void CBlender_deffer_model::Compile(CBlender_Compile& C)
             C.r_End();
             break;
         case SE_R2_SHADOW: // smap
+        case SE_R2_SHADOW_LIGHTS:
             if (bAref)
             {
                 C.r_Pass("shadow_direct_model_aref", "shadow_direct_base_aref", FALSE, TRUE, TRUE, FALSE, D3DBLEND_ZERO, D3DBLEND_ONE, TRUE, 220);

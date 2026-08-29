@@ -53,7 +53,7 @@ HRESULT dx10State::Apply(CBackend& cmd_list) const
 
     // HACK to get current phase
     auto& dsgraph = RImplementation.get_context(context_id);
-    const bool smap = dsgraph.phase == CRender::PHASE_SMAP;
+    const bool smap = dsgraph.phase != CRender::PHASE_NORMAL;
 
     SSManager.VSApplySamplers(context_id, m_VSSamplers, smap);
     SSManager.PSApplySamplers(context_id, m_PSSamplers, smap);

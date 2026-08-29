@@ -111,8 +111,8 @@ SThunderboltCollection::SThunderboltCollection() {}
 void SThunderboltCollection::load(CInifile* pIni, CInifile* thunderbolts, LPCSTR sect)
 {
     section = sect;
-    int tb_count = pIni->line_count(sect);
-    for (int tb_idx = 0; tb_idx < tb_count; tb_idx++)
+    const u32 tb_count = pIni->line_count(sect);
+    for (u32 tb_idx = 0; tb_idx < tb_count; tb_idx++)
     {
         LPCSTR N, V;
         if (pIni->r_line(sect, tb_idx, &N, &V))
@@ -123,8 +123,8 @@ void SThunderboltCollection::load(CInifile* pIni, CInifile* thunderbolts, LPCSTR
 void SThunderboltCollection::load_shoc(CInifile* pIni, LPCSTR sect)
 {
     section = sect;
-    int tb_count = pIni->line_count(sect);
-    for (int tb_idx = 0; tb_idx < tb_count; tb_idx++)
+    const u32 tb_count = pIni->line_count(sect);
+    for (u32 tb_idx = 0; tb_idx < tb_count; tb_idx++)
     {
         LPCSTR N, V;
         if (pIni->r_line(sect, tb_idx, &N, &V))

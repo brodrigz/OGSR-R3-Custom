@@ -23,8 +23,8 @@ light::light(void) : ISpatial(g_SpatialSpace)
     cone = deg2rad(60.f);
     color.set(1, 1, 1, 1);
 
-    m_volumetric_intensity = 0.3;
-    m_volumetric_distance = 1;
+    m_volumetric_intensity = 0.2f;
+    m_volumetric_distance = 1.f;
 
     fBlend = 0;
 

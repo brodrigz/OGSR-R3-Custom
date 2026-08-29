@@ -151,6 +151,13 @@ extern ECORE_API int opt_shadow_geom;
 
 extern int r_back_buffer_count;
 
+enum
+{
+    old_style_flare,
+    new_shader_flare
+};
+extern u32 r_lens_flare_mode;
+
 enum : u64
 {
     R2FLAG_SUN = 1ull << 0,
@@ -161,7 +168,7 @@ enum : u64
     R2FLAGEXT_ENABLE_TESSELLATION = 1ull << 5,
     R2FLAGEXT_WIREFRAME = 1ull << 6,
     R2FLAGEXT_HOM_DEPTH_DRAW = 1ull << 7,
-    // = 1ull << 8,
+    R2FLAG_SMAP_LIGHTS_2SIDE = 1ull << 8,
     R2FLAGEXT_DISABLE_DYNAMIC = 1ull << 9,
     R2FLAGEXT_DISABLE_PARTICLES = 1ull << 10,
     R2FLAGEXT_DISABLE_HOM = 1ull << 11,
@@ -227,6 +234,8 @@ enum : u64
     R2FLAGEXT_SSFX_SHADOWS = 1ull << 57,
     R2FLAGEXT_SSFX_SSS = 1ull << 58,
     R2FLAGEXT_SMAP_LOW_LOD = 1ull << 59,
+    R2FLAGEXT_SHADER_CACHE = 1ull << 60,
+    R2FLAGEXT_DISABLE_PARTICLES_COLLISION = 1ull << 61,
 };
 
 extern void xrRender_initconsole();
@@ -236,7 +245,7 @@ enum
 {
     NO_AA,
     DLSS,
-    FSR2,
+    FSR3,
     TAA,
     SMAA,
 };

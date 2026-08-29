@@ -6,8 +6,7 @@
 
 #include "../xrRender/QueryHelper.h"
 
-#include <..\AMD_FSR2\build\native\include\ffx-fsr2-api\ffx_fsr2.h>
-#include <..\AMD_FSR2\build\native\include\ffx-fsr2-api\dx11\ffx_fsr2_dx11.h>
+#include "FidelityFX/host/ffx_fsr3.h"
 
 IC bool pred_sp_sort(ISpatial* _1, ISpatial* _2)
 {
@@ -16,7 +15,8 @@ IC bool pred_sp_sort(ISpatial* _1, ISpatial* _2)
     return d1 < d2;
 }
 
-#define BASE_FOV 67.f
+constexpr float PUDDLES_RENDER_RANGE_SQR{_sqr(150.f)};
+constexpr float BASE_FOV{67.f};
 
 // Aproximate, adjusted by fov, distance from camera to position (For right work when looking though binoculars and scopes)
 
@@ -290,38 +290,10 @@ void CRender::Render()
         return;
     }
 
-    if (ps_pnv_mode < 2 && (ps_r_pp_aa_mode == DLSS || ps_r_pp_aa_mode == FSR2 || ps_r_pp_aa_mode == TAA || ps_r2_ls_flags.test(R2FLAG_DBG_TAA_JITTER_ENABLE)))
+    if (ps_pnv_mode < 2 && (ps_r_pp_aa_mode == DLSS || ps_r_pp_aa_mode == FSR3 || ps_r_pp_aa_mode == TAA || ps_r2_ls_flags.test(R2FLAG_DBG_TAA_JITTER_ENABLE)))
     {
-        // Halton sequence generator
-        auto halton = [](const int index, const int base) {
-            float result = 0.0f;
-            float f = 1.0f / base;
-            int i = index;
-            while (i > 0)
-            {
-                result = result + f * (i % base);
-                i = static_cast<int>(std::floor(i / base));
-                f = f / base;
-            }
-            return result;
-        };
-
-        // Генерация jitter смещений для TAA
-        auto getHaltonJitterOffset = [&](float& jitterX, float& jitterY, const u32 frameIndex) {
-            jitterX = halton(frameIndex + 1, 2) - 0.5f;
-            jitterY = halton(frameIndex + 1, 3) - 0.5f;
-        };
-
-        int32_t jitterPhaseCount = 16;
-        if (ps_r_pp_aa_mode == FSR2)
-        {
-            jitterPhaseCount = ffxFsr2GetJitterPhaseCount(static_cast<int32_t>(Device.dwWidth), static_cast<int32_t>(Device.dwWidth));
-            ffxFsr2GetJitterOffset(&ps_r_taa_jitter_full.x, &ps_r_taa_jitter_full.y, Device.dwFrame, jitterPhaseCount);
-        }
-        else
-        {
-            getHaltonJitterOffset(ps_r_taa_jitter_full.x, ps_r_taa_jitter_full.y, Device.dwFrame);
-        }
+        auto jitterPhaseCount = ffxFsr3UpscalerGetJitterPhaseCount(static_cast<int32_t>(Device.dwWidth), static_cast<int32_t>(Device.dwWidth));
+        ffxFsr3UpscalerGetJitterOffset(&ps_r_taa_jitter_full.x, &ps_r_taa_jitter_full.y, Device.dwFrame, jitterPhaseCount);
 
         ps_r_taa_jitter.x = 2.0f * ps_r_taa_jitter_full.x / Device.dwWidth;
         ps_r_taa_jitter.y = -2.0f * ps_r_taa_jitter_full.y / Device.dwHeight;
@@ -565,9 +537,10 @@ void CRender::render_forward()
 
         if (ps_r2_ls_flags_ext.test(R2FLAGEXT_SSLR) && !fis_zero(Env.wetness_factor))
         {
+            const Fvector& cam_pos = Device.vCameraPositionSaved;
             for (const auto& puddle : current_level_puddles)
             {
-                if (!ViewBase.testSphere_dirty(puddle.xform.c, puddle.radius))
+                if (cam_pos.distance_to_sqr(puddle.xform.c) > PUDDLES_RENDER_RANGE_SQR || !ViewBase.testSphere_dirty(puddle.xform.c, puddle.radius))
                     continue;
 
                 cmd_list.set_Shader(Target->s_puddles);

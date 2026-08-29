@@ -110,6 +110,7 @@ BOOL CObjectSpace::RayPick(const Fvector& start, const Fvector& dir, float range
 BOOL CObjectSpace::_RayPick(const Fvector& start, const Fvector& dir, float range, rq_target tgt, rq_result& R, const CObject* ignore_object) const
 {
     ZoneScoped;
+    ZoneValue(static_cast<uint64_t>(range));
 
     R.O = nullptr;
     R.range = range;
@@ -163,7 +164,6 @@ BOOL CObjectSpace::RayQuery(collide::rq_results& dest, const collide::ray_defs& 
 BOOL CObjectSpace::_RayQuery(collide::rq_results& r_dest, const collide::ray_defs& R, collide::rq_callback* CB, LPVOID user_data, collide::test_callback* tb, const CObject* ignore_object) const
 {
     ZoneScoped;
-
     ZoneValue(static_cast<uint64_t>(R.range));
 
     // initialize query

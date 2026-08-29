@@ -115,36 +115,15 @@ void CHOM::Unload()
     xr_free(m_pTris);
 }
 
-class pred_fb
-{
-public:
-    occTri* m_pTris;
-    Fvector camera;
-
-public:
-    pred_fb(occTri* _t) : m_pTris(_t) {}
-    pred_fb(occTri* _t, Fvector& _c) : m_pTris(_t), camera(_c) {}
-    ICF bool operator()(const CDB::RESULT& _1, const CDB::RESULT& _2) const
-    {
-        const occTri& t0 = m_pTris[_1.id];
-        const occTri& t1 = m_pTris[_2.id];
-        return camera.distance_to_sqr(t0.center) < camera.distance_to_sqr(t1.center);
-    }
-    ICF bool operator()(const CDB::RESULT& _1) const
-    {
-        const occTri& T = m_pTris[_1.id];
-        return T.skip > Device.dwFrame;
-    }
-};
-
 void CHOM::Render_DB(CFrustum& base)
 {
     ZoneScoped;
 
     // Update projection matrices on every frame to ensure valid HOM culling
-    float view_dim = occ_dim_0;
-    Fmatrix m_viewport = {view_dim / 2.f, 0.0f, 0.0f, 0.0f, 0.0f, -view_dim / 2.f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, view_dim / 2.f + 0 + 0, view_dim / 2.f + 0 + 0, 0.0f, 1.0f};
-    Fmatrix m_viewport_01 = {1.f / 2.f, 0.0f, 0.0f, 0.0f, 0.0f, -1.f / 2.f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.f / 2.f + 0 + 0, 1.f / 2.f + 0 + 0, 0.0f, 1.0f};
+    constexpr float view_dim = occ_dim_0;
+    constexpr Fmatrix m_viewport{view_dim / 2.f, 0.0f, 0.0f, 0.0f, 0.0f, -view_dim / 2.f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, view_dim / 2.f + 0 + 0, view_dim / 2.f + 0 + 0, 0.0f, 1.0f};
+    constexpr Fmatrix m_viewport_01{1.f / 2.f, 0.0f, 0.0f, 0.0f, 0.0f, -1.f / 2.f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 1.f / 2.f + 0 + 0, 1.f / 2.f + 0 + 0, 0.0f, 1.0f};
+
     m_xform.mul(m_viewport, Device.mFullTransform);
     m_xform_01.mul(m_viewport_01, Device.mFullTransform);
 
@@ -155,11 +134,17 @@ void CHOM::Render_DB(CFrustum& base)
 
     // Prepare
     CDB::RESULT* it = xrc.r_begin();
-    CDB::RESULT* end = xrc.r_end();
+    CDB::RESULT* end = std::remove_if(it, xrc.r_end(), [&](const CDB::RESULT& _1) {
+        const occTri& T = m_pTris[_1.id];
+        return T.skip > Device.dwFrame;
+    });
 
-    Fvector COP = Device.vCameraPosition;
-    end = std::remove_if(it, end, pred_fb(m_pTris));
-    std::sort(it, end, pred_fb(m_pTris, COP));
+    const Fvector& COP = Device.vCameraPosition;
+    std::sort(it, end, [&](const CDB::RESULT& _1, const CDB::RESULT& _2) {
+        const occTri& t0 = m_pTris[_1.id];
+        const occTri& t1 = m_pTris[_2.id];
+        return COP.distance_to_sqr(t0.center) < COP.distance_to_sqr(t1.center);
+    });
 
     // Build frustum with near plane only
     CFrustum clip;

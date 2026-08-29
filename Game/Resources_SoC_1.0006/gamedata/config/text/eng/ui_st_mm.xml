@@ -289,8 +289,8 @@
 	<string id="st_opt_dlss">
 		<text>NVIDIA DLSS</text>
 	</string>
-	<string id="st_opt_fsr2">
-		<text>AMD FSR2</text>
+	<string id="st_opt_fsr3">
+		<text>AMD FSR3</text>
 	</string>
 	<string id="st_opt_taa">
 		<text>TAA</text>
@@ -463,7 +463,7 @@
 		<text>Anti-aliasing</text>
 	</string>
 	<string id="ui_mm_cas">
-		<text>Sharpness after anti-aliasing</text>
+		<text>CAS (Sharpness after AA)</text>
 	</string>
 	<string id="ui_mm_r2_aa">
 		<text>Antialiasing (R2)</text>
@@ -650,6 +650,12 @@
 	</string>
 	<string id="ui_mm_font_scale_y">
 		<text>Fonts height</text>
+	</string>
+	<string id="ui_mm_exclusive_input">
+		<text>Exclusive Input (blocks Windows hotkeys)</text>
+	</string>
+	<string id="ui_st_weapon_bobbing">
+		<text>Weapon bobbing</text>
 	</string>
 
 	<!-- Окно "Управление" -->
@@ -915,7 +921,7 @@
 		<text>This setting enables objects to cast shadows from sunlight. On weak PCs, disabling this setting can give a serious speed boost.</text>
 	</string>
 	<string id="video_settings_desc_12">
-		<text>This setting enables the grass to cast shadows from sunlight and other dynamic lighting sources. Now this setting works - we fixed it. ATTENTION! Setting up just sucks the hell out of performance. Don't use it with a large grass rendering radius or high grass density!</text>
+		<text>This setting enables the grass to cast shadows from sunlight and other dynamic lighting sources.</text>
 	</string>
 	<string id="video_settings_desc_13">
 		<text>This setting adjusts the accuracy of the lighting calculation as the distance to them increases. The higher it is, the more detailed the shadows from dynamic light sources will look at a distance.</text>
@@ -936,10 +942,10 @@
 		<text>This setting enables shader smoothing on dynamic lighting.</text>
 	</string>
 	<string id="video_settings_desc_19">
-        <text>This setting switches the anti-aliasing type. Available options are NVIDIA DLSS (Deep learning super sampling), AMD FSR2 (FidelityFX Super Resolution 2), TAA (Temporal anti-aliasing), SMAA (Subpixel Morphological AntiAliasing). \n \nNVIDIA DLSS (Deep Learning Super Sampling) is a revolutionary AI-powered rendering technology that improves graphics quality by using specialized tensor cores in GeForce RTX graphics cards. The technology became available in desktop and mobile graphics cards with the arrival of the RTX20 series. Anti-aliasing using DLSS produces results superior in quality to MSAA 8x, without causing performance drops. \n \nFSR is a less demanding and lower quality analogue from AMD. FSR 2.0 is supported by all AMD video cards from the RX 400 series and newer, as well as NVIDIA video cards from the 1000 series.</text>
+        <text>This setting switches the anti-aliasing type. Available options are NVIDIA DLSS (Deep learning super sampling), AMD FSR3 (FidelityFX Super Resolution 3), TAA (Temporal anti-aliasing), SMAA (Subpixel Morphological AntiAliasing). \n \nNVIDIA DLSS (Deep Learning Super Sampling) is a revolutionary AI-powered rendering technology that improves graphics quality by using specialized tensor cores in GeForce RTX graphics cards. The technology became available in desktop and mobile graphics cards with the arrival of the RTX20 series. Anti-aliasing using DLSS produces results superior in quality to MSAA 8x, without causing performance drops. \n \nFSR is a less demanding and lower quality analogue from AMD. FSR 3.0 is supported by all AMD graphics cards from the RX 590 and newer (Polaris architecture and above), as well as NVIDIA graphics cards from the GTX 10 series (e.g. GTX 1060) and newer.</text>
 	</string>
 	<string id="video_settings_desc_20">
-		<text>""</text>
+		<text>Contrast Adaptive Sharpening (CAS) is an AMD technology from the FidelityFX SDK. It's often used in conjunction with uscaling technologies (such as AMD FSR) to compensate for the slight blurring that occurs when rendering at low resolutions. The higher the slider value, the sharper the anti-aliasing will be. At the minimum slider value (0), CAS is not applied at all.</text>
 	</string>
 	<string id="video_settings_desc_21">
 		<text>This setting adjusts the degree of reflection of light on shiny and matte surfaces such as metal, leather, wood, etc. This is an"amateur" setting, and if you don't know exactly what you're doing, leave it at the default value. The further the slider is, the stronger the reflection effect, but do not overdo it - at large values, the surfaces begin to look like they are covered in plastic.</text>

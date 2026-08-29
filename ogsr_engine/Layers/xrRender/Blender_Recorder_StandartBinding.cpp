@@ -408,7 +408,7 @@ static class cl_actor_params2 final : public R_constant_setup
     void setup(CBackend& cmd_list, R_constant* C) override
     {
         const auto& P = shader_exports.get_actor_params2();
-        cmd_list.set_c(C, P.x, P.y, P.z, static_cast<float>(ps_r2_ls_flags_ext.test(R2FLAGEXT_LENS_FLARE)));
+        cmd_list.set_c(C, P.x, P.y, P.z, static_cast<float>(ps_r2_ls_flags_ext.test(R2FLAGEXT_LENS_FLARE) && r_lens_flare_mode == new_shader_flare));
     }
 } binder_actor_params2;
 

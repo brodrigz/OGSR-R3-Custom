@@ -31,6 +31,7 @@
 #include "car.h"
 #include "sight_manager_space.h"
 #include "../xr_3da/IGame_Persistent.h"
+#include "InventoryOwner.h"
 
 using namespace luabind;
 
@@ -146,6 +147,9 @@ class_<CScriptGameObject> script_register_game_object2(class_<CScriptGameObject>
         .def("enable_talk", &CScriptGameObject::EnableTalk)
         .def("disable_talk", &CScriptGameObject::DisableTalk)
         .def("is_talk_enabled", &CScriptGameObject::IsTalkEnabled)
+        .def("get_talk_partner", &CScriptGameObject::GetTalkPartner)
+
+        .def("is_trading", &CScriptGameObject::IsTrading)
         .def("enable_trade", &CScriptGameObject::EnableTrade)
         .def("disable_trade", &CScriptGameObject::DisableTrade)
         .def("is_trade_enabled", &CScriptGameObject::IsTradeEnabled)
@@ -417,6 +421,12 @@ class_<CScriptGameObject> script_register_game_object2(class_<CScriptGameObject>
         .def("radius", &CScriptGameObject::GetRadius)
         .def("play_hud_motion", (u32(CScriptGameObject::*)(LPCSTR))(&CScriptGameObject::play_hud_animation))
         .def("play_hud_motion", (u32(CScriptGameObject::*)(LPCSTR, bool, u32, float))(&CScriptGameObject::play_hud_animation))
+
+        .def("set_character_icon",
+             [](CScriptGameObject* self, const char* iconName) {
+                 if (auto pInvOwner = smart_cast<CInventoryOwner*>(&self->object()))
+                     pInvOwner->SetIcon(iconName);
+             })
 
         .def("add_feel_touch",
              (void(CScriptGameObject::*)(float, const luabind::object&, const luabind::functor<void>&, const luabind::functor<bool>&))(&CScriptGameObject::addFeelTouch))

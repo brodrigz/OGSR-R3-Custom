@@ -175,10 +175,6 @@
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\combine_volumetric.ps" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\combine_volumetric.s" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\contrast_adaptive_sharpening.s" />
-    <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\copy.ps" />
-    <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\copy_nomsaa.ps" />
-    <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\copy_p.ps" />
-    <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\copy_p_nomsaa.ps" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\deffer_base_aref_bump.ps" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\deffer_base_aref_bump_d.ps" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\deffer_base_aref_bump_db-hq.ps" />
@@ -593,5 +589,6 @@
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\accum_sun_cascade1.s" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\accum_sun_cascade2.ps" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\accum_sun_cascade2.s" />
+    <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\effects_moon.s" />
   </ItemGroup>
 </Project>

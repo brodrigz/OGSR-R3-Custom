@@ -45,7 +45,7 @@ public:
     bool loadIni(CInifile& ini, LPCSTR section);
     bool saveIni(CInifile& ini, LPCSTR section);
 
-    float sum(CEnvModifier& _another, Fvector3& view);
+    float sum(CEnvModifier& _another, const Fvector3& view);
 };
 
 class ENGINE_API CEnvAmbient
@@ -266,7 +266,7 @@ private:
 
     bool b_wfx;
 
-    CEnvDescriptor* wfx_end_desc[2];
+    CEnvDescriptor* wfx_end_desc[2]{};
 
     shared_str CurrentName;
 
@@ -337,7 +337,7 @@ public:
 
     void RenderSky(CBackend& cmd_list);
     void RenderClouds(CBackend& cmd_list);
-    void RenderFlares(CBackend& cmd_list);
+    void RenderFlares(CBackend& cmd_list, BOOL bSun, BOOL bFlares, BOOL bGradient);
     void RenderLast(CBackend& cmd_list);
 
     bool SetWeatherFX(const shared_str& name);

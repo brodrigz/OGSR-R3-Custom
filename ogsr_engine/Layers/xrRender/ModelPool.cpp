@@ -521,9 +521,8 @@ void CModelPool::Prefetch()
     if (pSettings->section_exist(section))
     {
         const auto& sect = pSettings->r_section(section);
-        for (const auto& pair: sect.Data)
+        for (const auto& low_name : sect.Ordered_Data | std::views::keys)
         {
-            const auto& low_name = pair.first;
             if (!Instance_Find(low_name.c_str()))
             {
                 shared_str fname;
@@ -549,7 +548,7 @@ void CModelPool::Prefetch()
 
     now_prefetch2 = true;
     const auto& sect = vis_prefetch_ini->r_section("prefetch");
-    for (const auto& [low_name, val] : sect.Data)
+    for (const auto& [low_name, val] : sect.Ordered_Data)
     {
         float val1{}, val2{};
         sscanf(val.c_str(), "%f,%f", &val1, &val2);
@@ -560,11 +559,11 @@ void CModelPool::Prefetch()
             fname.sprintf("%s.ogf", low_name.c_str());
             if (FS.exist(fsgame::game_meshes, fname.c_str()))
             {
-                ::Render->hud_loading = val2 == 2.f;
-                //if (::Render->hud_loading)
+                ::Render->shader_option_hud_loading(val2 == 2.f);
+                //if (::Render->shader_option_hud_loading())
                 //    Msg("--[%s] loading hud model [%s]", __FUNCTION__, fname.c_str());
                 dxRender_Visual* V = Create(low_name.c_str());
-                ::Render->hud_loading = false;
+                ::Render->shader_option_hud_loading(false);
                 Delete(V, FALSE);
                 cnt++;
             }
@@ -765,7 +764,7 @@ void CModelPool::process_vis_prefetch() const
         return;
     xr_vector<const char*> expired;
     const auto& sect = vis_prefetch_ini->r_section("prefetch");
-    for (const auto& [key, val] : sect.Data)
+    for (const auto& [key, val] : sect.Ordered_Data)
     {
         float val1{}, val2{};
         sscanf(val.c_str(), "%f,%f", &val1, &val2);

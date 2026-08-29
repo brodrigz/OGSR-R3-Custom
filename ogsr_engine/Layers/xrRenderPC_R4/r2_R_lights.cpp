@@ -33,7 +33,7 @@ void CRender::render_lights_shadowed_one(light_ctx& task)
             L->svis[dsgraph.context_id].begin();
         }
 
-        dsgraph.phase = PHASE_SMAP;
+        dsgraph.phase = PHASE_SMAP_LIGHTS;
         dsgraph.r_pmask(true, false);
 
         CFrustum view_frustum;

@@ -113,23 +113,38 @@ void CRender::level_Load(IReader* fs)
     {
         CInifile ini(puddles_file);
 
-        current_level_puddles.reserve(ini.sections().size());
+        const auto& sects = ini.sections_ordered();
 
-        for (const auto& pair : ini.sections())
+        current_level_puddles.reserve(sects.size());
+
+        for (const auto& _sect : sects | std::views::values)
         {
-            const auto& sect = pair.second->Name;
+            const auto& sect = _sect->Name;
 
             auto& puddle = current_level_puddles.emplace_back();
 
-            const Fvector position = ini.r_fvector3(sect, "center");
-            const float max_height = ini.r_float(sect, "max_depth");
+            const Fvector position{_sect->line_exist("center") ? ini.r_fvector3(sect, "center") : ini.r_fvector3(sect, "position")};
+            const float max_height{_sect->line_exist("max_depth") ? ini.r_float(sect, "max_depth") : ini.r_float(sect, "max_height")};
 
-            Fvector2 size_xz = ini.r_fvector2(sect, "radius");
+            Fvector2 size_xz{_sect->line_exist("radius") ? ini.r_fvector2(sect, "radius") : ini.r_fvector2(sect, "size_xz")};
             if (fis_zero(size_xz.y))
                 size_xz.y = size_xz.x;
 
-            if (pair.second->line_exist("rotation"))
-                puddle.xform.rotateY(ini.r_float(sect, "rotation"));
+            if (_sect->line_exist("rotation"))
+            {
+                const Fvector rot = ini.r_fvector3(sect, "rotation");
+                if (fis_zero(rot.y) && fis_zero(rot.z))
+                {
+                    if (!fis_zero(rot.x))
+                        puddle.xform.rotateY(rot.x);
+                }
+                else
+                {
+                    puddle.xform.rotateX(-rot.x);
+                    puddle.xform.rotateY(-rot.y);
+                    puddle.xform.rotateZ(-rot.z);
+                }
+            }
 
             puddle.xform.mulB_43(Fmatrix{}.scale(size_xz.x, 1.0f, size_xz.y));
 

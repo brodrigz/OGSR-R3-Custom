@@ -631,7 +631,7 @@ Shader* CResourceManager::_lua_Create(LPCSTR d_shader, LPCSTR s_textures)
     C.BT = nullptr;
     C.bEditor = FALSE;
     C.bDetail = FALSE;
-    C.HudElement = RImplementation.hud_loading;
+    C.HudElement = RImplementation.shader_option_hud_loading();
 
     // Prepare
     _ParseList(C.L_textures, s_textures);
@@ -689,7 +689,9 @@ Shader* CResourceManager::_lua_Create(LPCSTR d_shader, LPCSTR s_textures)
                 S.E[1] = C._lua_Compile(s_shader, "normal");
             }
 
-            // Compile element
+            ASSERT_FMT(!object(s_shader, "l_point", LUA_TFUNCTION), "l_point found in blender [%s]. Check and remove it!", s_shader);
+            ASSERT_FMT(!object(s_shader, "l_spot", LUA_TFUNCTION), "l_spot found in blender [%s]. Check and remove it!", s_shader);
+            /*
             if (object(s_shader, "l_point", LUA_TFUNCTION))
             {
                 C.iElement = 2;
@@ -697,15 +699,14 @@ Shader* CResourceManager::_lua_Create(LPCSTR d_shader, LPCSTR s_textures)
                 S.E[2] = C._lua_Compile(s_shader, "l_point");
             }
 
-            // Compile element
             if (object(s_shader, "l_spot", LUA_TFUNCTION))
             {
                 C.iElement = 3;
                 C.bDetail = FALSE;
                 S.E[3] = C._lua_Compile(s_shader, "l_spot");
             }
+            */
 
-            // Compile element
             if (object(s_shader, "l_special", LUA_TFUNCTION))
             {
                 C.iElement = 4;

@@ -142,7 +142,7 @@ private:
     DetailSlot& QueryDB(int sx, int sz);
 
     void cache_Initialize();
-    void cache_Update(int sx, int sz, Fvector& view);
+    void cache_Update(int sx, int sz, const Fvector& view);
     void cache_Task(int gx, int gz, Slot* D);
     void cache_Decompress(Slot* D);
 

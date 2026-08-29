@@ -46,7 +46,7 @@
     <ClCompile>
       <Optimization>Disabled</Optimization>
       <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;XRENGINE_STATIC;XRCORE_STATIC;XRCDB_STATIC;XR_PARTICLES_STATIC;LUABIND_STATIC;XRRENDER_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;_USRDLL;XRENGINE_STATIC;XRCORE_STATIC;XRCDB_STATIC;XR_PARTICLES_STATIC;LUABIND_STATIC;XRRENDER_STATIC;FFX_GCC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ExceptionHandling>
       </ExceptionHandling>
       <BasicRuntimeChecks Condition="$(Configuration.Contains('Debug')) And '$(EnableASAN)'=='true'">
@@ -61,7 +61,7 @@
       <WarningLevel>Level4</WarningLevel>
       <DisableSpecificWarnings>4456;4457;4458;4459;4315;4267;</DisableSpecificWarnings>
       <StringPooling>false</StringPooling>
-      <AdditionalIncludeDirectories>./;$(SolutionDir)\3rd_party\Src\d3dx;..\..\xrCore;..\..\Luabind;..\..\LuaJIT\src;$(SolutionDir)\3rd_party\Src\imgui;$(SolutionDir)\3rd_party\Src\DirectXMesh\DirectXMesh;$(SolutionDir)\3rd_party\Src\DirectXTex\DirectXTex\DirectXTex;$(SolutionDir)\3rd_party\Src\DirectXMath\DirectXMath\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;$(SolutionDir)\3rd_party\Src\d3dx;..\..\xrCore;..\..\Luabind;..\..\LuaJIT\src;$(SolutionDir)\3rd_party\Src\FidelityFX-SDK\FidelityFX-SDK\sdk\include;$(SolutionDir)\3rd_party\Src\imgui;$(SolutionDir)\3rd_party\Src\DirectXMesh\DirectXMesh;$(SolutionDir)\3rd_party\Src\DirectXTex\DirectXTex\DirectXTex;$(SolutionDir)\3rd_party\Src\DirectXMath\DirectXMath\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <OmitFramePointers>false</OmitFramePointers>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -85,8 +85,8 @@
       <OmitFramePointers>false</OmitFramePointers>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
       <WholeProgramOptimization>true</WholeProgramOptimization>
-      <AdditionalIncludeDirectories>./;$(SolutionDir)\3rd_party\Src\d3dx;..\..\xrCore;..\..\Luabind;..\..\LuaJIT\src;$(SolutionDir)\3rd_party\Src\imgui;$(SolutionDir)\3rd_party\Src\DirectXMesh\DirectXMesh;$(SolutionDir)\3rd_party\Src\DirectXTex\DirectXTex\DirectXTex;$(SolutionDir)\3rd_party\Src\DirectXMath\DirectXMath\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;XRENGINE_STATIC;XRCORE_STATIC;XRCDB_STATIC;XR_PARTICLES_STATIC;LUABIND_STATIC;XRRENDER_STATIC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>./;$(SolutionDir)\3rd_party\Src\d3dx;..\..\xrCore;..\..\Luabind;..\..\LuaJIT\src;$(SolutionDir)\3rd_party\Src\FidelityFX-SDK\FidelityFX-SDK\sdk\include;$(SolutionDir)\3rd_party\Src\imgui;$(SolutionDir)\3rd_party\Src\DirectXMesh\DirectXMesh;$(SolutionDir)\3rd_party\Src\DirectXTex\DirectXTex\DirectXTex;$(SolutionDir)\3rd_party\Src\DirectXMath\DirectXMath\Inc;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_WINDOWS;_USRDLL;XRENGINE_STATIC;XRCORE_STATIC;XRCDB_STATIC;XR_PARTICLES_STATIC;LUABIND_STATIC;XRRENDER_STATIC;FFX_GCC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <ExceptionHandling>
       </ExceptionHandling>
@@ -128,6 +128,7 @@
     <ClInclude Include="..\..\Include\xrRender\LensFlareRender.h" />
     <ClInclude Include="..\..\Include\xrRender\ParticleCustom.h" />
     <ClInclude Include="..\xrRenderDX10\imgui\Stratum2_Bold.hpp" />
+    <ClInclude Include="..\xrRenderDX10\imgui\imgui_styles.hpp" />
     <ClInclude Include="..\xrRenderDX10\imgui_impl_win32.h" />
     <ClInclude Include="..\xrRender\DetailFormat.h" />
     <ClInclude Include="..\xrRender\ParticleEffectActions.h" />
@@ -472,6 +473,12 @@
     </ProjectReference>
     <ProjectReference Include="..\..\..\3rd_party\Src\DirectXTex\DirectXTex.vcxproj">
       <Project>{286CC988-2191-467A-9F6D-ABB7954D4F78}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\3rd_party\Src\FidelityFX-SDK\ffx_backend_dx11_x64.vcxproj">
+      <Project>{2573F943-895F-3EB6-B3A2-EC66C5BD3507}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\3rd_party\Src\FidelityFX-SDK\ffx_fsr3upscaler_x64.vcxproj">
+      <Project>{900D55FB-392E-3485-AC4A-5F66868F6252}</Project>
     </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

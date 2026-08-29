@@ -169,10 +169,6 @@
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\combine_volumetric.ps" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\combine_volumetric.s" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\contrast_adaptive_sharpening.s" />
-    <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\copy.ps" />
-    <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\copy_nomsaa.ps" />
-    <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\copy_p.ps" />
-    <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\copy_p_nomsaa.ps" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\deffer_base_aref_bump-hq.ps" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\deffer_base_aref_bump.ps" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\deffer_base_aref_bump_d-hq.ps" />
@@ -276,6 +272,7 @@
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\deffer_tree_s_flat_d.vs" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\effects_flare.ps" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\effects_flare.vs" />
+    <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\effects_moon.s" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\effects_sun.ps" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\effects_water_puddles.s" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\ogsr_blur.s" />

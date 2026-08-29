@@ -13,6 +13,9 @@
 
 BOOL CCF_DynamicMesh::_RayQuery(const collide::ray_defs& Q, collide::rq_results& R)
 {
+    ZoneScoped;
+    ZoneValue(static_cast<uint64_t>(Q.range));
+
     int s_count = R.r_count();
     BOOL res = inherited::_RayQuery(Q, R);
     if (!res)

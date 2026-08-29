@@ -346,6 +346,9 @@ protected:
     {
         bool finished_task = false;
 
+        // MSVC - Говно
+        std::set_terminate([] { Debug.backend("<no expression>", "Unexpected application termination", nullptr, nullptr, DEBUG_INFO); });
+
         CoInitializeEx(nullptr, COINIT_MULTITHREADED);
 
         {

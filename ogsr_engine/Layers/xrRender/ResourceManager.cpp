@@ -9,19 +9,22 @@
 #include "blenders/blender.h"
 #include "blenders/blender_recorder.h"
 
-template <class T>
-BOOL reclaim(xr_vector<T*>& vec, const T* ptr)
+namespace
 {
-    auto it = vec.begin();
-    auto end = vec.end();
-    for (; it != end; ++it)
-        if (*it == ptr)
-        {
-            vec.erase(it);
-            return TRUE;
-        }
-    return FALSE;
-}
+    template <class T>
+    bool reclaim(xr_vector<T*>& vec, const T* ptr)
+    {
+        auto it = vec.begin();
+        auto end = vec.end();
+        for (; it != end; ++it)
+            if (*it == ptr)
+            {
+                vec.erase(it);
+                return true;
+            }
+        return false;
+    }
+} // namespace
 
 IBlender* CResourceManager::_GetBlender(LPCSTR Name)
 {
@@ -147,7 +150,7 @@ Shader* CResourceManager::_cpp_Create(IBlender* B, LPCSTR s_shader, LPCSTR s_tex
     C.BT = B;
     C.bEditor = FALSE;
     C.bDetail = FALSE;
-    C.HudElement = RImplementation.hud_loading;
+    C.HudElement = RImplementation.shader_option_hud_loading();
 
     // Parse names
     _ParseList(C.L_textures, s_textures);

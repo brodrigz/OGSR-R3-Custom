@@ -221,10 +221,10 @@ void CGamePersistent::WeathersUpdate()
             int data_set = (Random.randF() < (1.f - Environment().CurrentEnv->weight)) ? 0 : 1;
 
             CEnvDescriptor* const current_env = Environment().Current[0];
-            VERIFY(current_env);
-
             CEnvDescriptor* const _env = Environment().Current[data_set];
-            VERIFY(_env);
+
+            if (!current_env || !_env)
+                return;
 
             CEnvAmbient* env_amb = _env->env_ambient;
             if (env_amb)
@@ -399,7 +399,9 @@ void CGamePersistent::WeathersUpdate()
             int data_set = (Random.randF() < (1.f - Environment().CurrentEnv->weight)) ? 0 : 1;
 
             CEnvDescriptor* const _env = Environment().Current[data_set];
-            VERIFY(_env);
+
+            if (!_env)
+                return;
 
             CEnvAmbient* env_amb = _env->env_ambient;
 

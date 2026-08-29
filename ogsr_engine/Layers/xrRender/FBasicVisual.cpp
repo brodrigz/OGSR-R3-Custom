@@ -109,9 +109,9 @@ static ref_shader& GetCachedModelShader(const char* sh, const char* tex)
     key += "_+_";
     key += tex ? tex : "";
     key += "___";
-    key += std::to_string(RImplementation.m_skinning);
+    key += std::to_string(RImplementation.shader_option_skinning());
     key += "___";
-    key += std::to_string(static_cast<int>(RImplementation.hud_loading));
+    key += std::to_string(RImplementation.shader_option_hud_loading());
 
     if (const auto it = g_ModelShadersCache.find(key); it != g_ModelShadersCache.end())
     {
@@ -129,7 +129,7 @@ static ref_shader& GetCachedModelShader(const char* sh, const char* tex)
 
 void dxRender_Visual::Load(const char* N, IReader* data, u32)
 {
-    IsHudVisual = ::Render->hud_loading;
+    IsHudVisual = ::Render->shader_option_hud_loading();
 
     dbg_name = N;
 

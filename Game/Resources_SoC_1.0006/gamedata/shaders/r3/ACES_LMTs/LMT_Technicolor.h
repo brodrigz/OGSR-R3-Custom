@@ -3,7 +3,7 @@
 // Saturation boost that emulates the vibrancy of 3 strip technicolor
 //=================================================================================================
 
-float Technicolor_Amount = .4;
+static const float Technicolor_Amount = .4;
 
 void Technicolor(inout float3 aces)
 {

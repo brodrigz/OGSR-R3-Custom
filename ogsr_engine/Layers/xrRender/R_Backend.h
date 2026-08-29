@@ -385,11 +385,6 @@ public:
         if (C)
             constants.set(C, A);
     }
-    ICF void set_c(R_constant* C, bool A)
-    {
-        if (C)
-            constants.set(C, A);
-    }
     ICF void set_c(R_constant* C, int A)
     {
         if (C)
@@ -466,11 +461,6 @@ public:
     {
         if (ctable)
             set_ca(&*ctable->get(n), e, x, y, z, w);
-    }
-    ICF void set_c(LPCSTR n, bool A)
-    {
-        if (ctable)
-            set_c(&*ctable->get(n), A);
     }
     ICF void set_c(LPCSTR n, float A)
     {
@@ -553,11 +543,6 @@ public:
     {
         if (ctable)
             set_ca(&*ctable->get(n), e, x, y, z, w);
-    }
-    ICF void set_c(shared_str& n, bool A)
-    {
-        if (ctable)
-            set_c(&*ctable->get(n), A);
     }
     ICF void set_c(shared_str& n, float A)
     {

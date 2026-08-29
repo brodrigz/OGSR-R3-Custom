@@ -9,7 +9,7 @@
 using namespace PAPI;
 using namespace PS;
 
-extern float ps_particle_update_coeff;
+extern float ps_particle_update_coeff, ps_particle_collision_min_dist;
 
 //------------------------------------------------------------------------------
 // class CParticleEffectDef
@@ -60,6 +60,8 @@ void CPEDef::SetName(LPCSTR name) { m_Name = name; }
 
 void CPEDef::ExecuteAnimate(Particle* particles, u32 p_cnt, float dt) const
 {
+    ZoneScoped;
+
     const float speedFac = m_Frame.m_fSpeed * dt;
     for (u32 i = 0; i < p_cnt; i++)
     {
@@ -75,6 +77,8 @@ void CPEDef::ExecuteAnimate(Particle* particles, u32 p_cnt, float dt) const
 
 void CPEDef::ExecuteCollision(PAPI::Particle* particles, u32 p_cnt, float dt, CParticleEffect* owner) const
 {
+    ZoneScoped;
+
     pVector pt{}, n{};
     // Must traverse list in reverse order so Remove will work
     for (int i = p_cnt - 1; i >= 0; i--)
@@ -89,7 +93,7 @@ void CPEDef::ExecuteCollision(PAPI::Particle* particles, u32 p_cnt, float dt, CP
             Fvector dir;
             dir.sub(m.pos, m.posB);
             const float dist = dir.magnitude();
-            if (dist >= EPS)
+            if (dist > ps_particle_collision_min_dist)
             {
                 dir.div(dist);
 

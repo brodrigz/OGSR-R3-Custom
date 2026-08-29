@@ -28,7 +28,7 @@ public:
 
 struct FS_item
 {
-    string_path name;
+    string_path name{};
     u32 size;
     u32 time_write;
     string256 buff;
@@ -111,8 +111,7 @@ FS_file_list_ex::FS_file_list_ex(LPCSTR path, u32 flags, LPCSTR mask)
     for (const auto& file : files)
     {
         auto& itm = m_file_items.emplace_back();
-        ZeroMemory(itm.name, sizeof(itm.name));
-        strcat_s(itm.name, file.name.c_str());
+        strcpy_s(itm.name, file.name.c_str());
         itm.time_write = (u32)file.time_write;
         itm.size = file.size;
     }

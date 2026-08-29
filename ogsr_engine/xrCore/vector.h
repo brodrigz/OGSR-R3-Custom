@@ -14,6 +14,9 @@ constexpr float EPS_S = 0.0000001f;
 constexpr float EPS = 0.0000100f;
 constexpr float EPS_L = 0.0010000f;
 
+#undef M_SQRT1_2
+constexpr float M_SQRT1_2 = 0.7071067811865475244008443621048f;
+
 constexpr float M_PI = 3.1415926535897932384626433832795f;
 constexpr float PI = 3.1415926535897932384626433832795f;
 constexpr float PI_MUL_2 = 6.2831853071795864769252867665590f;

@@ -3,7 +3,7 @@
 // Creates a highly contrasted and desaturated look
 //=================================================================================================
 
-float Bleach_Bypass_Amount = 0.75; // strength of the effect
+static const float Bleach_Bypass_Amount = 0.75; // strength of the effect
 
 void Bleach_Bypass(inout float3 aces)
 {

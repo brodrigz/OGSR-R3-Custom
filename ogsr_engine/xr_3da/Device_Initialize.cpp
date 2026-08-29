@@ -67,7 +67,7 @@ void CRenderDevice::Initialize()
         AdjustWindowRect(&rc, m_dwWindowStyle, FALSE);
 
         // Create the render window
-        m_hWnd = CreateWindow /*Ex*/ ( // WS_EX_TOPMOST,
+        m_hWnd = CreateWindowEx(WS_EX_TOPMOST,
             wndclass, "OGSR Engine", m_dwWindowStyle,
             /*rc.left, rc.top, */ CW_USEDEFAULT, CW_USEDEFAULT, (rc.right - rc.left), (rc.bottom - rc.top), 0L, 0, hInstance, 0L);
         gGameWindow = m_hWnd;

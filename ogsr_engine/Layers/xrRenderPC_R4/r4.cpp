@@ -22,12 +22,16 @@ float r_dtex_paralax_range = 50.f;
 //////////////////////////////////////////////////////////////////////////
 ShaderElement* CRender::rimp_select_sh_dynamic(dxRender_Visual* pVisual, float cdist_sq, bool hud, u32 phase)
 {
-    int id = SE_R2_SHADOW;
+    u32 id;
     if (CRender::PHASE_NORMAL == phase)
     {
         // if (hud)
         //     Msg("--[%s] Detected hud model: [%s]", __FUNCTION__, pVisual->dbg_name.c_str());
         id = (hud || ((_sqrt(cdist_sq) - pVisual->getVisData().sphere.R) < r_dtex_paralax_range)) ? SE_R2_NORMAL_HQ : SE_R2_NORMAL_LQ;
+    }
+    else
+    {
+        id = CRender::PHASE_SMAP_LIGHTS == phase ? SE_R2_SHADOW_LIGHTS : SE_R2_SHADOW;
     }
     return pVisual->shader->E[id]._get();
 }
@@ -37,10 +41,14 @@ ShaderElement* CRender::rimp_select_sh_static(dxRender_Visual* pVisual, float cd
 {
     if (!pVisual->shader)
         return nullptr;
-    int id = SE_R2_SHADOW;
+    u32 id;
     if (CRender::PHASE_NORMAL == phase)
     {
         id = ((_sqrt(cdist_sq) - pVisual->getVisData().sphere.R) < r_dtex_paralax_range) ? SE_R2_NORMAL_HQ : SE_R2_NORMAL_LQ;
+    }
+    else
+    {
+        id = CRender::PHASE_SMAP_LIGHTS == phase ? SE_R2_SHADOW_LIGHTS : SE_R2_SHADOW;
     }
     return pVisual->shader->E[id]._get();
 }
@@ -70,7 +78,6 @@ void CRender::create()
 
     Device.seqFrame.Add(this, REG_PRIORITY_HIGH + 10000);
 
-    m_skinning = -1;
     m_SMAPSize = 0; //этому параметру присваивается нужное значение непосредственно перед компиляцией нужного шейдера, т.к. в каждом шейдере теперь используется разный размер smap
 
     // options (smap-pool-size)
@@ -709,22 +716,22 @@ HRESULT CRender::shader_compile(LPCSTR name, DWORD const* pSrcData, UINT SrcData
 
     // skinning
     // SKIN_NONE
-    appendShaderOption(m_skinning < 0, "SKIN_NONE", "1");
+    appendShaderOption(shader_option_skinning() < 0, "SKIN_NONE", "1");
 
     // SKIN_0
-    appendShaderOption(0 == m_skinning, "SKIN_0", "1");
+    appendShaderOption(0 == shader_option_skinning(), "SKIN_0", "1");
 
     // SKIN_1
-    appendShaderOption(1 == m_skinning, "SKIN_1", "1");
+    appendShaderOption(1 == shader_option_skinning(), "SKIN_1", "1");
 
     // SKIN_2
-    appendShaderOption(2 == m_skinning, "SKIN_2", "1");
+    appendShaderOption(2 == shader_option_skinning(), "SKIN_2", "1");
 
     // SKIN_3
-    appendShaderOption(3 == m_skinning, "SKIN_3", "1");
+    appendShaderOption(3 == shader_option_skinning(), "SKIN_3", "1");
 
     // SKIN_4
-    appendShaderOption(4 == m_skinning, "SKIN_4", "1");
+    appendShaderOption(4 == shader_option_skinning(), "SKIN_4", "1");
 
     // Soft water
     appendShaderOption(TRUE, "USE_SOFT_WATER", "1");
@@ -804,37 +811,87 @@ HRESULT CRender::shader_compile(LPCSTR name, DWORD const* pSrcData, UINT SrcData
 
     char extension[3]{};
     strncpy_s(extension, pTarget, 2);
-
-    string_path file_name{};
-
     string_path file{};
-    xr_strcpy(file, "shaders_cache\\r4\\");
-    xr_strcat(file, name);
-    xr_strcat(file, ".");
-    xr_strcat(file, extension);
+    xr_strconcat(file, "shaders_cache\\", name, ".", extension);
+    string_path file_name{};
     FS.update_path(file_name, fsgame::app_data_root, file);
 
+    includer Includer;
+    LPD3DBLOB pShaderBuf{};
+    LPD3DBLOB pErrorBuf{};
+    HRESULT _result{E_FAIL};
+    u32 crc{};
+
+    if (ps_r2_ls_flags_ext.test(R2FLAGEXT_SHADER_CACHE))
     {
-        includer Includer;
-        LPD3DBLOB pShaderBuf{};
-        LPD3DBLOB pErrorBuf{};
-
-        auto _result = D3DCompile(pSrcData, SrcDataLen, "", defines.data(), &Includer, pFunctionName, pTarget, Flags, 0, &pShaderBuf, &pErrorBuf);
-
+        _result = D3DPreprocess(pSrcData, SrcDataLen, "", defines.data(), &Includer, &pShaderBuf, &pErrorBuf);
         if (SUCCEEDED(_result))
+            crc = crc32(pShaderBuf->GetBufferPointer(), static_cast<u32>(pShaderBuf->GetBufferSize()));
+        else
+            Msg("!![%s] D3DPreprocess for [%s] failed with error: [%s]", __FUNCTION__, file_name, Debug.DXerror2string(_result));
+        _RELEASE(pShaderBuf);
+        _RELEASE(pErrorBuf);
+
+        sprintf_s(file, "%s\\%s-%s-%x", file_name, pFunctionName, pTarget, Flags);
+        if (SUCCEEDED(_result) && FS.exist(file))
         {
-            _result = create_shader(pTarget, (DWORD*)pShaderBuf->GetBufferPointer(), (u32)pShaderBuf->GetBufferSize(), file_name, result, o.disasm);
+            IReader* fp = FS.r_open(file);
+
+            if (fp->elapsed() > 2 * sizeof(crc))
+            {
+                u32 crc_read = fp->r_u32();
+                if (crc_read != crc)
+                    _result = E_FAIL;
+                crc_read = fp->r_u32();
+                if (SUCCEEDED(_result) && crc_read != crc32(fp->pointer(), fp->elapsed()))
+                    _result = E_FAIL;
+                if (SUCCEEDED(_result))
+                    _result = create_shader(pTarget, (DWORD*)fp->pointer(), fp->elapsed(), file_name, result, o.disasm);
+            }
+            else
+                _result = E_FAIL;
+
+            FS.r_close(fp);
         }
         else
-        {
-            Msg("! %s", file_name);
-            if (pErrorBuf)
-                Log("! error: " + std::string{reinterpret_cast<const char*>(pErrorBuf->GetBufferPointer())});
-            else
-                Msg("! Can't compile shader hr=0x%08x", _result);
-        }
-        return _result;
+            _result = E_FAIL;
     }
+
+    if (FAILED(_result))
+    {
+        _result = D3DCompile(pSrcData, SrcDataLen, "", defines.data(), &Includer, pFunctionName, pTarget, Flags, 0, &pShaderBuf, &pErrorBuf);
+        if (SUCCEEDED(_result))
+        {
+            if (ps_r2_ls_flags_ext.test(R2FLAGEXT_SHADER_CACHE) && crc)
+            {
+                Msg("--Compiling shader [%s] [%s] [%s]", name, pTarget, pFunctionName);
+
+                IWriter* fp = FS.w_open(file);
+                fp->w_u32(crc);
+
+                crc = crc32(pShaderBuf->GetBufferPointer(), static_cast<u32>(pShaderBuf->GetBufferSize()));
+                fp->w_u32(crc);
+
+                fp->w(pShaderBuf->GetBufferPointer(), pShaderBuf->GetBufferSize());
+                FS.w_close(fp);
+            }
+            _result = create_shader(pTarget, (DWORD*)pShaderBuf->GetBufferPointer(), static_cast<u32>(pShaderBuf->GetBufferSize()), file_name, result, o.disasm);
+        }
+    }
+
+    if (FAILED(_result))
+    {
+        Msg("! %s", file_name);
+        if (pErrorBuf)
+            Log("! error: " + std::string{reinterpret_cast<const char*>(pErrorBuf->GetBufferPointer())});
+        else
+            Msg("! Can't compile shader hr=0x%08x", _result);
+    }
+
+    _RELEASE(pShaderBuf);
+    _RELEASE(pErrorBuf);
+
+    return _result;
 }
 
 void CRender::ClearTarget()

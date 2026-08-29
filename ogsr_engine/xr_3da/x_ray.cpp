@@ -42,11 +42,11 @@ void InitSettings()
     string_path fname;
     FS.update_path(fname, "$game_config$", "system.ltx");
     pSettings = xr_new<CInifile>(fname, TRUE);
-    CHECK_OR_EXIT(!pSettings->sections().empty(), make_string("Cannot find file %s.\nReinstalling application may fix this problem.", fname));
+    CHECK_OR_EXIT(!pSettings->sections_ordered().empty(), make_string("Cannot find file %s.\nReinstalling application may fix this problem.", fname));
 
     FS.update_path(fname, "$game_config$", "game.ltx");
     pGameIni = xr_new<CInifile>(fname, TRUE);
-    CHECK_OR_EXIT(!pGameIni->sections().empty(), make_string("Cannot find file %s.\nReinstalling application may fix this problem.", fname));
+    CHECK_OR_EXIT(!pGameIni->sections_ordered().empty(), make_string("Cannot find file %s.\nReinstalling application may fix this problem.", fname));
 
     IS_OGSR_GA = strstr(READ_IF_EXISTS(pSettings, r_string, "mod_ver", "mod_ver", "nullptr"), "OGSR");
 
@@ -83,8 +83,8 @@ void InitSettings()
     {
         Msg("[shader_params_export] section found!!!");
 
-        int tb_count = pSettings->line_count("shader_params_export");
-        for (int tb_idx = 0; tb_idx < tb_count; tb_idx++)
+        const u32 tb_count = pSettings->line_count("shader_params_export");
+        for (u32 tb_idx = 0; tb_idx < tb_count; tb_idx++)
         {
             LPCSTR N, V;
             if (pSettings->r_line("shader_params_export", tb_idx, &N, &V))
@@ -104,7 +104,7 @@ void InitConsole()
     Console = xr_new<CConsole>();
     Console->Initialize();
 
-    strcpy_s(Console->ConfigFile, "user.ltx");
+    strcpy_s(Console->ConfigFile, fsgame::user_ltx);
     if (strstr(Core.Params, "-ltx "))
     {
         string64 c_name;
@@ -122,7 +122,6 @@ void InitConsole()
     CORE_FEATURE_SET(forcibly_equivalent_slots, "features");
     CORE_FEATURE_SET(slots_extend_menu, "features");
     CORE_FEATURE_SET(dynamic_sun_movement, "features");
-    CORE_FEATURE_SET(wpn_bobbing, "features");
     CORE_FEATURE_SET(show_inv_item_condition, "features");
     CORE_FEATURE_SET(remove_alt_keybinding, "features");
     CORE_FEATURE_SET(binoc_firing, "features");
@@ -764,27 +763,7 @@ int CApplication::Level_ID(const char* name, const char* ver, const bool bSet)
 {
     int result = -1;
     bool arch_res = false;
-/* //Вроде б нам это не нужно. что-то от мп
-    auto it = FS.m_archives.begin();
-    auto it_e = FS.m_archives.end();
-    for (; it != it_e; ++it)
-    {
-        CLocatorAPI::archive& A = *it;
-        if (A.hSrcFile == NULL)
-        {
-            LPCSTR ln = A.header->r_string("header", "level_name");
-            LPCSTR lv = A.header->r_string("header", "level_ver");
-            if (0 == _stricmp(ln, name) && 0 == _stricmp(lv, ver))
-            {
-                FS.LoadArchive(A);
-                arch_res = true;
-            }
-        }
-    }
 
-    if (arch_res)
-        Level_Scan();
-*/
     string256 buffer;
     strconcat(sizeof(buffer), buffer, name, "\\");
     for (u32 I = 0; I < Levels.size(); ++I)

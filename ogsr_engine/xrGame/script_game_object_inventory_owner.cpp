@@ -5,6 +5,7 @@
 #include "stdafx.h"
 #include "script_game_object.h"
 #include "InventoryOwner.h"
+#include "trade.h"
 #include "InventoryBox.h"
 #include "Pda.h"
 #include "xrMessages.h"
@@ -177,6 +178,28 @@ bool CScriptGameObject::IsTalkEnabled()
     return pInventoryOwner->IsTalkEnabled();
 }
 
+CScriptGameObject* CScriptGameObject::GetTalkPartner()
+{
+    CInventoryOwner* pInventoryOwner = smart_cast<CInventoryOwner*>(&object());
+    if (!pInventoryOwner)
+        return nullptr;
+
+    const CGameObject* partner = smart_cast<CGameObject*>(pInventoryOwner->GetTalkPartner());
+
+    return partner ? partner->lua_game_object() : nullptr;
+}
+
+bool CScriptGameObject::IsTrading()
+{
+    CInventoryOwner* pInventoryOwner = smart_cast<CInventoryOwner*>(&object());
+    if (!pInventoryOwner)
+        return false;
+
+    const CTrade* trade = pInventoryOwner->GetTrade();
+
+    return trade ? trade->IsInTradeState() : false;
+}
+
 void CScriptGameObject::EnableTrade()
 {
     CInventoryOwner* pInventoryOwner = smart_cast<CInventoryOwner*>(&object());
@@ -184,6 +207,7 @@ void CScriptGameObject::EnableTrade()
         return;
     pInventoryOwner->EnableTrade();
 }
+
 void CScriptGameObject::DisableTrade()
 {
     CInventoryOwner* pInventoryOwner = smart_cast<CInventoryOwner*>(&object());
@@ -191,6 +215,7 @@ void CScriptGameObject::DisableTrade()
         return;
     pInventoryOwner->DisableTrade();
 }
+
 bool CScriptGameObject::IsTradeEnabled()
 {
     CInventoryOwner* pInventoryOwner = smart_cast<CInventoryOwner*>(&object());

@@ -67,10 +67,6 @@ void CRenderDevice::End()
     {
         ::Sound->set_master_volume(0.f);
 
-        const HWND insertPos = IsDebuggerPresent() ? HWND_NOTOPMOST : HWND_TOPMOST;
-
-        SetWindowPos(Device.m_hWnd, insertPos, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-
         dwPrecacheFrame--;
 
         if (!load_screen_renderer.b_registered)
@@ -85,10 +81,6 @@ void CRenderDevice::End()
 
         if (0 == dwPrecacheFrame)
         {
-            SetWindowPos(Device.m_hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-
-            //m_pRender->updateGamma();
-            
             ::Sound->set_master_volume(1.f);
 
             //Memory.mem_compact();
@@ -418,7 +410,6 @@ void CRenderDevice::ShowMainWindow() const
 {
     ShowWindow(m_hWnd, SW_SHOWNORMAL);
     SetForegroundWindow(m_hWnd);
-    SetWindowPos(m_hWnd, nullptr, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
 void CRenderDevice::Run()

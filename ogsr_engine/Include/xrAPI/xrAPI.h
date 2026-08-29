@@ -24,3 +24,9 @@ extern XRCORE_API CGameMtlLibrary* PGMLib;
 class IDebugRender;
 extern XRCORE_API IDebugRender* DRender;
 //#endif // DEBUG
+
+IC CGameMtlLibrary& GMLibrary()
+{
+    VERIFY(PGMLib);
+    return *PGMLib;
+}

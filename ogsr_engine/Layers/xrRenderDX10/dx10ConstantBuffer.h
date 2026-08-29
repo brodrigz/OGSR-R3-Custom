@@ -13,6 +13,9 @@ public:
     ID3DBuffer* GetBuffer() const { return m_pBuffer; }
     void Flush(u32 context_id);
 
+    // Context registry the buffer belongs to
+    u32 m_context_id{CHW::INVALID_CONTEXT_ID};
+
     // Set copy data into constant buffer
     template <typename T>
     void set(R_constant* C, R_constant_load& L, const T& A);

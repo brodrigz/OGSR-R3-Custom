@@ -7,9 +7,6 @@ float psShedulerTarget = 10.f;
 float psShedulerMax = 10.f;
 constexpr float psShedulerReaction = 1.f; // 0.1f;
 
-BOOL g_bSheduleInProgress = FALSE;
-
-//-------------------------------------------------------------------------------------
 void CSheduler::Initialize() { m_processing_now = false; }
 
 void CSheduler::Destroy()
@@ -348,8 +345,6 @@ void CSheduler::Update()
 
     internal_Registration();
 
-    g_bSheduleInProgress = TRUE;
-
     m_processing_now = true;
 
     u32 dwTime = Device.dwTimeGlobal;
@@ -383,9 +378,6 @@ void CSheduler::Update()
     Device.Statistic->fShedulerLoad = psShedulerCurrent;
 
     m_processing_now = false;
-
-    // Finalize
-    g_bSheduleInProgress = FALSE;
 
     internal_Registration();
 

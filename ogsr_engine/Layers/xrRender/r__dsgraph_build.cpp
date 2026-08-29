@@ -247,7 +247,7 @@ void R_dsgraph_structure::r_dsgraph_insert_dynamic(IRenderable* root, dxRender_V
                 mapHUD.insert_anyway(EPS, _MatrixItemS({SSA, root, pVisual, xform, &*pVisual->shader->E[0]}));
                 mapScopeHUD.insert_anyway(dist_sqr, _MatrixItemS({SSA, root, pVisual, xform, &*pVisual->shader->E[1]}));
                 // Simp: этот костыль пусть работает только в OGSR GA, там прицелы с ним приемлемо выглядят.
-                if (IS_OGSR_GA && ps_r_pp_aa_mode == DLSS || ps_r_pp_aa_mode == FSR2 || ps_r_pp_aa_mode == TAA || ps_r2_ls_flags.test(R2FLAG_DBG_TAA_JITTER_ENABLE))
+                if (IS_OGSR_GA && ps_r_pp_aa_mode == DLSS || ps_r_pp_aa_mode == FSR3 || ps_r_pp_aa_mode == TAA || ps_r2_ls_flags.test(R2FLAG_DBG_TAA_JITTER_ENABLE))
                 {
                     mapScopeHUDSorted.insert_anyway(dist_sqr, _MatrixItemS({SSA, root, pVisual, xform, &*pVisual->shader->E[0]}));
                     mapScopeHUDSorted.insert_anyway(dist_sqr, _MatrixItemS({SSA, root, pVisual, xform, &*pVisual->shader->E[1]}));
@@ -398,7 +398,7 @@ void R_dsgraph_structure::r_dsgraph_insert_static(dxRender_Visual* pVisual)
             if (pVisual->base_crc)
             {
                 const float lod = calcLOD(SSA);
-                pVisual->select_lod_id(clampr(1.f - (1.f - lod) * ps_r__LOD_k, 0.01f, 1.f), context_id, phase == CRender::PHASE_SMAP);
+                pVisual->select_lod_id(clampr(1.f - (1.f - lod) * ps_r__LOD_k, 0.01f, 1.f), context_id, phase != CRender::PHASE_NORMAL);
 
                 if (auto it = normalItems.trees->find(pVisual->crc[context_id]); it != normalItems.trees->end())
                 {
@@ -501,13 +501,13 @@ void R_dsgraph_structure::add_leafs_static(dxRender_Visual* pVisual)
     {
         // ZoneScopedN("add_leafs_static/HOM+IsValuableToRender");
 
-        if (phase != CRender::PHASE_SMAP && !RImplementation.HOM.visible(pVisual->getVisData()))
+        if (phase == CRender::PHASE_NORMAL && !RImplementation.HOM.visible(pVisual->getVisData()))
         {
             // Msg("add_leafs_static skip static model");
             return;
         }
 
-        if (!pVisual->ignore_optimization && !IsValuableToRender(pVisual, phase == CRender::PHASE_SMAP))
+        if (!pVisual->ignore_optimization && !IsValuableToRender(pVisual, phase != CRender::PHASE_NORMAL))
             return;
     }
 
@@ -541,7 +541,7 @@ void R_dsgraph_structure::add_leafs_static(dxRender_Visual* pVisual)
         float D;
         float ssa = CalcSSA(D, pV->getVisData().sphere.P, pV->getVisData().sphere.R /*+ 0*/) * pV->lod_factor;
 
-        if (ssa < r_ssaLOD_A && phase != CRender::PHASE_SMAP)
+        if (ssa < r_ssaLOD_A && phase == CRender::PHASE_NORMAL)
         {
             lstLODs.emplace_back(ssa, pVisual);
         }
@@ -549,7 +549,7 @@ void R_dsgraph_structure::add_leafs_static(dxRender_Visual* pVisual)
         //if (ssa < r_ssaDISCARD)
         //    return;
 
-        if (ssa > r_ssaLOD_B || phase == CRender::PHASE_SMAP)
+        if (ssa > r_ssaLOD_B || phase != CRender::PHASE_NORMAL)
         {
             // Add all children, doesn't perform any tests
             for (dxRender_Visual* Vis : pV->children)
@@ -604,13 +604,13 @@ void R_dsgraph_structure::add_static(dxRender_Visual* pVisual, const CFrustum& v
     {
         // ZoneScopedN("add_leafs_static/HOM+IsValuableToRender");
 
-        if (phase != CRender::PHASE_SMAP && !RImplementation.HOM.visible(pVisual->getVisData()))
+        if (phase == CRender::PHASE_NORMAL && !RImplementation.HOM.visible(pVisual->getVisData()))
         {
             // Msg("add_leafs_static skip static model");
             return;
         }
 
-        if (!pVisual->ignore_optimization && !IsValuableToRender(pVisual, phase == CRender::PHASE_SMAP))
+        if (!pVisual->ignore_optimization && !IsValuableToRender(pVisual, phase != CRender::PHASE_NORMAL))
             return;
     }
 
@@ -769,7 +769,7 @@ void R_dsgraph_structure::build_subspace(const IRender_Sector::sector_id_t& star
 
         if (g_pGameLevel && g_hud)
         {
-            if (phase == CRender::PHASE_SMAP)
+            if (phase != CRender::PHASE_NORMAL)
             {
                 g_hud->Render_SMAP(context_id);
             }

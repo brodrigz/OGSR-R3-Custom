@@ -110,7 +110,7 @@ void CBlender_Particle::Compile(CBlender_Compile& C)
         C.r_End();
         break;
     case SE_R2_SHADOW: // smap
-        // HARD or SOFT: shadow-map
+    case SE_R2_SHADOW_LIGHTS:
         switch (oBlend.IDselected)
         {
         case 0:

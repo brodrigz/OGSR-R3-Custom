@@ -175,17 +175,18 @@ function log3(fmt, ...)
 	end
 	local res, msg = pcall(string.format, fmt, unpack(args))
 	if not res then --Если произошла ошибка
-		msg = "!!log3 failed: "..msg.."\n"..debug.traceback()
+		msg = "!!log3 failed for string[" .. tostring(fmt) .. "]: "..msg.."\n"..debug.traceback()
 	end
 	log1(msg)
+	return msg
 end
 --==============================================================================================
-function abort(fmt, ...)
+function abort(...)
 	log1("!!****************************[ABORT]*********************************")
 	log1(debug.traceback())
-	log3(fmt, ...)
+	local err = log3(...)
 	log1("!!********************************************************************")
-	error(tostring(fmt))
+	error(err)
 end
 function ASSERT(cond, ...)
 	if not cond then

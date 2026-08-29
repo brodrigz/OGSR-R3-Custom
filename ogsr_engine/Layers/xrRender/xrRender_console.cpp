@@ -16,7 +16,7 @@ constexpr xr_token CascadesSmapSizeToken[]{// {"512x512", 512},
                                       //{"8192x8192", 8192},
                                       {}};
 
-u32 r2_SmapLightsSize = 3072;
+u32 r2_SmapLightsSize = 4096;
 constexpr xr_token LightsSmapSizeToken[]{//{"1536x1536", 1536},
                                         //{"2048x2048", 2048},
                                         {"2560x2560", 2560},
@@ -37,7 +37,7 @@ u32 ps_r_pp_aa_mode = DLSS;
 constexpr xr_token pp_aa_mode_token[] = {
     {"st_opt_off", NO_AA},
     {"st_opt_dlss", DLSS},
-    {"st_opt_fsr2", FSR2},
+    {"st_opt_fsr3", FSR3},
     {"st_opt_taa", TAA},
     {"st_opt_smaa", SMAA},
 
@@ -107,7 +107,7 @@ extern float r__dtex_range;
 
 Fvector3 ps_r_taa_jitter{};
 Fvector2 ps_r_taa_jitter_full{};
-float ps_r_cas{};
+float ps_r_cas{0.5};
 
 int ps_r__LightSleepFrames = 100;
 
@@ -168,15 +168,18 @@ Flags64 ps_r2_ls_flags = {
 //    R2FLAGEXT_RAIN_DROPS_CONTROL | 
 //    R2FLAGEXT_MASK | 
 //    R2FLAGEXT_MASK_CONTROL | 
-//    R2FLAGEXT_MT_TEXLOAD  |
+    R2FLAGEXT_MT_TEXLOAD  |
     R2FLAGEXT_SSLR |
+    R2FLAGEXT_SHADER_CACHE |
     R2FLAGEXT_SSFX_INTER_GRASS |
     R2FLAGEXT_FONT_SHADOWS
 //    | R2FLAGEXT_SSFX_SHADOWS
 //    | R2FLAGEXT_SSFX_SSS
-    | R2FLAGEXT_SMAP_LOW_LOD
+//    | R2FLAGEXT_SMAP_LOW_LOD
     | R2FLAGEXT_DISABLE_SMAPVIS
     | R2FLAG_SMAP_2SIDE
+    | R2FLAGEXT_USE_ACES
+    | R2FLAGEXT_LENS_FLARE
 };
 
 BOOL ps_no_scale_on_fade = 0; // Alundaio
@@ -214,7 +217,7 @@ float ps_r2_slight_fade = 1.0f;
 
 Fvector4 ps_ssfx_lut{}; // x - интенсивность, y - номер эффекта
 Fvector3 ps_ssfx_shadows{
-    1024.f, 1536.f,
+    1536.f, 2048.f,
     0.0f}; // x - Minimum shadow map resolution. When lights are away from the player the resolution of shadows drop to improve performance ( at the cost of image quality ), y -
            // Maximum shadow map resolution. When lights are closer, the resolution increases to improve the image quality of shadows ( at the cost of performance ).
 Fvector3 ps_ssfx_shadow_bias{0.4f, 0.03f, 0.0f};
@@ -253,9 +256,9 @@ Fvector4 ps_ssfx_hud_drops_1{}, ps_ssfx_hud_drops_2{}; // Значениями �
 
 Fvector4 ps_ssfx_blood_decals{0.6f, 0.6f, 0.f, 0.f};
 
-Fvector4 ps_ssfx_rain_1{10.0f, 0.02f, 5.f, 2.f}; // Len, Width, Speed, Quality
-Fvector4 ps_ssfx_rain_2{0.4f, 0.5f, 5.0f, 1.0f}; // Alpha, Brigthness, Refraction, Reflection
-Fvector4 ps_ssfx_rain_3{0.95f, 0.5f, 0.0f, 0.0f}; // Alpha, Refraction ( Splashes )
+Fvector4 ps_ssfx_rain_1{6.0f, 0.025f, 0.6f, 2.f}; // Len, Width, Speed, Quality
+Fvector4 ps_ssfx_rain_2{0.7f, 0.1f, 1.0f, 0.5f}; // Alpha, Brigthness, Refraction, Reflection
+Fvector4 ps_ssfx_rain_3{0.15f, 1.f, 0.0f, 0.0f}; // Alpha, Refraction ( Splashes )
 
 Fvector3 ps_ssfx_shadow_cascades{25.f, 60.f, 160.f};
 Fvector4 ps_ssfx_grass_shadows = {0.0f, 0.0f, 0.0f, 0.0f}; // X - каскады на которых будут рендериться тени (0 - на первом, 1 - на первом и втором, 2 - на всех трёх), Y - устарело и более не используется, Z - дальность на которой будут рендериться тени от источников света (НЕ СОЛНЦА)
@@ -329,7 +332,7 @@ float ps_r__opt_dist = 750.f;
 #include "../../xr_3da/xr_ioconsole.h"
 #include "../../xr_3da/xr_ioc_cmd.h"
 
-float ps_particle_update_coeff = 0.3f;
+float ps_particle_update_coeff{0.3f}, ps_particle_collision_min_dist{EPS_L};
 
 // Geometry optimization from Anomaly
 int opt_static_geom = 0;
@@ -338,6 +341,9 @@ int opt_shadow_geom = 0;
 int r_back_buffer_count{2};
 
 extern int delay_invisible_min, delay_invisible_max;
+
+constexpr xr_token r_lens_flare_mode_token[]{{"old_style_flare", old_style_flare}, {"new_shader_flare", new_shader_flare}, {}};
+u32 r_lens_flare_mode{new_shader_flare};
 
 //-----------------------------------------------------------------------
 class CCC_detail_radius : public CCC_Integer
@@ -466,7 +472,7 @@ class CCC_SunshaftsIntensity : public CCC_Float
 public:
     CCC_SunshaftsIntensity(LPCSTR N, float* V, float _min, float _max) : CCC_Float(N, V, _min, _max)
     {
-        SetCanSave(FALSE);
+        SetCanSave(false);
     }
 };
 
@@ -554,8 +560,8 @@ public:
 
         const float dist = 10;
 
-        const Fvector pos = Device.vCameraPosition;
-        const Fvector dir = Device.vCameraDirection;
+        const Fvector& pos = Device.vCameraPosition;
+        const Fvector& dir = Device.vCameraDirection;
 
         xr_vector<std::pair<dxRender_Visual*, float>> list;
 
@@ -697,6 +703,7 @@ void xrRender_initconsole()
 
     CMD3(CCC_Mask64, "r2_disable_hom", &ps_r2_ls_flags_ext, R2FLAGEXT_DISABLE_HOM);
     CMD3(CCC_Mask64, "r2_disable_particles", &ps_r2_ls_flags_ext, R2FLAGEXT_DISABLE_PARTICLES);
+    CMD3(CCC_Mask64, "r2_disable_particles_collision", &ps_r2_ls_flags_ext, R2FLAGEXT_DISABLE_PARTICLES_COLLISION);
     CMD3(CCC_Mask64, "r2_disable_dynamic", &ps_r2_ls_flags_ext, R2FLAGEXT_DISABLE_DYNAMIC);
     CMD3(CCC_Mask64, "r2_disable_light", &ps_r2_ls_flags_ext, R2FLAGEXT_DISABLE_LIGHT);
     //CMD3(CCC_Mask64, "r2_disable_smapvis", &ps_r2_ls_flags_ext, R2FLAGEXT_DISABLE_SMAPVIS);
@@ -721,6 +728,7 @@ void xrRender_initconsole()
     CMD3(CCC_Mask64, "r2_mask_control", &ps_r2_ls_flags_ext, R2FLAGEXT_MASK_CONTROL);
 
     CMD3(CCC_Mask64, "r_sslr_enable", &ps_r2_ls_flags_ext, R2FLAGEXT_SSLR);
+    CMD3(CCC_Mask64, "r_shader_cache", &ps_r2_ls_flags_ext, R2FLAGEXT_SHADER_CACHE)
 
     CMD3(CCC_Mask64, "r_terrain_parallax_enable", &ps_r2_ls_flags_ext, R2FLAGEXT_TERRAIN_PARALLAX);
 
@@ -743,6 +751,7 @@ void xrRender_initconsole()
     CMD3(CCC_Token, "r__smap_rain_size", &r2_SmapRainSize, RainSmapSizeToken);
 
     CMD3(CCC_Mask64, "r_smap_2side", &ps_r2_ls_flags, R2FLAG_SMAP_2SIDE);
+    CMD3(CCC_Mask64, "r_smap_lights_2side", &ps_r2_ls_flags, R2FLAG_SMAP_LIGHTS_2SIDE);
 
     CMD4(CCC_Float, "r2_sun_depth_far_scale", &ps_r2_sun_depth_far_scale, 0.5, 1.5);
     CMD4(CCC_Float, "r2_sun_depth_near_scale", &ps_r2_sun_depth_near_scale, 0.5, 1.5);
@@ -866,7 +875,7 @@ void xrRender_initconsole()
     CMD4(CCC_Float, "r2_ls_bloom_kernel_scale", &legacy_r2_ls_bloom_kernel_scale, 0, 1); // legacy fakelens compatibility
 
     // Screen Space Shaders
-    CMD4(CCC_Vector3, "ssfx_shadows", &ps_ssfx_shadows, Fvector3().set(128, 1536, 0), Fvector3().set(1536, 4096, 0));
+    CMD4(CCC_Vector3, "ssfx_shadows", &ps_ssfx_shadows, (Fvector3{1024.f, 1536.f, 0.f}), (Fvector3{4096.f, 4096.f, 0.f}));
 
     CMD4(CCC_Vector3, "ssfx_shadow_bias", &ps_ssfx_shadow_bias, Fvector3().set(0, 0, 0), Fvector3().set(1.0, 1.0, 1.0));
     CMD4(CCC_Vector4, "ssfx_lut", &ps_ssfx_lut, Fvector4().set(0.0, 0.0, 0.0, 0.0), tw2_max);
@@ -945,8 +954,10 @@ void xrRender_initconsole()
     CMD1(CCC_PART_DumpTextures, "particles_dump_textures");
 
     CMD4(CCC_Float, "particle_update_mod", &ps_particle_update_coeff, 0.04f, 10.f);
+    CMD4(CCC_Float, "particle_collision_min_dist", &ps_particle_collision_min_dist, EPS, 1.0f);
 
     CMD3(CCC_Mask64, "r_lens_flare", &ps_r2_ls_flags_ext, R2FLAGEXT_LENS_FLARE);
+    CMD3(CCC_Token, "r_lens_flare_mode", &r_lens_flare_mode, r_lens_flare_mode_token);
 
     CMD1(CCC_Dbg_DumpStaticVisual, "dbg_dump_static_at_look");
 

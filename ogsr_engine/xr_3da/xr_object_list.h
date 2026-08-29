@@ -60,8 +60,11 @@ public:
     void net_Register(CObject* O);
     void net_Unregister(CObject* O);
 
-    u32 net_Export(NET_Packet* P, u32 _start, u32 _count, std::vector<CObject*>& net_exported_objects); // return next start
+    u32 net_Export(NET_Packet* P, u32 _start, u32 _count, std::vector<CObject*>* net_exported_objects = nullptr); // return next start
     void net_Import(NET_Packet* P);
+
+    // для перебора массива объектов через range-based for
+    const auto& get_objects_map() const { return map_NETID; }
 
     ICF CObject* net_Find(u16 ID) const
     {

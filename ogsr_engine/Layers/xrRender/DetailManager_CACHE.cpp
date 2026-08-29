@@ -62,7 +62,7 @@ void CDetailManager::cache_Task(int gx, int gz, Slot* D)
     }
 }
 
-void CDetailManager::cache_Update(int v_x, int v_z, Fvector& view)
+void CDetailManager::cache_Update(int v_x, int v_z, const Fvector& view)
 {
     ZoneScoped;
 

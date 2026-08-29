@@ -15,9 +15,9 @@ static inline int get_texture_load_lod(const char* fn)
     xr_strlwr(fn);
     auto& sect = pSettings->r_section("reduce_lod_texture_list");
 
-    for (const auto& data : sect.Data)
+    for (const auto& name : sect.Ordered_Data | std::views::keys)
     {
-        if (strstr(fn, data.first.c_str()))
+        if (strstr(fn, name.c_str()))
         {
             if (psTextureLOD < 1)
             {

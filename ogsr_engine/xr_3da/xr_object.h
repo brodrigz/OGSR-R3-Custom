@@ -13,6 +13,9 @@ class ENGINE_API IRender_ObjectSpecific;
 class ENGINE_API CCustomHUD;
 class NET_Packet;
 class CSE_Abstract;
+class CActor;
+class CEntity;
+class CEntityAlive;
 
 //-----------------------------------------------------------------------------------------------------------
 #define CROW_RADIUS (30.f)
@@ -123,8 +126,14 @@ public:
     // Accessors and converters
     ICF IRenderVisual* Visual() const { return renderable.visual; }
     ICF ICollisionForm* CFORM() const { return collidable.model; }
+
     virtual CObject* dcast_CObject() { return this; }
     virtual IRenderable* dcast_Renderable() { return this; }
+
+    virtual CActor* cast_actor() { return nullptr; }
+    virtual CEntity* cast_entity() { return nullptr; }
+    virtual CEntityAlive* cast_entity_alive() { return nullptr; }
+
     virtual void OnChangeVisual() {}
 
     virtual IPhysicsShell* physics_shell() { return nullptr; }
@@ -196,8 +205,8 @@ public:
     IC u32 ps_Size() const { return PositionStack.size(); }
     virtual SavedPosition ps_Element(u32 ID) const;
 
-    virtual void ForceTransform(const Fmatrix& m) = 0;
-    virtual void ForceTransformAndDirection(const Fmatrix& m) = 0;
+    virtual void ForceTransform(const Fmatrix& m) {}
+    virtual void ForceTransformAndDirection(const Fmatrix& m) {}
 
     // HUD
     virtual void OnHUDDraw(CCustomHUD* hud, u32 context_id, IRenderable* root) {}
@@ -213,6 +222,10 @@ public:
 
 public:
     virtual bool register_schedule() const { return true; }
+
+public:
+    virtual Fvector get_new_local_point_on_mesh(u16& bone_id) const;
+    virtual Fvector get_last_local_point_on_mesh(Fvector const& last_point, u16 bone_id) const;
 };
 
 #pragma pack(pop)

@@ -45,17 +45,18 @@ static class NGXWrapper
     NVSDK_NGX_Handle* Handle{};
     bool DLSSCreated{}, DLSSInited{};
     ID3D11Resource* OutputRT{};
+    NVSDK_NGX_Dimensions saved_renderSize{};
 
 public:
     u32 saved_w{}, saved_h{};
     uint32_t dlssPreset{}, dlssQuality{};
-    using Uvector2 = _vector2<u32>;
 
-    bool Create(const u64 appid, const Uvector2& renderSize, const Uvector2& displaySize, ref_rt& out_rt, const u32 quality, u32& preset)
+    bool Create(const u64 appid, const NVSDK_NGX_Dimensions& renderSize, const NVSDK_NGX_Dimensions& displaySize, ref_rt& out_rt, const u32 quality, u32& preset)
     {
         OutputRT = out_rt->pSurface;
         saved_w = out_rt->dwWidth;
         saved_h = out_rt->dwHeight;
+        saved_renderSize = renderSize;
 
         if (DLSSCreated)
         {
@@ -153,11 +154,11 @@ public:
         /// flags |= NVSDK_NGX_DLSS_Feature_Flags_AlphaUpscaling;
 
         NVSDK_NGX_DLSS_Create_Params dlssCreateParams{};
-        dlssCreateParams.Feature.InWidth = renderSize.x;
-        dlssCreateParams.Feature.InHeight = renderSize.y;
+        dlssCreateParams.Feature.InWidth = renderSize.Width;
+        dlssCreateParams.Feature.InHeight = renderSize.Height;
         // final resolution
-        dlssCreateParams.Feature.InTargetWidth = displaySize.x;
-        dlssCreateParams.Feature.InTargetHeight = displaySize.y;
+        dlssCreateParams.Feature.InTargetWidth = displaySize.Width;
+        dlssCreateParams.Feature.InTargetHeight = displaySize.Height;
         dlssCreateParams.Feature.InPerfQualityValue = static_cast<NVSDK_NGX_PerfQuality_Value>(quality);
         dlssQuality = dlssCreateParams.Feature.InPerfQualityValue;
 
@@ -217,14 +218,13 @@ public:
         // Ресурс, содержащий векторы движения. DXGI_FORMAT_R16G16_FLOAT
         dlssEvalParams.pInMotionVectors = RImplementation.Target->rt_Velocity->pSurface;
 
-        dlssEvalParams.InRenderSubrectDimensions.Width = Device.dwWidth;
-        dlssEvalParams.InRenderSubrectDimensions.Height = Device.dwHeight;
+        dlssEvalParams.InRenderSubrectDimensions = saved_renderSize;
 
         dlssEvalParams.InJitterOffsetX = ps_r_taa_jitter_full.x;
         dlssEvalParams.InJitterOffsetY = ps_r_taa_jitter_full.y;
 
-        dlssEvalParams.InMVScaleX = -static_cast<float>(Device.dwWidth) * 0.5f;
-        dlssEvalParams.InMVScaleY = static_cast<float>(Device.dwHeight) * 0.5f;
+        dlssEvalParams.InMVScaleX = -static_cast<float>(saved_renderSize.Width) * 0.5f;
+        dlssEvalParams.InMVScaleY = static_cast<float>(saved_renderSize.Height) * 0.5f;
 
         const NVSDK_NGX_Result result = NGX_D3D11_EVALUATE_DLSS_EXT(HW.get_context(CHW::IMM_CTX_ID), Handle, NgxParameters, &dlssEvalParams);
         if (result != NVSDK_NGX_Result_Success)
@@ -276,11 +276,11 @@ void CRenderTarget::InitDLSS()
 {
     NGXWrapper.Destroy();
 
-    const NGXWrapper::Uvector2 RenderParams{Device.dwWidth, Device.dwHeight};
+    const NVSDK_NGX_Dimensions RenderParams{Device.dwWidth, Device.dwHeight};
     if (!NGXWrapper.Create(20082024151405ull, RenderParams, RenderParams, rt_Generic_combine, NVSDK_NGX_PerfQuality_Value_DLAA, ps_r_dlss_preset))
     {
         if (ps_r_pp_aa_mode == DLSS)
-            ps_r_pp_aa_mode = FSR2;
+            ps_r_pp_aa_mode = FSR3;
     }
 }
 
@@ -323,19 +323,20 @@ void CRenderTarget::ProcessCAS(CBackend& cmd_list)
 }
 
 //*****************************************************************************************************
-#include <..\AMD_FSR2\build\native\include\ffx-fsr2-api\ffx_fsr2.h>
-#include <..\AMD_FSR2\build\native\include\ffx-fsr2-api\dx11\ffx_fsr2_dx11.h>
+#include "FidelityFX/host/ffx_fsr3.h"
+#include "FidelityFX/host/backends/dx11/ffx_dx11.h"
 
-#pragma comment(lib, "ffx_fsr2_api_x64")
-#pragma comment(lib, "ffx_fsr2_api_dx11_x64")
-
-static class Fsr2Wrapper
+static class Fsr3Wrapper
 {
     bool fsr_created{};
-    FfxFsr2Context m_context{};
+    FfxFsr3UpscalerContext m_UpscalerContext{};
     xr_vector<char> m_scratchBuffer;
     ID3D11Resource* OutputRT{};
+    FfxDimensions2D saved_maxRenderSize{}, saved_displaySize{};
 
+    ID3D11Texture2D* dilatedDepth{};
+    ID3D11Texture2D* dilatedMotionVectors{};
+    ID3D11Texture2D* reconstructedPrevNearestDepth{};
 public:
     u32 saved_w{}, saved_h{};
 
@@ -344,6 +345,8 @@ public:
         OutputRT = out_rt->pSurface;
         saved_w = out_rt->dwWidth;
         saved_h = out_rt->dwHeight;
+        saved_maxRenderSize = maxRenderSize;
+        saved_displaySize = displaySize;
 
         if (fsr_created)
         {
@@ -355,26 +358,49 @@ public:
             Msg("!![%s] Low FeatureLevel: [%d]", __FUNCTION__, HW.FeatureLevel);
         }
 
-        // Setup DX11 interface.
-        FfxFsr2ContextDescription m_contextDesc{};
-        m_scratchBuffer.resize(ffxFsr2GetScratchMemorySizeDX11());
-        const FfxErrorCode errorCode = ffxFsr2GetInterfaceDX11(&m_contextDesc.callbacks, HW.pDevice, m_scratchBuffer.data(), m_scratchBuffer.size());
+        m_scratchBuffer.resize(ffxGetScratchMemorySizeDX11(FFX_FSR3UPSCALER_CONTEXT_COUNT));
+
+        FfxInterface fsrInterface{};
+        auto fsrDevice = ffxGetDeviceDX11(HW.pDevice);
+        FfxErrorCode errorCode = ffxGetInterfaceDX11(&fsrInterface, fsrDevice, m_scratchBuffer.data(), m_scratchBuffer.size(), FFX_FSR3UPSCALER_CONTEXT_COUNT);
         if (errorCode != FFX_OK)
         {
-            Msg("!!Failed ffxFsr2GetInterfaceDX11! Error: [%d]", errorCode);
+            Msg("!!Failed ffxGetInterfaceDX11! Error: [%d]", errorCode);
+            Destroy();
             return false;
         }
 
-        // This adds a ref to the device.
-        // The reference will get freed in ffxFsr2ContextDestroy
-        m_contextDesc.device = ffxGetDeviceDX11(HW.pDevice);
-        m_contextDesc.maxRenderSize = maxRenderSize;
-        m_contextDesc.displaySize = displaySize;
+        FfxFsr3UpscalerContextDescription m_UpscalercontextDesc{};
+        m_UpscalercontextDesc.backendInterface = fsrInterface;
+        m_UpscalercontextDesc.maxRenderSize = maxRenderSize;
+        m_UpscalercontextDesc.maxUpscaleSize = displaySize;
 
-        // You should config the flags you need based on your own project
-        m_contextDesc.flags = FFX_FSR2_ENABLE_HIGH_DYNAMIC_RANGE;
+        errorCode = ffxFsr3UpscalerContextCreate(&m_UpscalerContext, &m_UpscalercontextDesc);
+        if (errorCode != FFX_OK)
+        {
+            Msg("!!Failed ffxFsr3UpscalerContextCreate! Error: [%d]", errorCode);
+            Destroy();
+            return false;
+        }
 
-        ffxFsr2ContextCreate(&m_context, &m_contextDesc);
+        auto CreateTexture = [&](const DXGI_FORMAT fmt, const bool need_rt, ID3D11Texture2D** out) {
+            D3D11_TEXTURE2D_DESC Desc{};
+            Desc.Width = maxRenderSize.width;
+            Desc.Height = maxRenderSize.height;
+            Desc.MipLevels = 1;
+            Desc.ArraySize = 1;
+            Desc.Format = fmt;
+            Desc.SampleDesc.Count = 1;
+            Desc.Usage = D3D11_USAGE_DEFAULT;
+            Desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
+            if (need_rt)
+                Desc.BindFlags |= D3D11_BIND_RENDER_TARGET;
+            return HW.pDevice->CreateTexture2D(&Desc, nullptr, out);
+        };
+
+        R_CHK(CreateTexture(DXGI_FORMAT_R32_FLOAT, true, &dilatedDepth));
+        R_CHK(CreateTexture(DXGI_FORMAT_R16G16_FLOAT, true, &dilatedMotionVectors));
+        R_CHK(CreateTexture(DXGI_FORMAT_R32_UINT, false, &reconstructedPrevNearestDepth));
 
         fsr_created = true;
         return true;
@@ -382,53 +408,58 @@ public:
 
     void Destroy()
     {
-        if (!fsr_created)
-            return;
+        if (fsr_created)
+        {
+            ffxFsr3UpscalerContextDestroy(&m_UpscalerContext);
+            fsr_created = false;
+        }
 
-        fsr_created = false;
-        ffxFsr2ContextDestroy(&m_context);
+        _RELEASE(dilatedDepth);
+        _RELEASE(dilatedMotionVectors);
+        _RELEASE(reconstructedPrevNearestDepth);
     }
 
     bool Draw()
     {
         if (!fsr_created)
         {
-            Msg("! Fsr2Wrapper not created!");
+            Msg("! Fsr3Wrapper not created!");
             return false;
         }
 
-        FfxFsr2DispatchDescription dispatchParameters{};
+        FfxFsr3UpscalerDispatchDescription dispatchParameters{};
 
-        dispatchParameters.commandList = HW.get_context(CHW::IMM_CTX_ID);
+        dispatchParameters.commandList = ffxGetCommandListDX11(HW.get_context(CHW::IMM_CTX_ID));
 
-        dispatchParameters.color = ffxGetResourceDX11(&m_context, RImplementation.Target->rt_Generic_0->pSurface, L"FSR2_InputColor");
-        dispatchParameters.depth = ffxGetResourceDX11(&m_context, RImplementation.Target->rt_zbuffer->pSurface, L"FSR2_InputDepth");
+        dispatchParameters.color = ffxGetResourceDX11(RImplementation.Target->rt_Generic_0->pSurface, GetFfxResourceDescriptionDX11(RImplementation.Target->rt_Generic_0->pSurface), L"FSR3_InputColor");
+        dispatchParameters.depth = ffxGetResourceDX11(RImplementation.Target->rt_zbuffer->pSurface, GetFfxResourceDescriptionDX11(RImplementation.Target->rt_zbuffer->pSurface), L"FSR3_InputDepth");
 
-        dispatchParameters.motionVectors = ffxGetResourceDX11(&m_context, RImplementation.Target->rt_Velocity->pSurface, L"FSR2_InputMotionVectors");
-        dispatchParameters.exposure = ffxGetResourceDX11(&m_context, nullptr, L"FSR2_InputExposure");
+        dispatchParameters.motionVectors = ffxGetResourceDX11(RImplementation.Target->rt_Velocity->pSurface, GetFfxResourceDescriptionDX11(RImplementation.Target->rt_Velocity->pSurface), L"FSR3_InputMotionVectors");
+        dispatchParameters.exposure = ffxGetResourceDX11(nullptr, {}, L"FSR3_InputExposure");
 
-        dispatchParameters.reactive = ffxGetResourceDX11(&m_context, nullptr, L"FSR2_InputReactiveMap");
-        dispatchParameters.transparencyAndComposition = ffxGetResourceDX11(&m_context, nullptr, L"FSR2_TransparencyAndCompositionMap");
+        dispatchParameters.reactive = ffxGetResourceDX11(nullptr, {}, L"FSR3_InputReactiveMap");
+        dispatchParameters.transparencyAndComposition = ffxGetResourceDX11(nullptr, {}, L"FSR3_TransparencyAndCompositionMap");
 
-        dispatchParameters.output = ffxGetResourceDX11(&m_context, OutputRT, L"FSR2_OutputUpscaledColor", FFX_RESOURCE_STATE_UNORDERED_ACCESS);
+	    dispatchParameters.dilatedDepth = ffxGetResourceDX11(dilatedDepth, GetFfxResourceDescriptionDX11(dilatedDepth), L"FSR3_dilatedDepth", FFX_RESOURCE_STATE_UNORDERED_ACCESS);
+        dispatchParameters.dilatedMotionVectors =
+            ffxGetResourceDX11(dilatedMotionVectors, GetFfxResourceDescriptionDX11(dilatedMotionVectors), L"FSR3_DilatedMotion", FFX_RESOURCE_STATE_UNORDERED_ACCESS);
+        dispatchParameters.reconstructedPrevNearestDepth = ffxGetResourceDX11(reconstructedPrevNearestDepth, GetFfxResourceDescriptionDX11(reconstructedPrevNearestDepth),
+                                                                               L"FSR3_reconstructedPrevNearestDepth", FFX_RESOURCE_STATE_UNORDERED_ACCESS);
+
+        dispatchParameters.output = ffxGetResourceDX11(OutputRT, GetFfxResourceDescriptionDX11(OutputRT), L"FSR3_OutputUpscaledColor", FFX_RESOURCE_STATE_UNORDERED_ACCESS);
 
         dispatchParameters.jitterOffset.x = ps_r_taa_jitter_full.x;
         dispatchParameters.jitterOffset.y = ps_r_taa_jitter_full.y;
 
-        dispatchParameters.motionVectorScale.x = -static_cast<float>(Device.dwWidth) * 0.5f;
-        dispatchParameters.motionVectorScale.y = static_cast<float>(Device.dwHeight) * 0.5f;
-
-        dispatchParameters.reset = false;
-
-        dispatchParameters.enableSharpening = false;
-        dispatchParameters.sharpness = 0.f;
+        dispatchParameters.motionVectorScale.x = -static_cast<float>(saved_maxRenderSize.width) * 0.5f;
+        dispatchParameters.motionVectorScale.y = static_cast<float>(saved_maxRenderSize.height) * 0.5f;
 
         dispatchParameters.frameTimeDelta = std::max(1.0f + EPS_L, Device.fTimeDeltaRealMS); // The time elapsed since the last frame (expressed in milliseconds).
 
         dispatchParameters.preExposure = 1.0f;
 
-        dispatchParameters.renderSize.width = Device.dwWidth;
-        dispatchParameters.renderSize.height = Device.dwHeight;
+        dispatchParameters.renderSize = saved_maxRenderSize;
+        dispatchParameters.upscaleSize = saved_displaySize;
 
         dispatchParameters.cameraFar = g_pGamePersistent->Environment().CurrentEnv->far_plane;
         dispatchParameters.cameraNear = VIEWPORT_NEAR;
@@ -436,35 +467,31 @@ public:
         dispatchParameters.cameraFovAngleVertical = deg2rad(Device.fFOV);
 
         dispatchParameters.viewSpaceToMetersFactor = 1.0f;
-        dispatchParameters.autoTcThreshold = 0.1f;
-        dispatchParameters.autoTcScale = 1.0f;
-        dispatchParameters.autoReactiveScale = 5.0f;
-        dispatchParameters.autoReactiveMax = 0.9f;
 
-        const FfxErrorCode errorCode = ffxFsr2ContextDispatch(&m_context, &dispatchParameters);
+        const FfxErrorCode errorCode = ffxFsr3UpscalerContextDispatch(&m_UpscalerContext, &dispatchParameters);
 
         if (errorCode != FFX_OK)
         {
-            Msg("! ffxFsr2ContextDispatch not valid. Error: [%d]", errorCode);
+            Msg("! ffxFsr3UpscalerContextDispatch not valid. Error: [%d]", errorCode);
             return false;
         }
 
         return true;
     }
 
-    ~Fsr2Wrapper() { Destroy(); }
-} Fsr2Wrapper, Fsr2WrapperScope;
+    ~Fsr3Wrapper() { Destroy(); }
+} Fsr3Wrapper , Fsr3WrapperScope;
 
 void CRenderTarget::InitFSR()
 {
-    Fsr2Wrapper.Destroy();
-    Fsr2WrapperScope.Destroy();
+    Fsr3Wrapper.Destroy();
+    Fsr3WrapperScope.Destroy();
 
     const FfxDimensions2D displaySize{Device.dwWidth, Device.dwHeight};
 
-    if (!Fsr2Wrapper.Create(displaySize, displaySize, rt_Generic_combine))
+    if (!Fsr3Wrapper.Create(displaySize, displaySize, rt_Generic_combine))
     {
-        if (ps_r_pp_aa_mode == FSR2)
+        if (ps_r_pp_aa_mode == FSR3)
             ps_r_pp_aa_mode = TAA;
     }
     else
@@ -472,21 +499,21 @@ void CRenderTarget::InitFSR()
         reset_3dss_rendertarget();
 
         const FfxDimensions2D ScopeSize{rt_Generic_combine_scope->dwWidth, rt_Generic_combine_scope->dwHeight};
-        R_ASSERT(Fsr2WrapperScope.Create(displaySize, ScopeSize, rt_Generic_combine_scope));
+        R_ASSERT(Fsr3WrapperScope.Create(displaySize, ScopeSize, rt_Generic_combine_scope));
     }
 }
 
 void CRenderTarget::DestroyFSR()
 {
-    Fsr2Wrapper.Destroy();
-    Fsr2WrapperScope.Destroy();
+    Fsr3Wrapper.Destroy();
+    Fsr3WrapperScope.Destroy();
 }
 
 bool CRenderTarget::ProcessFSR() const
 {
     PIX_EVENT(FSR);
 
-    if (!Fsr2Wrapper.Draw())
+    if (!Fsr3Wrapper.Draw())
     {
         Msg("!![%s] FAILED FSR DRAW!", __FUNCTION__);
         return false;
@@ -505,7 +532,7 @@ bool CRenderTarget::ProcessFSR_3DSS(const bool need_reset)
         InitFSR();
     }
 
-    if (!Fsr2WrapperScope.Draw())
+    if (!Fsr3WrapperScope.Draw())
     {
         Msg("!![%s] FAILED 3D SCOPE FSR DRAW!", __FUNCTION__);
         return false;
@@ -524,10 +551,10 @@ void CRenderTarget::PhaseAA(CBackend& cmd_list)
     {
         case DLSS: {
             if (!ProcessDLSS())
-                ps_r_pp_aa_mode = FSR2;
+                ps_r_pp_aa_mode = FSR3;
             break;
         }
-        case FSR2: {
+        case FSR3: {
             u_setrt(cmd_list, get_width(cmd_list), get_height(cmd_list), nullptr, nullptr, nullptr, nullptr);
             RImplementation.rmNormal(cmd_list);
 
@@ -551,12 +578,12 @@ bool CRenderTarget::Phase3DSSUpscale(CBackend& cmd_list)
         return false;
 
     // Проверки на сглаживание для того, что для апскейлинга нам нужен taa джиттер
-    if (ps_r_pp_aa_mode != DLSS && ps_r_pp_aa_mode != FSR2 && ps_r_pp_aa_mode != TAA)
+    if (ps_r_pp_aa_mode != DLSS && ps_r_pp_aa_mode != FSR3 && ps_r_pp_aa_mode != TAA)
         return false;
 
     bool need_reset = reset_3dss_rendertarget();
     if (!need_reset)
-        need_reset = (Fsr2WrapperScope.saved_w != rt_Generic_combine_scope->dwWidth || Fsr2WrapperScope.saved_h != rt_Generic_combine_scope->dwHeight);
+        need_reset = (Fsr3WrapperScope.saved_w != rt_Generic_combine_scope->dwWidth || Fsr3WrapperScope.saved_h != rt_Generic_combine_scope->dwHeight);
 
     return ProcessFSR_3DSS(need_reset);
 }

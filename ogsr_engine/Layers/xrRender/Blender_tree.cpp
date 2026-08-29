@@ -109,6 +109,7 @@ void CBlender_Tree::Compile(CBlender_Compile& C)
         C.r_End();
         break;
     case SE_R2_SHADOW: // smap-spot
+    case SE_R2_SHADOW_LIGHTS:
         if (oBlend.value)
         {
             C.r_Pass(tvs_s, "shadow_direct_base_aref", FALSE, TRUE, TRUE, TRUE, D3DBLEND_ZERO, D3DBLEND_ONE, TRUE, 200);

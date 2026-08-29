@@ -40,10 +40,8 @@ XRCORE_API extern  str_container* g_pStringContainer;
 //////////////////////////////////////////////////////////////////////////
 class shared_str
 {
-private:
-    str_value* p_;
+    str_value* p_{};
 
-private:
     // ref-counting
     void _dec()
     {
@@ -75,15 +73,13 @@ private:
 
 public:
     // construction
-    shared_str() { p_ = nullptr; }
+    shared_str() = default;
     shared_str(const char* rhs)
     {
-        p_ = nullptr;
         _set(rhs);
     }
     shared_str(shared_str const& rhs)
     {
-        p_ = nullptr;
         _set(rhs);
     }
     ~shared_str() { _dec(); }

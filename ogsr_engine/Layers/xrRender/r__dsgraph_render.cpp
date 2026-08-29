@@ -79,7 +79,7 @@ void R_dsgraph_structure::r_dsgraph_render_graph_static(const u32 _priority, con
                     {
                         ZoneScopedN("render_static_visual");
 
-                        item.pVisual->Render(cmd_list, clampr(1.f - (1.f - lod) * ps_r__LOD_k, 0.01f, 1.f), phase == CRender::PHASE_SMAP);
+                        item.pVisual->Render(cmd_list, clampr(1.f - (1.f - lod) * ps_r__LOD_k, 0.01f, 1.f), phase != CRender::PHASE_NORMAL);
                     }
                 }
 
@@ -187,7 +187,7 @@ void R_dsgraph_structure::r_dsgraph_render_graph_dynamic(u32 _priority)
 
                     const float lod = calcLOD(item.ssa);
                     cmd_list.lod.set_lod(lod);
-                    item.pVisual->Render(cmd_list, lod, phase == CRender::PHASE_SMAP);
+                    item.pVisual->Render(cmd_list, lod, phase != CRender::PHASE_NORMAL);
                 }
                 items.items->clear();
             }
@@ -230,7 +230,7 @@ void render_item(u32 context_id, const T& item)
 
     const float lod = calcLOD(item.first);
     dsgraph.cmd_list.lod.set_lod(lod); // !!!
-    V->Render(dsgraph.cmd_list, lod, dsgraph.phase == CRender::PHASE_SMAP);
+    V->Render(dsgraph.cmd_list, lod, dsgraph.phase != CRender::PHASE_NORMAL);
 }
 
 template <class T>
@@ -287,7 +287,7 @@ void render_large_map(const u32 context_id, mapSortedLarge_T& map)
 
             const float lod = calcLOD(item.ssa);
             dsgraph.cmd_list.lod.set_lod(lod);
-            item.pVisual->Render(dsgraph.cmd_list, lod, dsgraph.phase == CRender::PHASE_SMAP);
+            item.pVisual->Render(dsgraph.cmd_list, lod, dsgraph.phase != CRender::PHASE_NORMAL);
         }
         items.items->clear();
     }

@@ -9,23 +9,23 @@
 #include "stdafx.h"
 #include "script_ini_file.h"
 
-static bool r_line(CInifile* self, LPCSTR S, int L, std::string& N, std::string& V)
+static bool r_line(CInifile* self, LPCSTR S, const u32 L, std::string& N, std::string& V)
 {
     THROW3(self->section_exist(S), "Cannot find section", S);
-    THROW2((int)self->line_count(S) > L, "Invalid line number");
+    THROW2(self->line_count(S) > L, "Invalid line number");
 
     N = "";
     V = "";
 
     LPCSTR n, v;
-    const bool result = !!self->r_line(S, L, &n, &v);
+    const bool result = self->r_line(S, L, &n, &v);
     if (!result)
-        return (false);
+        return false;
 
     N = n;
     if (v)
         V = v;
-    return (true);
+    return true;
 }
 
 static void iterate_sections(CInifile* self, const luabind::functor<void>& functor)
@@ -143,7 +143,7 @@ void CScriptIniFile::script_register(lua_State* L)
                   .def(constructor<LPCSTR>())
                   .def("section_exist", &section_exist_script)
                   .def("line_exist", &line_exist_script)
-                  .def("line_count", (u32(CInifile::*)(LPCSTR)) & CInifile::line_count)
+                  .def("line_count", (u32(CInifile::*)(LPCSTR) const) & CInifile::line_count)
                   .def("append_section", &append_section_script)
                   .def("append_section", &append_section_script2)
                   .def("remove_line", &CInifile::remove_line)
@@ -159,22 +159,22 @@ void CScriptIniFile::script_register(lua_State* L)
                   .def("r_line", &::r_line, pure_out_value<4>() + pure_out_value<5>())
 
                   .def("r_bool", &r_bool_script)
-                  .def("r_string", (LPCSTR(CInifile::*)(LPCSTR, LPCSTR)) & CInifile::r_string)
-                  .def("r_u32", (u32(CInifile::*)(LPCSTR, LPCSTR)) & CInifile::r_u32)
-                  .def("r_s32", (s32(CInifile::*)(LPCSTR, LPCSTR)) & CInifile::r_s32)
-                  .def("r_u16", (u16(CInifile::*)(LPCSTR, LPCSTR)) & CInifile::r_u16)
-                  .def("r_s16", (s16(CInifile::*)(LPCSTR, LPCSTR)) & CInifile::r_s16)
-                  .def("r_u8", (u8(CInifile::*)(LPCSTR, LPCSTR)) & CInifile::r_u8)
-                  .def("r_s8", (s8(CInifile::*)(LPCSTR, LPCSTR)) & CInifile::r_s8)
+                  .def("r_string", (LPCSTR(CInifile::*)(LPCSTR, LPCSTR) const) & CInifile::r_string)
+                  .def("r_u32", (u32(CInifile::*)(LPCSTR, LPCSTR) const) & CInifile::r_u32)
+                  .def("r_s32", (s32(CInifile::*)(LPCSTR, LPCSTR) const) & CInifile::r_s32)
+                  .def("r_u16", (u16(CInifile::*)(LPCSTR, LPCSTR) const) & CInifile::r_u16)
+                  .def("r_s16", (s16(CInifile::*)(LPCSTR, LPCSTR) const) & CInifile::r_s16)
+                  .def("r_u8", (u8(CInifile::*)(LPCSTR, LPCSTR) const) & CInifile::r_u8)
+                  .def("r_s8", (s8(CInifile::*)(LPCSTR, LPCSTR) const) & CInifile::r_s8)
 
-                  .def("r_u32_hex", (u32(CInifile::*)(LPCSTR, LPCSTR)) & CInifile::r_u32_hex)
-                  .def("r_u16_hex", (u16(CInifile::*)(LPCSTR, LPCSTR)) & CInifile::r_u16_hex)
-                  .def("r_u8_hex", (u8(CInifile::*)(LPCSTR, LPCSTR)) & CInifile::r_u8_hex)
+                  .def("r_u32_hex", (u32(CInifile::*)(LPCSTR, LPCSTR) const) & CInifile::r_u32_hex)
+                  .def("r_u16_hex", (u16(CInifile::*)(LPCSTR, LPCSTR) const) & CInifile::r_u16_hex)
+                  .def("r_u8_hex", (u8(CInifile::*)(LPCSTR, LPCSTR) const) & CInifile::r_u8_hex)
 
-                  .def("r_float", (float(CInifile::*)(LPCSTR, LPCSTR)) & CInifile::r_float)
-                  .def("r_vector2", (Fvector2(CInifile::*)(LPCSTR, LPCSTR)) & CInifile::r_fvector2)
-                  .def("r_vector", (Fvector3(CInifile::*)(LPCSTR, LPCSTR)) & CInifile::r_fvector3)
-                  .def("r_vector4", (Fvector4(CInifile::*)(LPCSTR, LPCSTR)) & CInifile::r_fvector4)
+                  .def("r_float", (float(CInifile::*)(LPCSTR, LPCSTR) const) & CInifile::r_float)
+                  .def("r_vector2", (Fvector2(CInifile::*)(LPCSTR, LPCSTR) const) & CInifile::r_fvector2)
+                  .def("r_vector", (Fvector3(CInifile::*)(LPCSTR, LPCSTR) const) & CInifile::r_fvector3)
+                  .def("r_vector4", (Fvector4(CInifile::*)(LPCSTR, LPCSTR) const) & CInifile::r_fvector4)
 
                   .def("r_clsid", &r_clsid_script)
                   .def("r_string_wq", &r_string_wb_script)

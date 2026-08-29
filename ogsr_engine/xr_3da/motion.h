@@ -64,7 +64,7 @@ public:
 
     float FPS() { return fFPS; }
 
-    int Length() const { return iFrameEnd - iFrameStart; }
+    int Length() const { return iFrameEnd - iFrameStart + 1; }
 
     void SetParam(int s, int e, float fps)
     {

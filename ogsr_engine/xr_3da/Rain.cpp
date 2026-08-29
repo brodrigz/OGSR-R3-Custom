@@ -72,7 +72,7 @@ void CEffect_Rain::Born(Item& dest, float radius, float speed)
     clamp(Wind_Velocity, 0.0f, 1.0f);
     Prepare(Rain_Offset, Rain_Axis, Wind_Velocity, Wind_Direction);
     // Camera Position
-    Fvector& view = Device.vCameraPosition;
+    const Fvector& view = Device.vCameraPosition;
 
     // Random Position
     float r = radius * 0.5f;

@@ -98,27 +98,28 @@ BOOL CHangingLamp::net_Spawn(CSE_Abstract* DC)
     clr.a = 1.f;
     clr.mul_rgb(fBrightness);
 
+    const bool this_is_spot{!!lamp->flags.is(CSE_ALifeObjectHangingLamp::flTypeSpot)};
+    //Simp: для поинта не вижу смысла по дефолту включать волюметрик, ибо один поинт - это шесть отдельных источников света направленных в разные стороны. Слишком накладно по 6 волюметриков на светильник.
+    const bool need_force_volumetric{this_is_spot};
+
     light_render = ::Render->light_create();
-    light_render->set_shadow(!!lamp->flags.is(CSE_ALifeObjectHangingLamp::flCastShadow));
-    light_render->set_type(lamp->flags.is(CSE_ALifeObjectHangingLamp::flTypeSpot) ? IRender_Light::SPOT : IRender_Light::POINT);
+    light_render->set_shadow(need_force_volumetric || lamp->flags.is(CSE_ALifeObjectHangingLamp::flCastShadow));
+    light_render->set_type(this_is_spot ? IRender_Light::SPOT : IRender_Light::POINT);
     light_render->set_range(lamp->range);
     light_render->set_color(clr);
     light_render->set_cone(lamp->spot_cone_angle);
     light_render->set_texture(*lamp->light_texture);
     light_render->set_virtual_size(lamp->m_virtual_size);
 
-// todo("адаптировать под новый рендер!")
+    // эти флары не юзаются пока в рендере
     // light_render->set_flare(!!lamp->flags.is(CSE_ALifeObjectHangingLamp::flUseFlare));
-    // light_render->set_lsf_params(lamp->m_speed, lamp->m_amount, lamp->m_smap_jitter);
 
-    //Simp: для поинта не вижу смысла по дефолту включать волюметрик, ибо один поинт - это шесть отдельных источников света направленных в разные стороны. Слишком накладно по 6 волюметриков на светильник.
-    //Да и вообще лучше придумать настройки чтоб каждую лампу индивидуально настроить можно было. Пока только настройку через скрипты добавил.
-    if (lamp->flags.is(CSE_ALifeObjectHangingLamp::flTypeSpot))
+    if (need_force_volumetric)
         light_render->set_volumetric(true);
     else
         light_render->set_volumetric(!!lamp->flags.is(CSE_ALifeObjectHangingLamp::flVolumetricLight));
 
-    light_render->set_volumetric_intensity(0.2f);
+    light_render->set_volumetric_intensity(0.25f);
     light_render->set_volumetric_distance(1.f);
 
     if (lamp->flags.is(CSE_ALifeObjectHangingLamp::flPointAmbient))
@@ -393,7 +394,7 @@ BOOL CHangingLamp::UsedAI_Locations() { return (FALSE); }
 
 void CHangingLamp::SetLSFParams(float _speed, float _amount, float _jit)
 {
-// todo("адаптировать под новый рендер!")
+// оставил для совместимости со старыми скриптами, так то это добавлять наверно смысла нет
     // light_render->set_lsf_params(_speed, _amount, _jit);
 }
 

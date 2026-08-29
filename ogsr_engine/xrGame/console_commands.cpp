@@ -34,6 +34,7 @@
 #include "level_graph.h"
 #include "cameralook.h"
 #include "ai_object_location.h"
+#include "InfoPortion.h"
 
 #ifdef DEBUG
 #include "PHDebug.h"
@@ -43,6 +44,7 @@
 
 #include "hudmanager.h"
 #include "../xr_3da/x_ray.h"
+#include <filesystem>
 
 string_path g_last_saved_game;
 
@@ -71,7 +73,6 @@ extern ESingleGameDifficulty g_SingleGameDifficulty;
 extern BOOL g_show_wnd_rect;
 extern BOOL g_show_wnd_rect2;
 extern BOOL g_show_wnd_rect_text;
-extern BOOL g_console_show_always;
     //-----------------------------------------------------------
 extern float g_fTimeFactor;
 extern BOOL g_bCopDeathAnim;
@@ -260,17 +261,41 @@ public:
             tok.id = i;
             string64 temp{};
             _GetItem(str, i++, temp);
-            if (curr_lang_len > 0 && !_stricmp(temp, &curr_lang_name[0]))
-                LanguageID = tok.id;
             tok.name = xr_strdup(temp);
+
+            if (curr_lang_len > 0 && !_stricmp(temp, &curr_lang_name[0]))
+            {
+                LanguageID = tok.id;
+                //инит при первом запуске движка, когда user.ltx нет, т.к. в этом случае Execute не будет вызван
+                if (!FS.exist(fsgame::app_data_root, Console->ConfigFile))
+                    InitLocalization(tok.name);
+            }
         }
         LanguagesToken.emplace_back();
         tokens = LanguagesToken.data();
     };
 
-    void Execute(LPCSTR args) override
+    void Execute(LPCSTR lang) override
     {
-        CCC_Token::Execute(args);
+        for (const auto& tok : LanguagesToken)
+        {
+            if (tok.name)
+            {
+                if (_stricmp(tok.name, lang) == 0)
+                {
+                    InitLocalization(tok.name);
+                    *value = tok.id;
+                    break;
+                }
+            }
+            else
+            {
+                InvalidSyntax();
+                return;
+            }
+        }
+
+        /*
         CStringTable().ReloadLanguage();
 
         if (IsMainMenuActive())
@@ -285,15 +310,25 @@ public:
             MainMenu()->Activate(TRUE);
         }
 
-        for (u16 id = 0; id < 0xffff; id++)
-        {
-            auto gameObj = Level().Objects.net_Find(id);
+        for (auto* gameObj : Level().Objects.get_objects_map())
             if (gameObj)
-            {
-                if (auto invItem = smart_cast<CInventoryItem*>(gameObj))
+                if (auto* invItem = smart_cast<CInventoryItem*>(gameObj))
                     invItem->ReloadNames();
-            }
-        }
+        */
+    }
+
+    void InitLocalization(const char* lang) const
+    {
+        string64 buff2;
+        sprintf_s(buff2, "languages\\%s\\", lang);
+        string_path buff;
+        FS.update_path(buff, fsgame::fs_root, buff2);
+        namespace stdfs = std::filesystem;
+        //ASSERT_FMT(stdfs::exists(buff), "!![%s] Path [%s] dont exists!", __FUNCTION__, buff);
+        //ASSERT_FMT(stdfs::is_directory(buff), "!![%s] Path [%s] is not directory!", __FUNCTION__, buff);
+        //ASSERT_FMT(!stdfs::is_empty(buff), "!![%s] Path [%s] is empty!", __FUNCTION__, buff);
+        if (stdfs::exists(buff) && stdfs::is_directory(buff) && !stdfs::is_empty(buff))
+            FS.append_path(fsgame::localization_dir, buff, nullptr, FALSE);
     }
 };
 
@@ -438,7 +473,7 @@ public:
 class CCC_TimeFactor : public IConsole_Command
 {
 public:
-    CCC_TimeFactor(LPCSTR N) : IConsole_Command(N) {}
+    CCC_TimeFactor(LPCSTR N) : IConsole_Command(N) { SetCanSave(false); }
     virtual void Execute(LPCSTR args)
     {
         float time_factor = (float)atof(args);
@@ -959,6 +994,38 @@ struct CCC_JumpToLevel : public IConsole_Command
         {
             tips.push_back((*itb).second.name());
         }
+    }
+};
+
+class CCC_Giveinfo : public IConsole_Command
+{
+public:
+    CCC_Giveinfo(LPCSTR N) : IConsole_Command(N) {};
+    void Execute(LPCSTR info_id) override
+    {
+        if (!g_pGameLevel)
+            return;
+
+        if (auto* actor = smart_cast<CActor*>(Level().CurrentEntity()))
+            actor->OnReceiveInfo(info_id);
+        else
+            Msg("! [g_info] : Actor not found!");
+    }
+};
+
+class CCC_Disinfo : public IConsole_Command
+{
+public:
+    CCC_Disinfo(LPCSTR N) : IConsole_Command(N) {};
+    void Execute(LPCSTR info_id) override
+    {
+        if (!g_pGameLevel)
+            return;
+
+        if (auto* actor = smart_cast<CActor*>(Level().CurrentEntity()))
+            actor->OnDisableInfo(info_id);
+        else
+            Msg("! [g_dis_info] : Actor not found!");
     }
 };
 
@@ -1632,6 +1699,8 @@ void CCC_RegisterCommands()
 
     //#ifndef MASTER_GOLD
     CMD1(CCC_JumpToLevel, "jump_to_level");
+    CMD1(CCC_Giveinfo, "give_info_portion");
+    CMD1(CCC_Disinfo, "disable_info_portion");
     CMD1(CCC_Spawn, "g_spawn");
     CMD1(CCC_SpawnToInventory, "g_spawn_to_inventory");
     CMD3(CCC_Mask, "g_god", &psActorFlags, AF_GODMODE);
@@ -1663,6 +1732,7 @@ void CCC_RegisterCommands()
     CMD3(CCC_Mask, "keypress_on_start", &psActorFlags, AF_KEYPRESS_ON_START);
     CMD3(CCC_Mask, "g_effects_on_demorecord", &psActorFlags, AF_EFFECTS_ON_DEMORECORD);
     CMD3(CCC_Mask, "g_lock_reload", &psActorFlags, AF_LOCK_RELOAD);
+    CMD3(CCC_Mask, "g_weapon_bobbing", &psActorFlags, AF_WEAPON_BOBBING);
 
     CMD4(CCC_Integer, "g_cop_death_anim", &g_bCopDeathAnim, 0, 1);
 
@@ -1750,7 +1820,6 @@ void CCC_RegisterCommands()
     CMD4(CCC_Integer, "show_wnd_rect", &g_show_wnd_rect, 0, 1);
     CMD4(CCC_Integer, "show_wnd_rect_all", &g_show_wnd_rect2, 0, 1);
     CMD4(CCC_Integer, "show_wnd_rect_names", &g_show_wnd_rect_text, 0, 1);
-    CMD4(CCC_Integer, "g_console_show_always", &g_console_show_always, 0, 1);
 
     *g_last_saved_game = 0;
 

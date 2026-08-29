@@ -485,70 +485,13 @@ void CGameObject::load(IReader& input_packet) {}
 
 void CGameObject::spawn_supplies()
 {
-    if (!spawn_ini() || ai().get_alife())
+    // эта штука в игре реально никогда не вызывается из за ai().get_alife()
+    // реально спаун отрабатывает через CSE_ALifeObject spawn_supplies
+
+    if (ai().get_alife())
         return;
 
-    if (!spawn_ini()->section_exist("spawn"))
-        return;
-
-    LPCSTR N, V;
-    float p;
-    bool bScope = false;
-    bool bSilencer = false;
-    bool bLauncher = false;
-
-    for (u32 k = 0, j; spawn_ini()->r_line("spawn", k, &N, &V); k++)
-    {
-        VERIFY(xr_strlen(N));
-        j = 1;
-        p = 1.f;
-
-        float f_cond = 1.0f;
-        if (V && xr_strlen(V))
-        {
-            int n = _GetItemCount(V);
-            string16 temp;
-            if (n > 0)
-                j = atoi(_GetItem(V, 0, temp)); // count
-
-            if (NULL != strstr(V, "prob="))
-                p = (float)atof(strstr(V, "prob=") + 5);
-            if (fis_zero(p))
-                p = 1.f;
-            if (!j)
-                j = 1;
-            if (NULL != strstr(V, "cond="))
-                f_cond = (float)atof(strstr(V, "cond=") + 5);
-            bScope = (NULL != strstr(V, "scope"));
-            bSilencer = (NULL != strstr(V, "silencer"));
-            bLauncher = (NULL != strstr(V, "launcher"));
-        }
-        for (u32 i = 0; i < j; ++i)
-            if (::Random.randF(1.f) < p)
-            {
-                CSE_Abstract* A = Level().spawn_item(N, Position(), ai_location().level_vertex_id(), ID(), true);
-
-                CSE_ALifeInventoryItem* pSE_InventoryItem = smart_cast<CSE_ALifeInventoryItem*>(A);
-                if (pSE_InventoryItem)
-                    pSE_InventoryItem->m_fCondition = f_cond;
-
-                CSE_ALifeItemWeapon* W = smart_cast<CSE_ALifeItemWeapon*>(A);
-                if (W)
-                {
-                    if (W->m_scope_status == CSE_ALifeItemWeapon::eAddonAttachable)
-                        W->m_addon_flags.set(CSE_ALifeItemWeapon::eWeaponAddonScope, bScope);
-                    if (W->m_silencer_status == CSE_ALifeItemWeapon::eAddonAttachable)
-                        W->m_addon_flags.set(CSE_ALifeItemWeapon::eWeaponAddonSilencer, bSilencer);
-                    if (W->m_grenade_launcher_status == CSE_ALifeItemWeapon::eAddonAttachable)
-                        W->m_addon_flags.set(CSE_ALifeItemWeapon::eWeaponAddonGrenadeLauncher, bLauncher);
-                }
-
-                NET_Packet P;
-                A->Spawn_Write(P, TRUE);
-                Level().Send(P, net_flags(TRUE));
-                F_entity_Destroy(A);
-            }
-    }
+    FATAL(__FUNCTION__ " call!");
 }
 
 void CGameObject::setup_parent_ai_locations(bool assign_position)

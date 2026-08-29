@@ -183,7 +183,7 @@ void CDetailManager::UpdateVisibleM()
     for (auto& vec : m_visibles)
         vec.clear();
 
-    const Fvector EYE = Device.vCameraPositionSaved;
+    const Fvector& EYE = Device.vCameraPositionSaved;
 
     CFrustum View;
     View.CreateFromMatrix(Device.mFullTransformSaved, FRUSTUM_P_LRTB + FRUSTUM_P_FAR);
@@ -439,7 +439,7 @@ void CDetailManager::MT_CALC()
         cache_Initialize();
     }
 
-    Fvector EYE = Device.vCameraPositionSaved;
+    const Fvector& EYE = Device.vCameraPositionSaved;
 
     const int s_x = iFloor(EYE.x / dm_slot_size + .5f);
     const int s_z = iFloor(EYE.z / dm_slot_size + .5f);

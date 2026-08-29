@@ -209,19 +209,22 @@ void CObjectList::ProcessDestroyQueue()
                 (*oit)->net_Relcase(destroy_queue[it]);
 
         for (int it = destroy_queue.size() - 1; it >= 0; it--)
-            Sound->object_relcase(destroy_queue[it]);
+        {
+            auto* obj = destroy_queue.at(it);
+            Sound->object_relcase(obj);
+            g_hud->net_Relcase(obj);
+        }
 
         auto It = m_relcase_callbacks.begin();
         auto Ite = m_relcase_callbacks.end();
         for (; It != Ite; ++It)
         {
-            VERIFY(*(*It).m_ID == (It - m_relcase_callbacks.begin()));
+            VERIFY((*It->m_ID) == (It - m_relcase_callbacks.begin()));
             auto dIt = destroy_queue.begin();
             auto dIte = destroy_queue.end();
             for (; dIt != dIte; ++dIt)
             {
-                (*It).m_Callback(*dIt);
-                g_hud->net_Relcase(*dIt);
+                It->m_Callback(*dIt);
             }
         }
 
@@ -244,8 +247,7 @@ void CObjectList::ProcessDestroyQueue()
 
 void CObjectList::net_Register(CObject* O)
 {
-    R_ASSERT(O);
-    R_ASSERT(O->ID() < 0xffff);
+    R_ASSERT(O && O->ID() < 0xffff);
 
     map_NETID[O->ID()] = O;
 }
@@ -259,7 +261,7 @@ void CObjectList::net_Unregister(CObject* O)
 constexpr bool g_Dump_Export_Obj{};
 
 // Simp: net_exported_objects добавлено в OGSR, при адаптации ЗП учесть это!
-u32 CObjectList::net_Export(NET_Packet* _Packet, u32 start, u32 max_object_size, std::vector<CObject*>& net_exported_objects)
+u32 CObjectList::net_Export(NET_Packet* _Packet, u32 start, u32 max_object_size, std::vector<CObject*>* net_exported_objects)
 {
     if (g_Dump_Export_Obj)
         Msg("---- net_export --- ");
@@ -276,7 +278,8 @@ u32 CObjectList::net_Export(NET_Packet* _Packet, u32 start, u32 max_object_size,
             // Msg						("cl_export: %d '%s'",P->ID(),*P->cName());
             P->net_Export(Packet);
 
-            net_exported_objects.push_back(P);
+            if (net_exported_objects)
+                net_exported_objects->push_back(P);
 
 #ifdef DEBUG
             u32 size = u32(Packet.w_tell() - position) - sizeof(u8);

@@ -118,6 +118,7 @@ void CBlender_Model_EbB::Compile(CBlender_Compile& C)
             C.r_End();
             break;
         case SE_R2_SHADOW: // smap
+        case SE_R2_SHADOW_LIGHTS:
             C.r_Pass("shadow_direct_model", "dumb", FALSE, TRUE, TRUE, FALSE);
             // C.r_Sampler		("s_base",C.L_textures[0]);
             C.r_dx10Texture("s_base", C.L_textures[0]);

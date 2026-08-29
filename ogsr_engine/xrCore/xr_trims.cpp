@@ -73,14 +73,14 @@ LPCSTR _CopyVal(LPCSTR src, LPSTR dst, char separator)
     return dst;
 }
 
-LPSTR _GetItem(LPCSTR src, int index, LPSTR dst, char separator, LPCSTR def, bool trim)
+LPSTR __GetItem(LPCSTR src, int index, LPSTR dst, const size_t dst_size, char separator, LPCSTR def, bool trim)
 {
     LPCSTR ptr;
     ptr = _SetPos(src, index, separator);
     if (ptr)
         _CopyVal(ptr, dst, separator);
     else
-        strcpy(dst, def);
+        strcpy_s(dst, dst_size, def);
     if (trim)
         _Trim(dst);
     return dst;

@@ -496,7 +496,7 @@ IC void CBackend::ApplyVertexLayout()
             m_pInputSignature->GetBufferSize(),
             &pLayout);
 
-        decl->vs_to_layout.emplace(m_pInputSignature, pLayout);
+        decl->vs_to_layout.insert({m_pInputSignature, pLayout});
     }
 
     if (m_pInputLayout != pLayout)

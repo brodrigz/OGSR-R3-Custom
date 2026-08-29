@@ -68,7 +68,7 @@ private:
 
 public:
 
-    CInput(bool bExclusive = true, int deviceForInit = default_key);
+    CInput(bool bExclusive = false, int deviceForInit = default_key);
     ~CInput();
 
     void iCapture(IInputReceiver* pc);

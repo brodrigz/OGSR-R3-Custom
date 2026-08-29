@@ -278,7 +278,7 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
     {
         PIX_EVENT(RenderFlares);
         cmd_list.set_Stencil(FALSE);
-        g_pGamePersistent->Environment().RenderFlares(cmd_list); // lens-flares
+        g_pGamePersistent->Environment().RenderFlares(cmd_list, FALSE, ps_r2_ls_flags_ext.test(R2FLAGEXT_LENS_FLARE) && r_lens_flare_mode == old_style_flare, TRUE);
     }
 
     //	PP-if required

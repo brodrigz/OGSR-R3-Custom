@@ -32,4 +32,7 @@ RD /s /q 3rd_party\Src\DiscordRPC\DiscordRPC
 git clone --branch master --depth 1 https://github.com/OGSR/discord-rpc.git 3rd_party\Src\DiscordRPC\DiscordRPC
 git clone --branch v1.1.0 --depth 1 https://github.com/Tencent/rapidjson.git 3rd_party\Src\DiscordRPC\DiscordRPC\thirdparty\rapidjson-1.1.0
 
+RD /s /q 3rd_party\Src\FidelityFX-SDK\FidelityFX-SDK
+git clone --branch release-FSR3-3.1.2-DX11-Native-API --depth 1 https://github.com/OGSR/FidelityFX-SDK.git 3rd_party\Src\FidelityFX-SDK\FidelityFX-SDK
+
 pause

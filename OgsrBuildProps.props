@@ -32,9 +32,12 @@
 
       <BuildStlModules>false</BuildStlModules>
       <ConformanceMode>true</ConformanceMode>
+
       <AdditionalOptions Condition="$(Configuration.Contains('Release'))">/Zc:__cplusplus /Ob3 %(AdditionalOptions)</AdditionalOptions>
       <AdditionalOptions Condition="$(Configuration.Contains('Debug'))">/Zc:__cplusplus %(AdditionalOptions)</AdditionalOptions>
-      <PreprocessorDefinitions Condition="$(Configuration.Contains('Debug'))">_MSVC_STL_HARDENING=1;_ITERATOR_DEBUG_LEVEL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+
+      <PreprocessorDefinitions Condition="$(Configuration.Contains('Release'))">_MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions Condition="$(Configuration.Contains('Debug'))">_MSVC_STL_USE_ABORT_AS_DOOM_FUNCTION;_MSVC_STL_HARDENING=1;_ITERATOR_DEBUG_LEVEL=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <BufferSecurityCheck>true</BufferSecurityCheck>
     </ClCompile>
 
