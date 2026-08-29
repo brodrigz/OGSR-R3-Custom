@@ -125,7 +125,9 @@ void InitConsole()
     CORE_FEATURE_SET(show_inv_item_condition, "features");
     CORE_FEATURE_SET(remove_alt_keybinding, "features");
     CORE_FEATURE_SET(binoc_firing, "features");
-    CORE_FEATURE_SET(cop_style_scope_texture, "features");    
+    // Legacy scope_texture names are resolved through scopes.xml by default.
+    // Mods can still opt out explicitly with cop_style_scope_texture = false.
+    Core.Features.set(xrCore::Feature::cop_style_scope_texture, READ_IF_EXISTS(pSettings, r_bool, "features", "cop_style_scope_texture", true));
     CORE_FEATURE_SET(stop_anim_playing, "features");
     CORE_FEATURE_SET(corpses_collision, "features");
     CORE_FEATURE_SET(more_hide_weapon, "features");

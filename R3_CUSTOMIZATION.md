@@ -33,6 +33,10 @@ The trace records:
 
 The implementation is compiled only when `DEBUG` is defined and is disabled unless the command-line switch is present. Release builds contain no resolver logging or mod-specific script-name list.
 
+## Legacy scope textures
+
+`cop_style_scope_texture` defaults to `true`, so legacy `scope_texture` names are resolved through `config/ui/scopes.xml`. A build that requires direct texture lookup can explicitly set `cop_style_scope_texture = false` in `[features]`.
+
 ## Porting custom features
 
 Keep compatibility work focused on observable contracts:
