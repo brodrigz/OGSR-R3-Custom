@@ -599,6 +599,12 @@ void CCC_Register()
 
     CMD2(CCC_Bool, "g_prefetch", &g_prefetch);
 
+    // This feature is normally seeded from [features] at startup, but its
+    // decision point is per-weapon hide.  Exposing the same bit as a saved
+    // gameplay command lets UI options change it immediately and persist the
+    // player's preference in the user configuration.
+    CMD3(CCC_Mask64, "g_complete_late_reload_on_hide", &Core.Features, xrCore::Feature::complete_late_reload_on_hide);
+
     //extern BOOL g_laserdotcorrection;
     //CMD2(CCC_Bool, "g_laserdotcorrection", &g_laserdotcorrection);
 

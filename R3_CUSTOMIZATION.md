@@ -15,6 +15,8 @@ Examples of reusable surfaces in this fork include script wallmark placement, la
 
 Set `complete_late_reload_on_hide = true` in `[features]` to let an actor's ordinary magazine reload finish when the weapon is hidden during its last fifteen percent. This is intended for quick item-use animations that temporarily hide the active weapon. It is player-only, disabled by default, applies only when the resolved hands reload has no usable commit mark, and deliberately excludes tri-state shell reloads.
 
+The generic saved console command `g_complete_late_reload_on_hide on|off` controls the same feature bit at runtime. Radiophobia's bundled Gameplay-options checkbox uses it, so its change applies immediately and is saved in the user's configuration. Content that does not include that UI can still choose the startup default through `[features]`.
+
 Builds compiled with `DEBUG` retain opt-in reload tracing. Start such an engine with `-trace_reload` to log actor reload requests, resolved motion marks, animation completion, tri-state cartridge commits, and late-hide decisions. Release builds contain no reload diagnostic logging.
 
 ## Script-resolution diagnostics
