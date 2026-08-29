@@ -49,6 +49,10 @@ protected:
     // token
     LPCSTR GetOptTokenValue();
     const xr_token* GetOptToken();
+    // Dynamic token providers (for example the OpenAL device list) may
+    // legitimately be unavailable. UI controls can use this probe to disable
+    // themselves without hiding configuration mistakes behind GetOptToken().
+    const xr_token* TryGetOptToken();
     void SaveOptTokenValue(const char* val);
 
     xr_string m_entry;

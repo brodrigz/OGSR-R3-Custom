@@ -73,6 +73,7 @@ protected:
     int m_itoken_id{};
     E_COMBO_STATE m_eState;
     int m_backup_itoken_id{};
+    bool m_hasTokenList{};
 
     CUI_IB_FrameLineWnd m_frameLine;
     CUILabel m_text;

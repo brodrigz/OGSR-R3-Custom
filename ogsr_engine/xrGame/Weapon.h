@@ -254,6 +254,10 @@ protected:
     bool m_bScopeShowIndicators = true;
     bool m_bIgnoreScopeTexture = false;
 
+    // Config metadata from the currently resolved scope section. Rendering and
+    // feature policy deliberately remain outside the weapon implementation.
+    shared_str m_sScopeNightVision;
+
     float m_fMinZoomK = def_min_zoom_k;
     float m_fZoomStepCount = def_zoom_step_count;
 
@@ -261,6 +265,8 @@ protected:
 
 public:
     IC bool IsZoomEnabled() const { return m_bZoomEnabled; }
+    bool HasScopeNightVision() const { return m_sScopeNightVision.size() > 0; }
+    LPCSTR GetScopeNightVision() const { return m_sScopeNightVision.c_str(); }
     void GetZoomData(float scope_factor, float& delta, float& min_zoom_factor);
     virtual void ZoomChange(bool inc);
     virtual void OnZoomIn();

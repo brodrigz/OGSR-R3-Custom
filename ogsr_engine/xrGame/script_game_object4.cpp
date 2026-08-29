@@ -591,6 +591,25 @@ bool CScriptGameObject::GetGLMode()
     }
     return k->m_bGrenadeMode;
 }
+
+bool CScriptGameObject::HasScopeNightVision() const
+{
+    const auto* weapon = smart_cast<const CWeapon*>(&object());
+    return weapon && weapon->HasScopeNightVision();
+}
+
+LPCSTR CScriptGameObject::GetScopeNightVision() const
+{
+    const auto* weapon = smart_cast<const CWeapon*>(&object());
+    return weapon ? weapon->GetScopeNightVision() : "";
+}
+
+bool CScriptGameObject::Is3dssEnabled() const
+{
+    const auto* weapon = smart_cast<const CWeapon*>(&object());
+    return weapon && weapon->Is3dssEnabled();
+}
+
 u32 CScriptGameObject::GetCurrAmmo()
 {
     CWeaponAmmo* k = smart_cast<CWeaponAmmo*>(&object());

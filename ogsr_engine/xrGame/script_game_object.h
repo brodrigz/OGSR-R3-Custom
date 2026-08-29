@@ -713,6 +713,9 @@ public:
     u32 GetUnderbarrelAmmoType();
     u32 GetAmmoElapsed2();
     bool GetGLMode();
+    bool HasScopeNightVision() const;
+    LPCSTR GetScopeNightVision() const;
+    bool Is3dssEnabled() const;
 
     u32 GetCurrAmmo();
 

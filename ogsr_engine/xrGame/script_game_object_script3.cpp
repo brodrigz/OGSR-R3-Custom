@@ -391,6 +391,9 @@ class_<CScriptGameObject> script_register_game_object2(class_<CScriptGameObject>
         .def("get_underbarrel_ammo_type", &CScriptGameObject::GetUnderbarrelAmmoType)
         .def("get_ammo_in_magazine2", &CScriptGameObject::GetAmmoElapsed2)
         .def("get_gl_mode", &CScriptGameObject::GetGLMode)
+        .def("has_scope_nightvision", &CScriptGameObject::HasScopeNightVision)
+        .def("get_scope_nightvision", &CScriptGameObject::GetScopeNightVision)
+        .def("is_3dss_enabled", &CScriptGameObject::Is3dssEnabled)
 
         .def("get_current_ammo", &CScriptGameObject::GetCurrAmmo)
 

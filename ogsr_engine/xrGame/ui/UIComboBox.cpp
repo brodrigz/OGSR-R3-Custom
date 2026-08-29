@@ -115,7 +115,17 @@ void CUIComboBox::OnListItemSelect()
 void CUIComboBox::SetCurrentValue()
 {
     m_list.Clear();
-    const xr_token* tok = GetOptToken();
+    const xr_token* tok = TryGetOptToken();
+    m_hasTokenList = tok != nullptr;
+    Enable(m_hasTokenList);
+
+    if (!m_hasTokenList)
+    {
+        m_itoken_id = 0;
+        m_backup_itoken_id = 0;
+        m_text.SetText("");
+        return;
+    }
 
     while (tok->name)
     {
@@ -136,6 +146,9 @@ void CUIComboBox::SetCurrentValue()
 
 void CUIComboBox::SaveValue()
 {
+    if (!m_hasTokenList)
+        return;
+
     CUIOptionsItem::SaveValue();
     const xr_token* tok = GetOptToken();
     const char* cur_val = tok[m_itoken_id].name;
@@ -146,7 +159,7 @@ bool CUIComboBox::IsChanged()
 {
     // if (m_backup_itoken_id != m_itoken_id) Msg("~~[%s] m_backup_itoken_id: [%d], m_itoken_id: [%d]", __FUNCTION__, m_backup_itoken_id, m_itoken_id);
 
-    return m_backup_itoken_id != m_itoken_id;
+    return m_hasTokenList && m_backup_itoken_id != m_itoken_id;
 }
 
 LPCSTR CUIComboBox::GetText() { return m_text.GetText(); }
@@ -159,7 +172,11 @@ void CUIComboBox::SetItem(int idx)
 
     m_text.SetText(m_list.GetSelectedText());
 }
-void CUIComboBox::OnBtnClicked() { ShowList(!m_list.IsShown()); }
+void CUIComboBox::OnBtnClicked()
+{
+    if (m_hasTokenList)
+        ShowList(!m_list.IsShown());
+}
 
 void CUIComboBox::ShowList(bool bShow)
 {

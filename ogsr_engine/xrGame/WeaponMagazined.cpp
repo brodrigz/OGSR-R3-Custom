@@ -699,6 +699,7 @@ void CWeaponMagazined::UpdateCL()
         return;
 
     inherited::UpdateCL();
+
     float dt = Device.fTimeDelta;
 
     //когда происходит апдейт состояния оружия
@@ -981,7 +982,7 @@ void CWeaponMagazined::Hide(bool now)
     // of discarding it with the final animation tail.  Tri-state reloads add
     // individual cartridges at their own animation boundaries and must keep
     // their original interruption semantics.
-    constexpr float late_reload_completion_fraction = 0.85f;
+    constexpr float late_reload_completion_fraction = 0.80f;
     const bool feature_enabled = Core.Features.test(xrCore::Feature::complete_late_reload_on_hide);
     const bool actor_owned = ParentIsActor();
     const bool regular_reload = !IsTriStateReload();
@@ -1115,7 +1116,6 @@ void CWeaponMagazined::PlayReloadSound()
 void CWeaponMagazined::switch2_Reload()
 {
     CWeapon::FireEnd();
-
     if (iAmmoElapsed > 0 && CartridgeInTheChamberEnabled)
         CartridgeInTheChamber = 1;
     else
@@ -1366,6 +1366,12 @@ bool CWeaponMagazined::Detach(const char* item_section_name, bool b_spawn_item)
 
 void CWeaponMagazined::InitZoomParams(LPCSTR section, bool useTexture)
 {
+    // Always reset this value: InitAddons() reuses this path after an optic is
+    // attached, detached, or replaced.
+    m_sScopeNightVision = READ_IF_EXISTS(pSettings, r_string, section, "scope_nightvision", "");
+    if (m_sScopeNightVision.equal("none"))
+        m_sScopeNightVision = "";
+
     m_fMinZoomK = def_min_zoom_k;
     m_fZoomStepCount = def_zoom_step_count;
 

@@ -39,6 +39,12 @@ The implementation is compiled only when `DEBUG` is defined and is disabled unle
 
 `cop_style_scope_texture` defaults to `true`, so legacy `scope_texture` names are resolved through `config/ui/scopes.xml`. A build that requires direct texture lookup can explicitly set `cop_style_scope_texture = false` in `[features]`.
 
+## Scope night-vision metadata
+
+An optic section may declare an opaque `scope_nightvision = <profile>` value. The resolved scope value is cached whenever weapon zoom parameters are initialized, including attach, detach, and replacement paths. Lua can read it through `has_scope_nightvision()` and `get_scope_nightvision()`, and can query `is_3dss_enabled()` without duplicating engine scope resolution.
+
+The engine does not interpret the profile or render an effect. Game configuration and scripts own profile meanings, NV renderer selection, wearable-NV priority, and cleanup policy.
+
 ## Porting custom features
 
 Keep compatibility work focused on observable contracts:

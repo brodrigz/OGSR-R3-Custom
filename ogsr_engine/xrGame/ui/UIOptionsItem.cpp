@@ -64,9 +64,11 @@ void CUIOptionsItem::SaveOptBoolValue(bool val)
 
 LPCSTR CUIOptionsItem::GetOptTokenValue() { return Console->GetToken(m_entry.c_str()); }
 
+const xr_token* CUIOptionsItem::TryGetOptToken() { return Console->GetXRToken(m_entry.c_str()); }
+
 const xr_token* CUIOptionsItem::GetOptToken()
 {
-    const auto* token = Console->GetXRToken(m_entry.c_str());
+    const auto* token = TryGetOptToken();
     ASSERT_FMT(token, "Can't find token [%s]", m_entry.c_str());
     return token;
 }
