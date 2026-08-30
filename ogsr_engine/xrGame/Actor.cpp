@@ -758,10 +758,21 @@ float CActor::currentFOV()
     const auto pWeapon = smart_cast<CWeapon*>(inventory().ActiveItem());
 
     if (eacFirstEye == cam_active && pWeapon && pWeapon->IsZoomed() && (!pWeapon->UseScopeTexture() || (!pWeapon->IsRotatingToZoom() && pWeapon->UseScopeTexture())))
+    {
+        float aim_fov;
         if (Core.Features.test(xrCore::Feature::ogse_wpn_zoom_system))
-            return atanf(tanf(g_fov * (0.5f * PI / 180.f)) / pWeapon->GetZoomFactor()) / (0.5f * PI / 180.f);
+            aim_fov = atanf(tanf(g_fov * (0.5f * PI / 180.f)) / pWeapon->GetZoomFactor()) / (0.5f * PI / 180.f);
         else
-            return pWeapon->GetZoomFactor() * 0.75f;
+            aim_fov = pWeapon->GetZoomFactor() * 0.75f;
+
+        if (Core.Features.test(xrCore::Feature::auto_aim_zoom) && pWeapon->AllowAutoAimZoom())
+        {
+            constexpr float free_zoom_fov_multiplier = 0.75f;
+            aim_fov *= free_zoom_fov_multiplier;
+        }
+
+        return aim_fov;
+    }
     else
         return g_fov;
 }

@@ -1668,6 +1668,28 @@ float CWeapon::CurrentZoomFactor()
         return m_fIronSightZoomFactor;
 }
 
+bool CWeapon::AllowAutoAimZoom()
+{
+    // An attached optic can override the owning weapon. Permanent optics use
+    // the weapon section itself, matching InitAddons/InitZoomParams.
+    const shared_str& weapon_section = cNameSect();
+    LPCSTR override_section = weapon_section.c_str();
+    if (m_eScopeStatus == ALife::eAddonAttachable && IsScopeAttached() && m_sScopeName.size())
+        override_section = m_sScopeName.c_str();
+
+    if (pSettings->line_exist(override_section, "auto_aim_zoom"))
+        return pSettings->r_bool(override_section, "auto_aim_zoom");
+
+    if (xr_strcmp(override_section, weapon_section.c_str()) != 0 && pSettings->line_exist(weapon_section, "auto_aim_zoom"))
+        return pSettings->r_bool(weapon_section, "auto_aim_zoom");
+
+    // Radiophobia's iron sights use 1.0 and its reflex/holographic optics
+    // inherit 1.06. Magnifying optics either render a 2D scope texture, use a
+    // 3D scope viewport, or define a substantially larger zoom factor.
+    constexpr float max_unmagnified_zoom_factor = 1.10f;
+    return !UseScopeTexture() && !Is3dssEnabled() && CurrentZoomFactor() <= max_unmagnified_zoom_factor;
+}
+
 void CWeapon::OnZoomIn()
 {
     m_bZoomMode = true;

@@ -285,6 +285,7 @@ public:
 
     IC float GetZoomFactor() const { return m_fZoomFactor; }
     virtual float CurrentZoomFactor();
+    bool AllowAutoAimZoom();
 
     //показывает, что оружие находится в соостоянии поворота для приближенного прицеливания
     bool IsRotatingToZoom() const { return (m_fZoomRotationFactor < 1.f); }

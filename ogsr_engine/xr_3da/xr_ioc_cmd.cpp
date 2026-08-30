@@ -600,6 +600,7 @@ void CCC_Register()
     CMD2(CCC_Bool, "g_prefetch", &g_prefetch);
 
     CMD3(CCC_Mask64, "g_complete_late_reload_on_hide", &Core.Features, xrCore::Feature::complete_late_reload_on_hide);
+    CMD3(CCC_Mask64, "g_auto_aim_zoom", &Core.Features, xrCore::Feature::auto_aim_zoom);
 
     //extern BOOL g_laserdotcorrection;
     //CMD2(CCC_Bool, "g_laserdotcorrection", &g_laserdotcorrection);

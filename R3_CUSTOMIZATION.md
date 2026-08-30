@@ -19,6 +19,16 @@ The generic saved console command `g_complete_late_reload_on_hide on|off` contro
 
 Builds compiled with `DEBUG` retain opt-in reload tracing. Start such an engine with `-trace_reload` to log actor reload requests, resolved motion marks, animation completion, tri-state cartridge commits, and late-hide decisions. Release builds contain no reload diagnostic logging.
 
+## Automatic aim zoom
+
+The saved `g_auto_aim_zoom on|off` command optionally applies the same 0.75
+final-FOV multiplier as the free-zoom action while the actor aims through iron,
+reflex, or holographic sights. The default classifier rejects 2D scope textures,
+active 3D scope viewports, and effective zoom factors above 1.10. A weapon or
+active attachable-optic section can explicitly set `auto_aim_zoom = true|false`
+to override that default. Radiophobia's bundled Gameplay-options checkbox
+controls and persists the feature without requiring a new key binding.
+
 ## Script-resolution diagnostics
 
 Debug builds support an opt-in script resolver trace. Start a Debug engine with:
