@@ -169,6 +169,8 @@ public:
 class XRCORE_API xrCore
 {
 public:
+    static constexpr const char* EngineVersion = "3.548";
+
     string64 ApplicationName;
     string_path ApplicationPath;
     string_path WorkingPath;
