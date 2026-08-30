@@ -45,6 +45,15 @@ An optic section may declare an opaque `scope_nightvision = <profile>` value. Th
 
 The engine does not interpret the profile or render an effect. Game configuration and scripts own profile meanings, NV renderer selection, wearable-NV priority, and cleanup policy.
 
+## Lifecycle-safe time-factor query
+
+`level.get_time_factor()` is safe while the single-player server is creating
+ALife, before the client game state exists. It uses the normal client clock
+during gameplay, falls back to the active server/ALife clock during bootstrap,
+and returns `1.0` only when no game or ALife clock exists. This keeps the Lua
+API generic while allowing modules with top-level initialization to survive
+the Lua-VM recreation introduced by current OGSR.
+
 ## Porting custom features
 
 Keep compatibility work focused on observable contracts:

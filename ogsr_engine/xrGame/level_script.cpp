@@ -147,7 +147,24 @@ void set_time_factor(float time_factor)
     GamePersistent().Environment().SetGameTime(Level().GetEnvironmentGameDayTimeSec(), Level().game->GetEnvironmentGameTimeFactor());
 }
 
-float get_time_factor() { return (Level().GetGameTimeFactor()); }
+float get_time_factor()
+{
+    if (g_pGameLevel)
+    {
+        if (Level().game)
+            return Level().GetGameTimeFactor();
+
+        // Lua modules may be loaded while the single-player server is creating
+        // ALife, before the client game state is initialized.
+        if (Level().Server && Level().Server->game)
+            return Level().Server->game->GetGameTimeFactor();
+    }
+
+    if (ai().get_alife())
+        return ai().alife().time_manager().time_factor();
+
+    return 1.f;
+}
 
 void set_game_difficulty(ESingleGameDifficulty dif)
 {
