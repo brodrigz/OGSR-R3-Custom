@@ -1053,8 +1053,8 @@ void CActor::shedule_Update(u32 DT)
             mstate_wishful &= ~mcAccel;
             mstate_wishful &= ~mcLStrafe;
             mstate_wishful &= ~mcRStrafe;
-            mstate_wishful &= ~mcLLookout;
-            mstate_wishful &= ~mcRLookout;
+            if (!psActorFlags.test(AF_LEAN_TOGGLE))
+                mstate_wishful &= ~mcLookout;
             mstate_wishful &= ~mcFwd;
             mstate_wishful &= ~mcBack;
             extern bool g_bAutoClearCrouch;

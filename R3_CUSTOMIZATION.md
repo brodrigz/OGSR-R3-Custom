@@ -29,6 +29,14 @@ active attachable-optic section can explicitly set `auto_aim_zoom = true|false`
 to override that default. Radiophobia's bundled Gameplay-options checkbox
 controls and persists the feature without requiring a new key binding.
 
+## Lean toggle
+
+The saved `lean_toggle on|off` command changes the existing left/right lean
+actions between hold and toggle behavior. With it enabled, pressing the active
+lean direction returns the actor upright and pressing the opposite direction
+switches sides. Radiophobia's bundled Gameplay-options checkbox controls and
+persists the setting; hold-to-lean remains the default.
+
 ## Script-resolution diagnostics
 
 Debug builds support an opt-in script resolver trace. Start a Debug engine with:

@@ -1568,6 +1568,7 @@ void CCC_RegisterCommands()
     CMD3(CCC_Mask, "g_dof_reload", &psActorFlags, AF_DOF_RELOAD);
 
     CMD3(CCC_Mask, "wpn_aim_toggle", &psActorFlags, AF_WPN_AIM_TOGGLE);
+    CMD3(CCC_Mask, "lean_toggle", &psActorFlags, AF_LEAN_TOGGLE);
 
     // alife
 #ifdef DEBUG

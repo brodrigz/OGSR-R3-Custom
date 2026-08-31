@@ -27,6 +27,7 @@ enum
     AF_ACTOR_SHADOW = 1 << 22,
     AF_THROW_DEBUG = 1 << 23,
     AF_WEAPON_BOBBING = 1 << 24,
+    AF_LEAN_TOGGLE = 1 << 25,
 };
 
 //enum

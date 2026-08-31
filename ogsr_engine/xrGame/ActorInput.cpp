@@ -99,6 +99,21 @@ void CActor::IR_OnKeyboardPress(int cmd)
             mstate_wishful |= mcSprint;
     }
     break;
+    case kL_LOOKOUT:
+    case kR_LOOKOUT: {
+        if (psActorFlags.test(AF_LEAN_TOGGLE))
+        {
+            const u32 lookout = cmd == kL_LOOKOUT ? mcLLookout : mcRLookout;
+            if (mstate_wishful & lookout)
+                mstate_wishful &= ~mcLookout;
+            else
+            {
+                mstate_wishful &= ~mcLookout;
+                mstate_wishful |= lookout;
+            }
+        }
+    }
+    break;
     case kCAM_1: cam_Set(eacFirstEye); break;
     case kCAM_2: cam_Set(eacLookAt); break;
     case kCAM_3: cam_Set(eacFreeLook); break;
@@ -280,8 +295,14 @@ void CActor::IR_OnKeyboardHold(int cmd)
     case kACCEL: mstate_wishful |= mcAccel; break;
     case kL_STRAFE: mstate_wishful |= mcLStrafe; break;
     case kR_STRAFE: mstate_wishful |= mcRStrafe; break;
-    case kL_LOOKOUT: mstate_wishful |= mcLLookout; break;
-    case kR_LOOKOUT: mstate_wishful |= mcRLookout; break;
+    case kL_LOOKOUT:
+        if (!psActorFlags.test(AF_LEAN_TOGGLE))
+            mstate_wishful |= mcLLookout;
+        break;
+    case kR_LOOKOUT:
+        if (!psActorFlags.test(AF_LEAN_TOGGLE))
+            mstate_wishful |= mcRLookout;
+        break;
     case kFWD: mstate_wishful |= mcFwd; break;
     case kBACK: mstate_wishful |= mcBack; break;
     case kCROUCH: mstate_wishful |= mcCrouch; break;
