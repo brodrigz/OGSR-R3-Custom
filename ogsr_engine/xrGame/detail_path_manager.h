@@ -116,6 +116,9 @@ private:
     bool m_state_patrol_path;
     u32 m_last_patrol_point;
     u32 m_time_path_built;
+    u32 m_last_failure_report_time;
+    u32 m_failure_attempt_count;
+    bool m_failure_reported;
     float m_extrapolate_length;
 
 private:

@@ -12,9 +12,7 @@
 #include "ai_object_location.h"
 #include "level_graph.h"
 
-#ifdef DEBUG
 #include "custommonster.h"
-#endif
 
 CDetailPathManager::CDetailPathManager(CRestrictedObject* object) { m_restricted_object = object; }
 
@@ -35,6 +33,9 @@ void CDetailPathManager::reinit()
     m_use_dest_orientation = false;
     m_state_patrol_path = false;
     m_time_path_built = 0;
+    m_last_failure_report_time = 0;
+    m_failure_attempt_count = 0;
+    m_failure_reported = false;
     m_extrapolate_length = 8.f;
     m_distance_to_target = flt_max;
     m_distance_to_target_actual = false;
@@ -107,20 +108,32 @@ void CDetailPathManager::build_path(const xr_vector<u32>& level_path, u32 interm
         }
         if (failed())
         {
-            Msg("! DetailPathManager has failed : from [%f,%f,%f] to [%f,%f,%f]", VPUSH(ai().level_graph().vertex_position(level_path.front())),
-                VPUSH(ai().level_graph().vertex_position(level_path.back())));
+            ++m_failure_attempt_count;
+            const u32 current_time = Device.dwTimeGlobal;
+            if (!m_failure_reported || (current_time - m_last_failure_report_time >= 1000))
+            {
+                Msg("! DetailPathManager failed for [%s]: vertices [%u -> %u], level path [%u], attempts [%u], from [%f,%f,%f] to [%f,%f,%f]",
+                    m_restricted_object ? *m_restricted_object->object().cName() : "unknown", level_path.front(), level_path.back(), (u32)level_path.size(),
+                    m_failure_attempt_count, VPUSH(ai().level_graph().vertex_position(level_path.front())), VPUSH(ai().level_graph().vertex_position(level_path.back())));
+                m_last_failure_report_time = current_time;
+                m_failure_attempt_count = 0;
+                m_failure_reported = true;
 #ifdef DEBUG
-            Msg("! DetailPathManager has failed for object %s : from [%f,%f,%f] to [%f,%f,%f]", m_restricted_object ? *m_restricted_object->object().cName() : "unknown",
-                VPUSH(ai().level_graph().vertex_position(level_path.front())), VPUSH(ai().level_graph().vertex_position(level_path.back())));
-            Msg("List of available velocities :");
-            xr_vector<STravelParamsIndex>::const_iterator I = m_start_params.begin();
-            xr_vector<STravelParamsIndex>::const_iterator E = m_start_params.end();
-            for (; I != E; ++I)
-                Msg("[%d] : [%f][%f]", (*I).index, (*I).linear_velocity, (*I).angular_velocity);
+                Msg("List of available velocities :");
+                xr_vector<STravelParamsIndex>::const_iterator I = m_start_params.begin();
+                xr_vector<STravelParamsIndex>::const_iterator E = m_start_params.end();
+                for (; I != E; ++I)
+                    Msg("[%d] : [%f][%f]", (*I).index, (*I).linear_velocity, (*I).angular_velocity);
 
 //			for (;;)
 //				build_smooth_path(level_path,intermediate_index);
 #endif
+            }
+        }
+        else
+        {
+            m_failure_attempt_count = 0;
+            m_failure_reported = false;
         }
 
         if (valid())
