@@ -56,6 +56,9 @@ bool CStateMonsterSmartTerrainTaskAbstract::check_start_conditions()
     if (monster->m_smart_terrain_id == 0xffff)
         return false;
 
+    if (!monster->brain().smart_terrain().task(monster))
+        return false;
+
     // we dont need to reach task
     if (monster->m_task_reached)
         return false;
@@ -121,6 +124,12 @@ void CStateMonsterSmartTerrainTaskAbstract::setup_substates()
 TEMPLATE_SPECIALIZATION
 void CStateMonsterSmartTerrainTaskAbstract::reselect_state()
 {
+    if (!m_current_task)
+    {
+        select_state(eStateSmartTerrainTaskWaitCapture);
+        return;
+    }
+
     if (prev_substate == u32(-1))
     {
         if (get_state(eStateSmartTerrainTaskGamePathWalk)->check_start_conditions())

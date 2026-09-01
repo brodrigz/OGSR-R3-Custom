@@ -16,7 +16,7 @@ class CStateMonsterSmartTerrainTask : public CState<_Object>
     using inherited::prev_substate;
     using inherited::select_state;
 
-    CALifeSmartTerrainTask* m_current_task;
+    CALifeSmartTerrainTask* m_current_task{};
 
 public:
     CStateMonsterSmartTerrainTask(_Object* obj);

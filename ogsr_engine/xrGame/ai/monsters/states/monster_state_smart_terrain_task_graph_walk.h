@@ -7,7 +7,9 @@ class CStateMonsterSmartTerrainTaskGraphWalk : public CStateMove<_Object>
     typedef CStateMove<_Object> inherited;
     using inherited::inherited::object;
 
-    CALifeSmartTerrainTask* m_task;
+    CALifeSmartTerrainTask* m_task{};
+
+    CALifeSmartTerrainTask* refresh_task();
 
 public:
     CStateMonsterSmartTerrainTaskGraphWalk(_Object* obj) : inherited(obj) {}
