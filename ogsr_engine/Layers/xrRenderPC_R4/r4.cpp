@@ -120,7 +120,7 @@ void CRender::create()
 #ifdef DX10_FLUID_ENABLE
     FluidManager.Initialize(70, 70, 70);
     //	FluidManager.Initialize( 100, 100, 100 );
-    FluidManager.SetScreenSize(Device.dwWidth, Device.dwHeight);
+    FluidManager.SetScreenSize(Target->GetRenderWidth(), Target->GetRenderHeight());
 #endif
 }
 
@@ -203,7 +203,7 @@ void CRender::reset_end()
     //-AVO
 
 #ifdef DX10_FLUID_ENABLE
-    FluidManager.SetScreenSize(Device.dwWidth, Device.dwHeight);
+    FluidManager.SetScreenSize(Target->GetRenderWidth(), Target->GetRenderHeight());
 #endif
 
     cleanup_contexts();
@@ -958,7 +958,13 @@ void CRender::Begin()
     }
 
     // state main state parms on frame start only
-    SSManager.SetParams(ps_r__tf_Anisotropic, ps_r__tf_Mipbias);
+    float mipBias = ps_r__tf_Mipbias;
+    if (Target && Target->GetRenderWidth() < Target->GetDisplayWidth())
+    {
+        const float renderScale = static_cast<float>(Target->GetRenderWidth()) / static_cast<float>(Target->GetDisplayWidth());
+        mipBias += std::log2(renderScale);
+    }
+    SSManager.SetParams(ps_r__tf_Anisotropic, mipBias);
 
     Vertex.Flush();
     Index.Flush();

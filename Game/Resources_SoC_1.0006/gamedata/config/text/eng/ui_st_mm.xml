@@ -23,18 +23,18 @@
 	<string id="ui_st_want_to_leave_game_q">
 		<text>Do you really want to leave the ZONE?</text>
 	</string>
-	<!-- Ïåðâûé ýêðàí (èãðà çàãðóæåíà, íåäîñòàþùèå ñòðîêè) -->
+	<!--   ( ,  ) -->
 	<string id="ui_mm_return_game">
 		<text>Return to game</text>
 	</string>
 	<string id="ui_mm_quit_game">
 		<text>Quit game</text>
 	</string>
-	<!-- Ïåðâûé ýêðàí (ïîñëå ñìåðòè, íåäîñòàþùèå ñòðîêè) -->
+	<!--   ( ,  ) -->
 	<string id="st_game_over_press_jump">
 		<text>Press ($$ACTION_JUMP$$) to go to the main menu</text>
 	</string>
-	<!-- Îêíî âûáîðà ñëîæíîñòè -->
+	<!--    -->
 	<string id="ui_mm_novice">
 		<text>Novice</text>
 	</string>
@@ -50,11 +50,11 @@
 	<string id="ui_mm_back">
 		<text>Back</text>
 	</string>
-	<!-- Îêíî çàãðóçêè -->
+	<!--   -->
 	<string id="ui_mm_load">
 		<text>Load</text>
 	</string>
-	<!-- çàãðóçêà ðàçíîå -->
+	<!--   -->
 	<string id="ui_st_load_game_confirm">
 		<text>Loading the game will result in the loss of unsaved data. Would you like to continue?</text>
 	</string>
@@ -67,7 +67,7 @@
 	<string id="ui_load_press_any_key_to_start">
 		<text>Press any key to go to the game</text>
 	</string>
-	<!-- Îêíî ñîõðàíåíèÿ -->
+	<!--   -->
 	<string id="ui_mm_save_game">
 		<text>Save game</text>
 	</string>
@@ -80,15 +80,15 @@
 	<string id="ui_st_file_name_is_empty">
 		<text>The file name is empty</text>
 	</string>
-	<!-- Çàïðîñ íà ïðåðûâàíèå èãðû -->
+	<!--     -->
 	<string id="ui_mm_quit_game_message">
 		<text>Are you sure you want to quit the game?</text>
 	</string>
-	<!-- Çàïðîñ íà âûõîä â Windows -->
+	<!--     Windows -->
 	<string id="ui_mm_quit_windows_message">
 		<text>Are you sure you want to exit to Windows?</text>
 	</string>
-	<!-- Îáùèå -->
+	<!--  -->
 	<string id="ui_mm_cancel">
 		<text>Cancel</text>
 	</string>
@@ -98,15 +98,15 @@
 	<string id="ui_mm_delete">
 		<text>Delete</text>
 	</string>
-	<!-- Îêíî íàñòðîåê -->
+	<!--   -->
 	<string id="ui_mm_options">
 		<text>OPTIONS</text>
 	</string>
-	<!-- Ýêðàí "Âèäåî" -->
+	<!--  "" -->
 	<string id="ui_mm_video">
 		<text>Video</text>
 	</string>
-	<!-- Ïðåñåòû -->
+	<!--  -->
 	<string id="Minimum">
 		<text>Minimum</text>
 	</string>
@@ -122,7 +122,7 @@
 	<string id="Extreme">
 		<text>Maximum</text>
 	</string>
-	<!-- áàçîâûå íàñòðîéêè âèäåî -->
+	<!--    -->
 	<string id="ui_mm_quality_presets">
 		<text>Quality settings</text>
 	</string>
@@ -153,7 +153,7 @@
 		<text>Advanced</text>
 	</string>
 
-	<!-- Îêíî ðàñøèðåííûõ íàñòðîåê âèäåî -->
+	<!--     -->
 
 	<string id="qt_off">
 		<text>Off</text>
@@ -294,6 +294,42 @@
 	</string>
 	<string id="st_opt_taa">
 		<text>TAA</text>
+	</string>
+	<string id="ui_mm_dlss_quality">
+		<text>DLSS quality</text>
+	</string>
+	<string id="ui_mm_fsr3_quality">
+		<text>FSR3 quality</text>
+	</string>
+	<string id="st_opt_dlaa">
+		<text>DLAA</text>
+	</string>
+	<string id="st_opt_dlss_quality">
+		<text>Quality</text>
+	</string>
+	<string id="st_opt_dlss_balanced">
+		<text>Balanced</text>
+	</string>
+	<string id="st_opt_dlss_performance">
+		<text>Performance</text>
+	</string>
+	<string id="st_opt_dlss_ultra_performance">
+		<text>Ultra Performance</text>
+	</string>
+	<string id="st_opt_fsr3_native_aa">
+		<text>Native AA</text>
+	</string>
+	<string id="st_opt_fsr3_quality">
+		<text>Quality</text>
+	</string>
+	<string id="st_opt_fsr3_balanced">
+		<text>Balanced</text>
+	</string>
+	<string id="st_opt_fsr3_performance">
+		<text>Performance</text>
+	</string>
+	<string id="st_opt_fsr3_ultra_performance">
+		<text>Ultra Performance</text>
 	</string>
 	<string id="ui_mm_r2_aa_mode">
 		<text>Antialiasing mode (R2)</text>
@@ -570,7 +606,7 @@
 		<text>Ammunition on belt (not recommended)</text>
 	</string>
 
-	<!-- Îêíî "Çâóê" -->
+	<!--  "" -->
 	<string id="ui_mm_sound">
 		<text>Sound</text>
 	</string>
@@ -586,11 +622,11 @@
 	<string id="ui_mm_eax">
 		<text>EAX</text>
 	</string>
-	<!-- íåàêòèâíûå íàñòðîéêè çâóêà -->
+	<!--    -->
 	<string id="ui_mm_sound_quality">
 		<text>Sound quality</text>
 	</string>
-	<!-- Îêíî "Èãðà" -->
+	<!--  "" -->
 	<string id="ui_mm_gameplay">
 		<text>Game</text>
 	</string>
@@ -658,7 +694,7 @@
 		<text>Weapon bobbing</text>
 	</string>
 
-	<!-- Îêíî "Óïðàâëåíèå" -->
+	<!--  "" -->
 	<string id="ui_mm_controls">
 		<text>Controls</text>
 	</string>
@@ -886,6 +922,12 @@
 	<string id="video_settings_name_69">
 		<text>Image upscaling in 3D scopes - r_3dss_scale_factor</text>
 	</string>
+	<string id="video_settings_name_70">
+		<text>DLSS quality - r_aa_dlss_quality</text>
+	</string>
+	<string id="video_settings_name_71">
+		<text>FSR3 quality - r_aa_fsr3_quality</text>
+	</string>
 
 	<string id="video_settings_desc_1">
 		<text>Motion blur - blurring of the image when turning the camera, playing scenes of movement or fast-moving objects.</text>
@@ -1079,6 +1121,12 @@
 	</string>
 	<string id="video_settings_desc_69">
 		<text>If DLSS or FSR is enabled, this setting adjusts the scaling of the image in the 3D scopes to improve its clarity. %c[yellow] \nWhen set to 1, the image is not scaled. %c[green] \nOptimal value: 2. %c[red] \nValues ??greater than 2 may noticeably reduce FPS.</text>
+	</string>
+	<string id="video_settings_desc_70">
+		<text>Sets the NVIDIA DLSS internal render scale. DLAA renders at native resolution for maximum image quality. Quality, Balanced, Performance and Ultra Performance render at progressively lower internal resolutions to gain FPS. Apply video settings or run vid_restart after changing this option.</text>
+	</string>
+	<string id="video_settings_desc_71">
+		<text>Sets the AMD FSR3 internal render scale. Native AA renders at native resolution for maximum image quality. Quality, Balanced, Performance and Ultra Performance render at progressively lower internal resolutions to gain FPS. Apply video settings or run vid_restart after changing this option.</text>
 	</string>
 
 </string_table>

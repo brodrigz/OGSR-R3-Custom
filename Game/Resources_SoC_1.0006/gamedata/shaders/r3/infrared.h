@@ -69,7 +69,7 @@ float3 infrared(float3 N, float3 original, float depth, float2 HPos, float2 Tex0
 
     float heat_mode = pnv_param_1.z - 2.f;
 
-    float3 hotness = s_heat.Load(int3(Tex0 * screen_res.xy, 0), 0);
+    float3 hotness = s_heat.Load(int3(Tex0 * render_res.xy, 0), 0);
     float3 mixed;
 
     if (hotness.y > 0.0)
