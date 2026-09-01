@@ -194,6 +194,11 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
     {
         PhaseAA(cmd_list); // anti - aliasing
     }
+    else
+    {
+        EndTemporalUpscaleInput();
+        RImplementation.rmNormal(cmd_list);
+    }
 
     if (!need_heatvision) // должны быть до 3DSS
     { // Screen space sunshafts

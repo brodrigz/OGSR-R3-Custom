@@ -39,6 +39,14 @@ void CRenderTarget::ProcessTAA(CBackend& cmd_list)
 #endif
 #endif
 
+struct DlssResolutionInfo
+{
+    u32 renderWidth{}, renderHeight{};
+    u32 minRenderWidth{}, minRenderHeight{};
+    u32 maxRenderWidth{}, maxRenderHeight{};
+    float sharpness{};
+};
+
 static class NGXWrapper
 {
     NVSDK_NGX_Parameter* NgxParameters{};
@@ -46,12 +54,32 @@ static class NGXWrapper
     bool DLSSCreated{}, DLSSInited{};
     ID3D11Resource* OutputRT{};
     NVSDK_NGX_Dimensions saved_renderSize{};
+    bool resetHistory{true};
 
 public:
     u32 saved_w{}, saved_h{};
-    uint32_t dlssPreset{}, dlssQuality{};
+    uint32_t dlssPreset{}, dlssQuality{}, requestedQuality{};
 
-    bool Create(const u64 appid, const NVSDK_NGX_Dimensions& renderSize, const NVSDK_NGX_Dimensions& displaySize, ref_rt& out_rt, const u32 quality, u32& preset)
+    bool QueryOptimalSettings(const u32 displayWidth, const u32 displayHeight, const NVSDK_NGX_PerfQuality_Value quality, DlssResolutionInfo& out) const
+    {
+        if (!NgxParameters)
+            return false;
+
+        const NVSDK_NGX_Result result = NGX_DLSS_GET_OPTIMAL_SETTINGS(NgxParameters, displayWidth, displayHeight, quality, &out.renderWidth, &out.renderHeight,
+            &out.maxRenderWidth, &out.maxRenderHeight, &out.minRenderWidth, &out.minRenderHeight, &out.sharpness);
+        if (result != NVSDK_NGX_Result_Success)
+        {
+            Msg("!![%s] failed for quality [%d]. result: [%d]", __FUNCTION__, quality, result);
+            return false;
+        }
+
+        Msg("--[DLSS] quality: [%d], output: [%ux%u], recommended render: [%ux%u], range: [%ux%u]-[%ux%u], sharpness: [%.3f]", quality,
+            displayWidth, displayHeight, out.renderWidth, out.renderHeight, out.minRenderWidth, out.minRenderHeight, out.maxRenderWidth, out.maxRenderHeight, out.sharpness);
+        return true;
+    }
+
+    bool Create(const u64 appid, const NVSDK_NGX_Dimensions& renderSize, const NVSDK_NGX_Dimensions& displaySize, ref_rt& out_rt, const u32 quality, u32& preset,
+        const NVSDK_NGX_PerfQuality_Value requested_quality)
     {
         OutputRT = out_rt->pSurface;
         saved_w = out_rt->dwWidth;
@@ -104,6 +132,10 @@ public:
             NVSDK_NGX_D3D11_DestroyParameters(NgxParameters);
             return false;
         }
+
+        requestedQuality = requested_quality;
+        DlssResolutionInfo resolutionInfo{};
+        QueryOptimalSettings(displaySize.Width, displaySize.Height, requested_quality, resolutionInfo);
 
         const char* preset_name{};
         switch (quality)
@@ -171,6 +203,7 @@ public:
         }
 
         DLSSCreated = true;
+        resetHistory = true;
         return true;
     }
 
@@ -197,7 +230,7 @@ public:
         DLSSCreated = false;
     }
 
-    bool Draw() const
+    bool Draw()
     {
         if (!DLSSCreated)
         {
@@ -225,6 +258,7 @@ public:
 
         dlssEvalParams.InMVScaleX = -static_cast<float>(saved_renderSize.Width) * 0.5f;
         dlssEvalParams.InMVScaleY = static_cast<float>(saved_renderSize.Height) * 0.5f;
+        dlssEvalParams.InReset = resetHistory ? 1 : 0;
 
         const NVSDK_NGX_Result result = NGX_D3D11_EVALUATE_DLSS_EXT(HW.get_context(CHW::IMM_CTX_ID), Handle, NgxParameters, &dlssEvalParams);
         if (result != NVSDK_NGX_Result_Success)
@@ -233,6 +267,7 @@ public:
             return false;
         }
 
+        resetHistory = false;
         return true;
     }
 
@@ -276,8 +311,20 @@ void CRenderTarget::InitDLSS()
 {
     NGXWrapper.Destroy();
 
+    SetTemporalRenderSize(Device.dwWidth, Device.dwHeight, Device.dwWidth, Device.dwHeight);
     const NVSDK_NGX_Dimensions RenderParams{Device.dwWidth, Device.dwHeight};
-    if (!NGXWrapper.Create(20082024151405ull, RenderParams, RenderParams, rt_Generic_combine, NVSDK_NGX_PerfQuality_Value_DLAA, ps_r_dlss_preset))
+    NVSDK_NGX_PerfQuality_Value requestedQuality = NVSDK_NGX_PerfQuality_Value_DLAA;
+    switch (ps_r_dlss_quality)
+    {
+    case DLSS_QUALITY_QUALITY: requestedQuality = NVSDK_NGX_PerfQuality_Value_MaxQuality; break;
+    case DLSS_QUALITY_BALANCED: requestedQuality = NVSDK_NGX_PerfQuality_Value_Balanced; break;
+    case DLSS_QUALITY_PERFORMANCE: requestedQuality = NVSDK_NGX_PerfQuality_Value_MaxPerf; break;
+    case DLSS_QUALITY_ULTRA_PERFORMANCE: requestedQuality = NVSDK_NGX_PerfQuality_Value_UltraPerformance; break;
+    }
+
+    // Resolution-domain work is intentionally staged separately. Until that
+    // abstraction is visually neutral, the active feature remains native DLAA.
+    if (!NGXWrapper.Create(20082024151405ull, RenderParams, RenderParams, rt_Generic_combine, NVSDK_NGX_PerfQuality_Value_DLAA, ps_r_dlss_preset, requestedQuality))
     {
         if (ps_r_pp_aa_mode == DLSS)
             ps_r_pp_aa_mode = FSR3;
@@ -293,7 +340,17 @@ bool CRenderTarget::ProcessDLSS()
 {
     PIX_EVENT(DLSS);
 
-    if (ps_r_dlss_preset != NGXWrapper.dlssPreset)
+    NVSDK_NGX_PerfQuality_Value requestedQuality = NVSDK_NGX_PerfQuality_Value_DLAA;
+    switch (ps_r_dlss_quality)
+    {
+    case DLSS_QUALITY_QUALITY: requestedQuality = NVSDK_NGX_PerfQuality_Value_MaxQuality; break;
+    case DLSS_QUALITY_BALANCED: requestedQuality = NVSDK_NGX_PerfQuality_Value_Balanced; break;
+    case DLSS_QUALITY_PERFORMANCE: requestedQuality = NVSDK_NGX_PerfQuality_Value_MaxPerf; break;
+    case DLSS_QUALITY_ULTRA_PERFORMANCE: requestedQuality = NVSDK_NGX_PerfQuality_Value_UltraPerformance; break;
+    }
+
+    if (ps_r_dlss_preset != NGXWrapper.dlssPreset || static_cast<u32>(requestedQuality) != NGXWrapper.requestedQuality || NGXWrapper.saved_w != Device.dwWidth ||
+        NGXWrapper.saved_h != Device.dwHeight)
     {
         InitDLSS();
     }
@@ -545,7 +602,11 @@ bool CRenderTarget::ProcessFSR_3DSS(const bool need_reset)
 void CRenderTarget::PhaseAA(CBackend& cmd_list)
 {
     if (ps_pnv_mode > 1) // skip AA for heatvision
+    {
+        EndTemporalUpscaleInput();
+        RImplementation.rmNormal(cmd_list);
         return;
+    }
 
     switch (ps_r_pp_aa_mode)
     {
@@ -565,6 +626,9 @@ void CRenderTarget::PhaseAA(CBackend& cmd_list)
         case TAA: ProcessTAA(cmd_list); break;
         case SMAA: ProcessSMAA(cmd_list); break;
     }
+
+    EndTemporalUpscaleInput();
+    RImplementation.rmNormal(cmd_list);
 
     if (ps_r_pp_aa_mode != SMAA)
         ProcessCAS(cmd_list);

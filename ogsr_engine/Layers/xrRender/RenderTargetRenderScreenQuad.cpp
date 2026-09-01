@@ -2,7 +2,7 @@
 
 void CRenderTarget::RenderScreenTriangle(CBackend& cmd_list, const ref_rt& rt, ref_selement& sh, const std::function<void()>& lambda)
 {
-    u_setrt(cmd_list, Device.dwWidth, Device.dwHeight, rt->pRT, nullptr, nullptr, nullptr);
+    u_setrt(cmd_list, GetActiveWidth(), GetActiveHeight(), rt->pRT, nullptr, nullptr, nullptr);
 
     cmd_list.set_CullMode(CULL_NONE);
     cmd_list.set_Stencil(FALSE);

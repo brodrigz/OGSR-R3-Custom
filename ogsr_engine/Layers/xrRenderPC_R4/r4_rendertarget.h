@@ -11,6 +11,11 @@ class CRenderTarget : public IRender_Target
 private:
     u32 dwWidth[R__NUM_CONTEXTS];
     u32 dwHeight[R__NUM_CONTEXTS];
+    u32 m_renderWidth{};
+    u32 m_renderHeight{};
+    u32 m_displayWidth{};
+    u32 m_displayHeight{};
+    bool m_temporalUpscaleInput{};
     u32 dwAccumulatorClearMark;
     u32 dwFlareClearMark;
 
@@ -289,6 +294,34 @@ public:
 
     virtual u32 get_width(CBackend& cmd_list) { return dwWidth[cmd_list.context_id]; }
     virtual u32 get_height(CBackend& cmd_list) { return dwHeight[cmd_list.context_id]; }
+
+    u32 GetRenderWidth() const { return m_renderWidth; }
+    u32 GetRenderHeight() const { return m_renderHeight; }
+    u32 GetDisplayWidth() const { return m_displayWidth; }
+    u32 GetDisplayHeight() const { return m_displayHeight; }
+    u32 GetActiveWidth() const { return m_temporalUpscaleInput ? m_renderWidth : m_displayWidth; }
+    u32 GetActiveHeight() const { return m_temporalUpscaleInput ? m_renderHeight : m_displayHeight; }
+    u32 GetViewportWidth(CBackend& cmd_list) const
+    {
+        if (m_temporalUpscaleInput && dwWidth[cmd_list.context_id] == m_displayWidth && dwHeight[cmd_list.context_id] == m_displayHeight)
+            return m_renderWidth;
+
+        return dwWidth[cmd_list.context_id];
+    }
+    u32 GetViewportHeight(CBackend& cmd_list) const
+    {
+        if (m_temporalUpscaleInput && dwWidth[cmd_list.context_id] == m_displayWidth && dwHeight[cmd_list.context_id] == m_displayHeight)
+            return m_renderHeight;
+
+        return dwHeight[cmd_list.context_id];
+    }
+    float GetRenderSubrectScaleX() const { return static_cast<float>(m_renderWidth) / static_cast<float>(m_displayWidth); }
+    float GetRenderSubrectScaleY() const { return static_cast<float>(m_renderHeight) / static_cast<float>(m_displayHeight); }
+    bool IsTemporalUpscaleInput() const { return m_temporalUpscaleInput; }
+
+    void SetTemporalRenderSize(u32 renderWidth, u32 renderHeight, u32 displayWidth, u32 displayHeight);
+    void BeginTemporalUpscaleInput() { m_temporalUpscaleInput = true; }
+    void EndTemporalUpscaleInput() { m_temporalUpscaleInput = false; }
 
     virtual void set_cm_imfluence(float f) { param_color_map_influence = f; }
     virtual void set_cm_interpolate(float f) { param_color_map_interpolate = f; }

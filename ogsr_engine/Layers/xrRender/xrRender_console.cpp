@@ -44,12 +44,22 @@ constexpr xr_token pp_aa_mode_token[] = {
     {nullptr, 0},
 };
 
-u32 ps_r_dlss_preset = NVSDK_NGX_DLSS_Hint_Render_Preset_F;
+u32 ps_r_dlss_preset = NVSDK_NGX_DLSS_Hint_Render_Preset_Default;
 constexpr xr_token dlss_mode_token[]{
     {"st_opt_dlss_default", NVSDK_NGX_DLSS_Hint_Render_Preset_Default}, // default behavior, may or may not change after OTA
     {"st_opt_dlss_f", NVSDK_NGX_DLSS_Hint_Render_Preset_F},
     {"st_opt_dlss_j", NVSDK_NGX_DLSS_Hint_Render_Preset_J},
     {"st_opt_dlss_k", NVSDK_NGX_DLSS_Hint_Render_Preset_K},
+    {},
+};
+
+u32 ps_r_dlss_quality = DLSS_QUALITY_DLAA;
+constexpr xr_token dlss_quality_token[]{
+    {"st_opt_dlaa", DLSS_QUALITY_DLAA},
+    {"st_opt_dlss_quality", DLSS_QUALITY_QUALITY},
+    {"st_opt_dlss_balanced", DLSS_QUALITY_BALANCED},
+    {"st_opt_dlss_performance", DLSS_QUALITY_PERFORMANCE},
+    {"st_opt_dlss_ultra_performance", DLSS_QUALITY_ULTRA_PERFORMANCE},
     {},
 };
 
@@ -822,6 +832,7 @@ void xrRender_initconsole()
     CMD4(CCC_Float, "r2_visor_refl_radius", &ps_r2_visor_refl_radius, 0.3f, 0.6f);
 
     CMD3(CCC_Token, "r_aa_mode", &ps_r_pp_aa_mode, pp_aa_mode_token);
+    CMD3(CCC_Token, "r_aa_dlss_quality", &ps_r_dlss_quality, dlss_quality_token);
     //CMD3(CCC_Token, "r_aa_dlss_preset", &ps_r_dlss_preset, dlss_mode_token);
 
     CMD4(CCC_Float, "r_3dss_scale_factor", &ps_r_dlss_3dss_scale_factor, 1.f, 2.5f);

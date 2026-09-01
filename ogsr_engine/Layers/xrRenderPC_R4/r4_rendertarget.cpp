@@ -173,9 +173,19 @@ void CRenderTarget::reset_target_dimensions()
     }
 }
 
+void CRenderTarget::SetTemporalRenderSize(u32 renderWidth, u32 renderHeight, u32 displayWidth, u32 displayHeight)
+{
+    m_displayWidth = _max(1u, displayWidth);
+    m_displayHeight = _max(1u, displayHeight);
+    m_renderWidth = std::clamp(renderWidth, 1u, m_displayWidth);
+    m_renderHeight = std::clamp(renderHeight, 1u, m_displayHeight);
+}
+
 CRenderTarget::CRenderTarget()
 {
     const auto& options = RImplementation.o;
+
+    SetTemporalRenderSize(Device.dwWidth, Device.dwHeight, Device.dwWidth, Device.dwHeight);
 
     param_blur = 0.f;
     param_gray = 0.f;
