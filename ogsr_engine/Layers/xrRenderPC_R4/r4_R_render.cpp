@@ -277,6 +277,7 @@ void CRender::Render()
     VERIFY(0 == mapDistort.size());
 
     Target->BeginTemporalUpscaleInput();
+    Target->u_setrt(cmd_list, Target->GetRenderWidth(), Target->GetRenderHeight(), nullptr, nullptr, nullptr, nullptr);
     rmNormal(cmd_list);
 
     if (ShouldSkipRender())

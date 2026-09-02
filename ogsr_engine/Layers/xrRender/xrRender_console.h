@@ -6,6 +6,7 @@ extern ECORE_API u32 r2_SmapCascade0Size, /*r2_SmapCascade1Size,*/ r2_SmapCascad
 extern ECORE_API u32 ps_r_pp_aa_mode;
 extern ECORE_API u32 ps_r_dlss_preset;
 extern ECORE_API u32 ps_r_dlss_quality;
+extern ECORE_API u32 ps_r_fsr3_quality;
 extern float ps_r_dlss_3dss_scale_factor;
 
 enum : u32
@@ -15,6 +16,15 @@ enum : u32
     DLSS_QUALITY_BALANCED,
     DLSS_QUALITY_PERFORMANCE,
     DLSS_QUALITY_ULTRA_PERFORMANCE,
+};
+
+enum : u32
+{
+    FSR3_QUALITY_NATIVE_AA,
+    FSR3_QUALITY_QUALITY,
+    FSR3_QUALITY_BALANCED,
+    FSR3_QUALITY_PERFORMANCE,
+    FSR3_QUALITY_ULTRA_PERFORMANCE,
 };
 
 extern ECORE_API u32 ps_r_sun_shafts;

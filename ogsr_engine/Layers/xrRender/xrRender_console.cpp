@@ -44,7 +44,7 @@ constexpr xr_token pp_aa_mode_token[] = {
     {nullptr, 0},
 };
 
-u32 ps_r_dlss_preset = NVSDK_NGX_DLSS_Hint_Render_Preset_Default;
+u32 ps_r_dlss_preset = NVSDK_NGX_DLSS_Hint_Render_Preset_F;
 constexpr xr_token dlss_mode_token[]{
     {"st_opt_dlss_default", NVSDK_NGX_DLSS_Hint_Render_Preset_Default}, // default behavior, may or may not change after OTA
     {"st_opt_dlss_f", NVSDK_NGX_DLSS_Hint_Render_Preset_F},
@@ -60,6 +60,16 @@ constexpr xr_token dlss_quality_token[]{
     {"st_opt_dlss_balanced", DLSS_QUALITY_BALANCED},
     {"st_opt_dlss_performance", DLSS_QUALITY_PERFORMANCE},
     {"st_opt_dlss_ultra_performance", DLSS_QUALITY_ULTRA_PERFORMANCE},
+    {},
+};
+
+u32 ps_r_fsr3_quality = FSR3_QUALITY_NATIVE_AA;
+constexpr xr_token fsr3_quality_token[]{
+    {"st_opt_fsr3_native_aa", FSR3_QUALITY_NATIVE_AA},
+    {"st_opt_fsr3_quality", FSR3_QUALITY_QUALITY},
+    {"st_opt_fsr3_balanced", FSR3_QUALITY_BALANCED},
+    {"st_opt_fsr3_performance", FSR3_QUALITY_PERFORMANCE},
+    {"st_opt_fsr3_ultra_performance", FSR3_QUALITY_ULTRA_PERFORMANCE},
     {},
 };
 
@@ -832,6 +842,7 @@ void xrRender_initconsole()
 
     CMD3(CCC_Token, "r_aa_mode", &ps_r_pp_aa_mode, pp_aa_mode_token);
     CMD3(CCC_Token, "r_aa_dlss_quality", &ps_r_dlss_quality, dlss_quality_token);
+    CMD3(CCC_Token, "r_aa_fsr3_quality", &ps_r_fsr3_quality, fsr3_quality_token);
     //CMD3(CCC_Token, "r_aa_dlss_preset", &ps_r_dlss_preset, dlss_mode_token);
 
     CMD4(CCC_Float, "r_3dss_scale_factor", &ps_r_dlss_3dss_scale_factor, 1.f, 2.5f);

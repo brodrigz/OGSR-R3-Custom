@@ -212,7 +212,10 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
     {
         PIX_EVENT(phase_3DSSReticle);
 
-        u_setrt(cmd_list, rt_Postprocess_0, nullptr, nullptr, nullptr, get_base_zb());
+        // The reticle is composited after temporal upscaling. Scene depth is
+        // render-sized and cannot be bound with this display-sized color RT.
+        u_setrt(cmd_list, rt_Postprocess_0, nullptr, nullptr, nullptr, nullptr);
+        RImplementation.rmNormal(cmd_list);
 
         cmd_list.set_CullMode(CULL_CCW);
         cmd_list.set_Stencil(FALSE);

@@ -16,6 +16,7 @@ private:
     u32 m_displayWidth{};
     u32 m_displayHeight{};
     bool m_temporalUpscaleInput{};
+    bool m_resetTemporalHistory{true};
     u32 dwAccumulatorClearMark;
     u32 dwFlareClearMark;
 
@@ -174,6 +175,7 @@ private:
     ref_shader s_lut;
     ref_shader s_taa;
     ref_shader s_cas;
+    ref_shader s_temporal_resolve;
 
     ref_shader s_rain_drops;
     ref_shader s_gasmask_dudv;
@@ -303,28 +305,17 @@ public:
     u32 GetDisplayHeight() const { return m_displayHeight; }
     u32 GetActiveWidth() const { return m_temporalUpscaleInput ? m_renderWidth : m_displayWidth; }
     u32 GetActiveHeight() const { return m_temporalUpscaleInput ? m_renderHeight : m_displayHeight; }
-    u32 GetViewportWidth(CBackend& cmd_list) const
-    {
-        if (m_temporalUpscaleInput && dwWidth[cmd_list.context_id] == m_displayWidth && dwHeight[cmd_list.context_id] == m_displayHeight)
-            return m_renderWidth;
-
-        return dwWidth[cmd_list.context_id];
-    }
-    u32 GetViewportHeight(CBackend& cmd_list) const
-    {
-        if (m_temporalUpscaleInput && dwWidth[cmd_list.context_id] == m_displayWidth && dwHeight[cmd_list.context_id] == m_displayHeight)
-            return m_renderHeight;
-
-        return dwHeight[cmd_list.context_id];
-    }
+    u32 GetViewportWidth(CBackend& cmd_list) const { return dwWidth[cmd_list.context_id]; }
+    u32 GetViewportHeight(CBackend& cmd_list) const { return dwHeight[cmd_list.context_id]; }
     float GetRenderSubrectScaleX() const { return static_cast<float>(m_renderWidth) / static_cast<float>(m_displayWidth); }
     float GetRenderSubrectScaleY() const { return static_cast<float>(m_renderHeight) / static_cast<float>(m_displayHeight); }
     bool IsTemporalUpscaleInput() const { return m_temporalUpscaleInput; }
 
     void SetTemporalRenderSize(u32 renderWidth, u32 renderHeight, u32 displayWidth, u32 displayHeight);
-    void ConfigureDLSSRenderSize();
+    void ConfigureTemporalRenderSize();
     void BeginTemporalUpscaleInput() { m_temporalUpscaleInput = true; }
     void EndTemporalUpscaleInput() { m_temporalUpscaleInput = false; }
+    void ResetTemporalHistory();
 
     virtual void set_cm_imfluence(float f) { param_color_map_influence = f; }
     virtual void set_cm_interpolate(float f) { param_color_map_interpolate = f; }
@@ -369,7 +360,7 @@ private:
     void DestroyDLSS();
 
     void InitFSR();
-    bool ProcessFSR() const;
+    bool ProcessFSR();
     bool ProcessFSR_3DSS(const bool need_reset);
     void DestroyFSR();
 

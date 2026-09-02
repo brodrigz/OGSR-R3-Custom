@@ -1,4 +1,6 @@
 #include "stdafx.h"
+#include "FidelityFX/host/ffx_fsr3.h"
+#include "FidelityFX/host/backends/dx11/ffx_dx11.h"
 
 void CRenderTarget::ProcessSMAA(CBackend& cmd_list)
 {
@@ -14,6 +16,12 @@ void CRenderTarget::ProcessSMAA(CBackend& cmd_list)
 void CRenderTarget::ProcessTAA(CBackend& cmd_list)
 {
     PIX_EVENT(TAA);
+
+    if (m_resetTemporalHistory)
+    {
+        HW.get_context(cmd_list.context_id)->CopyResource(rt_Generic_0_prev->pSurface, rt_Generic_0->pSurface);
+        m_resetTemporalHistory = false;
+    }
 
     RenderScreenTriangle(cmd_list, rt_Generic_scene_scratch, s_taa->E[0]);
     HW.get_context(cmd_list.context_id)->CopyResource(rt_Generic_0->pSurface, rt_Generic_scene_scratch->pSurface);
@@ -289,27 +297,66 @@ public:
         return true;
     }
 
+    void RequestHistoryReset() { resetHistory = true; }
+
     ~NGXWrapper() { Destroy(); }
 } NGXWrapper;
 
-void CRenderTarget::ConfigureDLSSRenderSize()
+static FfxFsr3UpscalerQualityMode GetRequestedFsr3Quality()
+{
+    return static_cast<FfxFsr3UpscalerQualityMode>(
+        std::clamp(ps_r_fsr3_quality, static_cast<u32>(FSR3_QUALITY_NATIVE_AA), static_cast<u32>(FSR3_QUALITY_ULTRA_PERFORMANCE)));
+}
+
+void CRenderTarget::ConfigureTemporalRenderSize()
 {
     SetTemporalRenderSize(Device.dwWidth, Device.dwHeight, Device.dwWidth, Device.dwHeight);
-    if (ps_r_pp_aa_mode != DLSS)
+
+    if (ps_r_pp_aa_mode == DLSS)
+    {
+        const NVSDK_NGX_PerfQuality_Value quality = GetRequestedDlssQuality();
+        if (!NGXWrapper.Initialize(20082024151405ull))
+        {
+            ps_r_pp_aa_mode = FSR3;
+        }
+        else
+        {
+            DlssResolutionInfo resolutionInfo{};
+            if (NGXWrapper.QueryOptimalSettings(Device.dwWidth, Device.dwHeight, quality, resolutionInfo))
+            {
+                SetTemporalRenderSize(resolutionInfo.renderWidth, resolutionInfo.renderHeight, Device.dwWidth, Device.dwHeight);
+            }
+            else
+            {
+                // Do not create an upscaling feature against native-sized
+                // resources after a failed quality query.
+                ps_r_dlss_quality = DLSS_QUALITY_DLAA;
+                Msg("!![DLSS] falling back to DLAA because optimal settings could not be queried");
+            }
+
+            Msg("--[DLSS] physical render domain: [%ux%u] -> [%ux%u]", GetRenderWidth(), GetRenderHeight(), GetDisplayWidth(), GetDisplayHeight());
+            return;
+        }
+    }
+
+    if (ps_r_pp_aa_mode != FSR3)
         return;
 
-    const NVSDK_NGX_PerfQuality_Value quality = GetRequestedDlssQuality();
-    if (!NGXWrapper.Initialize(20082024151405ull))
+    u32 renderWidth{};
+    u32 renderHeight{};
+    const FfxFsr3UpscalerQualityMode quality = GetRequestedFsr3Quality();
+    const FfxErrorCode result =
+        ffxFsr3UpscalerGetRenderResolutionFromQualityMode(&renderWidth, &renderHeight, Device.dwWidth, Device.dwHeight, quality);
+    if (result != FFX_OK)
     {
-        ps_r_pp_aa_mode = FSR3;
+        Msg("!![FSR3] failed to calculate render resolution for quality [%u]. Error: [%d]", ps_r_fsr3_quality, result);
+        ps_r_fsr3_quality = FSR3_QUALITY_NATIVE_AA;
         return;
     }
 
-    DlssResolutionInfo resolutionInfo{};
-    if (NGXWrapper.QueryOptimalSettings(Device.dwWidth, Device.dwHeight, quality, resolutionInfo))
-        SetTemporalRenderSize(resolutionInfo.renderWidth, resolutionInfo.renderHeight, Device.dwWidth, Device.dwHeight);
-
-    Msg("--[DLSS] physical render domain: [%ux%u] -> [%ux%u]", GetRenderWidth(), GetRenderHeight(), GetDisplayWidth(), GetDisplayHeight());
+    SetTemporalRenderSize(renderWidth, renderHeight, Device.dwWidth, Device.dwHeight);
+    Msg("--[FSR3] quality: [%u], physical render domain: [%ux%u] -> [%ux%u]", ps_r_fsr3_quality, GetRenderWidth(), GetRenderHeight(), GetDisplayWidth(),
+        GetDisplayHeight());
 }
 
 static float saved_3dss_scale_factor{};
@@ -405,8 +452,20 @@ void CRenderTarget::BeginPostprocess(CBackend& cmd_list, const bool temporalOutp
     u_setrt(cmd_list, GetDisplayWidth(), GetDisplayHeight(), nullptr, nullptr, nullptr, nullptr);
     RImplementation.rmNormal(cmd_list);
 
-    ID3D11Resource* source = temporalOutput ? rt_Generic_combine->pSurface : rt_Generic_0->pSurface;
-    HW.get_context(cmd_list.context_id)->CopyResource(rt_Postprocess_0->pSurface, source);
+    if (temporalOutput)
+    {
+        HW.get_context(cmd_list.context_id)->CopyResource(rt_Postprocess_0->pSurface, rt_Generic_combine->pSurface);
+    }
+    else if (GetRenderWidth() == GetDisplayWidth() && GetRenderHeight() == GetDisplayHeight())
+    {
+        HW.get_context(cmd_list.context_id)->CopyResource(rt_Postprocess_0->pSurface, rt_Generic_0->pSurface);
+    }
+    else
+    {
+        // CopyResource cannot scale. If a temporal upscaler is unavailable,
+        // stretch the render-sized scene so failure remains full-screen.
+        RenderScreenTriangle(cmd_list, rt_Postprocess_0, s_temporal_resolve->E[0]);
+    }
 }
 
 //*****************************************************************************************************
@@ -424,12 +483,71 @@ void CRenderTarget::ProcessCAS(CBackend& cmd_list)
 }
 
 //*****************************************************************************************************
-#include "FidelityFX/host/ffx_fsr3.h"
-#include "FidelityFX/host/backends/dx11/ffx_dx11.h"
+static DXGI_FORMAT GetDxgiFormat(const FfxSurfaceFormat format)
+{
+    switch (format)
+    {
+    case FFX_SURFACE_FORMAT_R32G32B32A32_TYPELESS: return DXGI_FORMAT_R32G32B32A32_TYPELESS;
+    case FFX_SURFACE_FORMAT_R32G32B32A32_UINT: return DXGI_FORMAT_R32G32B32A32_UINT;
+    case FFX_SURFACE_FORMAT_R32G32B32A32_FLOAT: return DXGI_FORMAT_R32G32B32A32_FLOAT;
+    case FFX_SURFACE_FORMAT_R16G16B16A16_FLOAT: return DXGI_FORMAT_R16G16B16A16_FLOAT;
+    case FFX_SURFACE_FORMAT_R32G32_FLOAT: return DXGI_FORMAT_R32G32_FLOAT;
+    case FFX_SURFACE_FORMAT_R8_UINT: return DXGI_FORMAT_R8_UINT;
+    case FFX_SURFACE_FORMAT_R32_UINT: return DXGI_FORMAT_R32_UINT;
+    case FFX_SURFACE_FORMAT_R10G10B10A2_UNORM: return DXGI_FORMAT_R10G10B10A2_UNORM;
+    case FFX_SURFACE_FORMAT_R8G8B8A8_TYPELESS: return DXGI_FORMAT_R8G8B8A8_TYPELESS;
+    case FFX_SURFACE_FORMAT_R8G8B8A8_UNORM: return DXGI_FORMAT_R8G8B8A8_UNORM;
+    case FFX_SURFACE_FORMAT_R8G8B8A8_SNORM: return DXGI_FORMAT_R8G8B8A8_SNORM;
+    case FFX_SURFACE_FORMAT_R8G8B8A8_SRGB: return DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+    case FFX_SURFACE_FORMAT_R11G11B10_FLOAT: return DXGI_FORMAT_R11G11B10_FLOAT;
+    case FFX_SURFACE_FORMAT_R16G16_FLOAT: return DXGI_FORMAT_R16G16_FLOAT;
+    case FFX_SURFACE_FORMAT_R16G16_UINT: return DXGI_FORMAT_R16G16_UINT;
+    case FFX_SURFACE_FORMAT_R16G16_SINT: return DXGI_FORMAT_R16G16_SINT;
+    case FFX_SURFACE_FORMAT_R16_FLOAT: return DXGI_FORMAT_R16_FLOAT;
+    case FFX_SURFACE_FORMAT_R16_UINT: return DXGI_FORMAT_R16_UINT;
+    case FFX_SURFACE_FORMAT_R16_UNORM: return DXGI_FORMAT_R16_UNORM;
+    case FFX_SURFACE_FORMAT_R16_SNORM: return DXGI_FORMAT_R16_SNORM;
+    case FFX_SURFACE_FORMAT_R8_UNORM: return DXGI_FORMAT_R8_UNORM;
+    case FFX_SURFACE_FORMAT_R8G8_UNORM: return DXGI_FORMAT_R8G8_UNORM;
+    case FFX_SURFACE_FORMAT_R8G8_UINT: return DXGI_FORMAT_R8G8_UINT;
+    case FFX_SURFACE_FORMAT_R32_FLOAT: return DXGI_FORMAT_R32_FLOAT;
+    default: return DXGI_FORMAT_UNKNOWN;
+    }
+}
+
+static HRESULT CreateFsrSharedTexture(const FfxCreateResourceDescription& createDescription, ID3D11Texture2D** texture)
+{
+    const FfxResourceDescription& resource = createDescription.resourceDescription;
+    if (resource.type != FFX_RESOURCE_TYPE_TEXTURE2D)
+        return E_INVALIDARG;
+
+    D3D11_TEXTURE2D_DESC description{};
+    description.Width = resource.width;
+    description.Height = resource.height;
+    description.MipLevels = resource.mipCount;
+    description.ArraySize = _max(1u, resource.depth);
+    description.Format = GetDxgiFormat(resource.format);
+    description.SampleDesc.Count = 1;
+    description.Usage = D3D11_USAGE_DEFAULT;
+    description.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+
+    if (resource.usage & FFX_RESOURCE_USAGE_UAV)
+        description.BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
+    if (resource.usage & FFX_RESOURCE_USAGE_RENDERTARGET)
+        description.BindFlags |= D3D11_BIND_RENDER_TARGET;
+    if (resource.usage & FFX_RESOURCE_USAGE_DEPTHTARGET)
+        description.BindFlags |= D3D11_BIND_DEPTH_STENCIL;
+
+    if (description.Format == DXGI_FORMAT_UNKNOWN || !description.Width || !description.Height || !description.MipLevels)
+        return E_INVALIDARG;
+
+    return HW.pDevice->CreateTexture2D(&description, nullptr, texture);
+}
 
 static class Fsr3Wrapper
 {
     bool fsr_created{};
+    bool resetHistory{true};
     FfxFsr3UpscalerContext m_UpscalerContext{};
     xr_vector<char> m_scratchBuffer;
     ID3D11Resource* OutputRT{};
@@ -439,15 +557,16 @@ static class Fsr3Wrapper
     ID3D11Texture2D* dilatedMotionVectors{};
     ID3D11Texture2D* reconstructedPrevNearestDepth{};
 public:
-    u32 saved_w{}, saved_h{};
+    u32 saved_w{}, saved_h{}, requestedQuality{};
 
-    bool Create(const FfxDimensions2D& maxRenderSize, const FfxDimensions2D& displaySize, ref_rt& out_rt)
+    bool Create(const FfxDimensions2D& maxRenderSize, const FfxDimensions2D& displaySize, ref_rt& out_rt, const u32 quality)
     {
         OutputRT = out_rt->pSurface;
         saved_w = out_rt->dwWidth;
         saved_h = out_rt->dwHeight;
         saved_maxRenderSize = maxRenderSize;
         saved_displaySize = displaySize;
+        requestedQuality = quality;
 
         if (fsr_created)
         {
@@ -475,6 +594,7 @@ public:
         m_UpscalercontextDesc.backendInterface = fsrInterface;
         m_UpscalercontextDesc.maxRenderSize = maxRenderSize;
         m_UpscalercontextDesc.maxUpscaleSize = displaySize;
+        m_UpscalercontextDesc.flags = FFX_FSR3UPSCALER_ENABLE_HIGH_DYNAMIC_RANGE;
 
         errorCode = ffxFsr3UpscalerContextCreate(&m_UpscalerContext, &m_UpscalercontextDesc);
         if (errorCode != FFX_OK)
@@ -484,26 +604,30 @@ public:
             return false;
         }
 
-        auto CreateTexture = [&](const DXGI_FORMAT fmt, const bool need_rt, ID3D11Texture2D** out) {
-            D3D11_TEXTURE2D_DESC Desc{};
-            Desc.Width = maxRenderSize.width;
-            Desc.Height = maxRenderSize.height;
-            Desc.MipLevels = 1;
-            Desc.ArraySize = 1;
-            Desc.Format = fmt;
-            Desc.SampleDesc.Count = 1;
-            Desc.Usage = D3D11_USAGE_DEFAULT;
-            Desc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_UNORDERED_ACCESS;
-            if (need_rt)
-                Desc.BindFlags |= D3D11_BIND_RENDER_TARGET;
-            return HW.pDevice->CreateTexture2D(&Desc, nullptr, out);
-        };
-
-        R_CHK(CreateTexture(DXGI_FORMAT_R32_FLOAT, true, &dilatedDepth));
-        R_CHK(CreateTexture(DXGI_FORMAT_R16G16_FLOAT, true, &dilatedMotionVectors));
-        R_CHK(CreateTexture(DXGI_FORMAT_R32_UINT, false, &reconstructedPrevNearestDepth));
-
         fsr_created = true;
+        resetHistory = true;
+
+        FfxFsr3UpscalerSharedResourceDescriptions sharedDescriptions{};
+        errorCode = ffxFsr3UpscalerGetSharedResourceDescriptions(&m_UpscalerContext, &sharedDescriptions);
+        if (errorCode != FFX_OK)
+        {
+            Msg("!!Failed ffxFsr3UpscalerGetSharedResourceDescriptions! Error: [%d]", errorCode);
+            Destroy();
+            return false;
+        }
+
+        const HRESULT dilatedDepthResult = CreateFsrSharedTexture(sharedDescriptions.dilatedDepth, &dilatedDepth);
+        const HRESULT dilatedMotionResult = CreateFsrSharedTexture(sharedDescriptions.dilatedMotionVectors, &dilatedMotionVectors);
+        const HRESULT reconstructedDepthResult =
+            CreateFsrSharedTexture(sharedDescriptions.reconstructedPrevNearestDepth, &reconstructedPrevNearestDepth);
+
+        if (FAILED(dilatedDepthResult) || FAILED(dilatedMotionResult) || FAILED(reconstructedDepthResult))
+        {
+            Msg("!!Failed to create FSR3 shared resources: [0x%08x, 0x%08x, 0x%08x]", dilatedDepthResult, dilatedMotionResult, reconstructedDepthResult);
+            Destroy();
+            return false;
+        }
+
         return true;
     }
 
@@ -518,6 +642,7 @@ public:
         _RELEASE(dilatedDepth);
         _RELEASE(dilatedMotionVectors);
         _RELEASE(reconstructedPrevNearestDepth);
+        resetHistory = true;
     }
 
     bool Draw()
@@ -568,6 +693,7 @@ public:
         dispatchParameters.cameraFovAngleVertical = deg2rad(Device.fFOV);
 
         dispatchParameters.viewSpaceToMetersFactor = 1.0f;
+        dispatchParameters.reset = resetHistory;
 
         const FfxErrorCode errorCode = ffxFsr3UpscalerContextDispatch(&m_UpscalerContext, &dispatchParameters);
 
@@ -577,8 +703,11 @@ public:
             return false;
         }
 
+        resetHistory = false;
         return true;
     }
+
+    void RequestHistoryReset() { resetHistory = true; }
 
     ~Fsr3Wrapper() { Destroy(); }
 } Fsr3Wrapper , Fsr3WrapperScope;
@@ -591,7 +720,8 @@ void CRenderTarget::InitFSR()
     const FfxDimensions2D renderSize{GetRenderWidth(), GetRenderHeight()};
     const FfxDimensions2D displaySize{GetDisplayWidth(), GetDisplayHeight()};
 
-    if (!Fsr3Wrapper.Create(renderSize, displaySize, rt_Generic_combine))
+    const u32 quality = static_cast<u32>(GetRequestedFsr3Quality());
+    if (!Fsr3Wrapper.Create(renderSize, displaySize, rt_Generic_combine, quality))
     {
         if (ps_r_pp_aa_mode == FSR3)
             ps_r_pp_aa_mode = TAA;
@@ -601,7 +731,7 @@ void CRenderTarget::InitFSR()
         reset_3dss_rendertarget();
 
         const FfxDimensions2D ScopeSize{rt_Generic_combine_scope->dwWidth, rt_Generic_combine_scope->dwHeight};
-        R_ASSERT(Fsr3WrapperScope.Create(displaySize, ScopeSize, rt_Generic_combine_scope));
+        R_ASSERT(Fsr3WrapperScope.Create(renderSize, ScopeSize, rt_Generic_combine_scope, FSR3_QUALITY_NATIVE_AA));
     }
 }
 
@@ -611,9 +741,27 @@ void CRenderTarget::DestroyFSR()
     Fsr3WrapperScope.Destroy();
 }
 
-bool CRenderTarget::ProcessFSR() const
+void CRenderTarget::ResetTemporalHistory()
+{
+    m_resetTemporalHistory = true;
+    NGXWrapper.RequestHistoryReset();
+    Fsr3Wrapper.RequestHistoryReset();
+    Fsr3WrapperScope.RequestHistoryReset();
+}
+
+bool CRenderTarget::ProcessFSR()
 {
     PIX_EVENT(FSR);
+
+    if (ps_r_pp_aa_mode == FSR3 && ps_r_fsr3_quality != Fsr3Wrapper.requestedQuality)
+    {
+        static u32 lastReportedQuality = u32(-1);
+        if (lastReportedQuality != ps_r_fsr3_quality)
+        {
+            Msg("--[FSR3] quality changes resize physical render targets; apply video settings or run vid_restart");
+            lastReportedQuality = ps_r_fsr3_quality;
+        }
+    }
 
     if (!Fsr3Wrapper.Draw())
     {
@@ -647,7 +795,21 @@ void CRenderTarget::PhaseAA(CBackend& cmd_list)
 {
     if (ps_pnv_mode > 1) // skip AA for heatvision
     {
-        const bool temporalOutput = ProcessFSR();
+        bool temporalOutput = false;
+        if (ps_r_pp_aa_mode == DLSS)
+        {
+            temporalOutput = ProcessDLSS();
+            if (!temporalOutput)
+            {
+                ps_r_pp_aa_mode = FSR3;
+                temporalOutput = ProcessFSR();
+            }
+        }
+        else if (ps_r_pp_aa_mode == FSR3)
+        {
+            temporalOutput = ProcessFSR();
+        }
+
         EndTemporalUpscaleInput();
         RImplementation.rmNormal(cmd_list);
         BeginPostprocess(cmd_list, temporalOutput);

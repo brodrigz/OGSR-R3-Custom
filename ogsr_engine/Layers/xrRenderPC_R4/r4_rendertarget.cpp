@@ -122,6 +122,7 @@ void CRenderTarget::u_setrt(CBackend& cmd_list, u32 W, u32 H, ID3DRenderTargetVi
     cmd_list.set_RT(_1, 0);
     cmd_list.set_RT(_2, 1);
     cmd_list.set_RT(_3, 2);
+    cmd_list.set_RT(nullptr, 3);
     cmd_list.set_ZB(zb);
 }
 
@@ -186,7 +187,7 @@ CRenderTarget::CRenderTarget()
     const auto& options = RImplementation.o;
 
     SetTemporalRenderSize(Device.dwWidth, Device.dwHeight, Device.dwWidth, Device.dwHeight);
-    ConfigureDLSSRenderSize();
+    ConfigureTemporalRenderSize();
 
     param_blur = 0.f;
     param_gray = 0.f;
@@ -334,6 +335,7 @@ CRenderTarget::CRenderTarget()
 
     s_taa.create("temporal_antialiasing");
     s_cas.create("contrast_adaptive_sharpening");
+    s_temporal_resolve.create("temporal_resolve");
 
     for (u32 idx{}; const auto& size : options.sun_cascades_smapsize)
     {
@@ -421,7 +423,7 @@ CRenderTarget::CRenderTarget()
             rt_LUM_pool[it].create(name, 1, 1, DXGI_FORMAT_R32_FLOAT);
             RCache.ClearRT(rt_LUM_pool[it]->pRT, 0x7f7f7f7f);
         }
-        u_setrt(RCache, Device.dwWidth, Device.dwHeight, get_base_rt(), nullptr, nullptr, get_base_zb());
+        u_setrt(RCache, Device.dwWidth, Device.dwHeight, get_base_rt(), nullptr, nullptr, nullptr);
     }
 
     // COMBINE

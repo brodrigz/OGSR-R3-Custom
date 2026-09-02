@@ -958,7 +958,13 @@ void CRender::Begin()
     }
 
     // state main state parms on frame start only
-    SSManager.SetParams(ps_r__tf_Anisotropic, ps_r__tf_Mipbias);
+    float mipBias = ps_r__tf_Mipbias;
+    if (Target && Target->GetRenderWidth() < Target->GetDisplayWidth())
+    {
+        const float renderScale = static_cast<float>(Target->GetRenderWidth()) / static_cast<float>(Target->GetDisplayWidth());
+        mipBias += std::log2(renderScale);
+    }
+    SSManager.SetParams(ps_r__tf_Anisotropic, mipBias);
 
     Vertex.Flush();
     Index.Flush();

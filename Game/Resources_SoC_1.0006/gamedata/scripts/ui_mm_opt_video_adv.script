@@ -12,6 +12,8 @@ local adv_vid_opt_params = {
 	{ "hud_fov",               "track", 0, hint_colors.green , "video_settings_name_62", "video_settings_desc_62" },
 	--
 	{ "aa",                    "list",  0, hint_colors.green , "video_settings_name_19", "video_settings_desc_19" },
+	{ "dlss_quality",          "list",  0, hint_colors.green , "video_settings_name_70", "video_settings_desc_70" },
+	{ "fsr3_quality",          "list",  0, hint_colors.green , "video_settings_name_71", "video_settings_desc_71" },
 	{ "cas",                   "track", 0, hint_colors.green , "video_settings_name_20", "video_settings_desc_20" },
 --	{ "3dss_scale_factor",     "track", 0, hint_colors.yellow, "video_settings_name_69", "video_settings_desc_69" },
 	--
@@ -81,6 +83,7 @@ function opt_video_adv:InitControls(x, y, xml, handler)
 
 	xml:InitFrame("frame", self)
 	self.scroll_v = xml:InitScrollView("video_adv:scroll_v", self)
+	self.upscaler_rows = {}
 
 	-- перебираем с конца, поскольку в настройках scroll view в xml стоит параметр flip_vert="1",
 	-- который инвертирует порядок элементов, что в свою очередь сделано для того, чтобы визуально первые элементы
@@ -119,8 +122,35 @@ function opt_video_adv:InitControls(x, y, xml, handler)
 
 		_st:Enable(enabled)
 		_st2:Enable(enabled)
+
+		if opt == "aa" then
+			self.aa_list = ctl
+		elseif opt == "dlss_quality" or opt == "fsr3_quality" then
+			self.upscaler_rows[opt] = _st
+		end
 	end
+
+	if self.aa_list then
+		handler:Register(self.aa_list, "video_adv:list_aa")
+		handler:AddCallback("video_adv:list_aa", ui_events.LIST_ITEM_SELECT, function()
+			self:UpdateUpscalerQualityRows()
+		end)
+	end
+	self:UpdateUpscalerQualityRows()
 
 	local btn = xml:Init3tButton("video_adv:btn_to_simply",	self)
 	handler:Register(btn, "btn_simply_graphic")
+end
+
+function opt_video_adv:UpdateUpscalerQualityRows()
+	local mode = get_console():get_string("r_aa_mode") or ""
+	if self.upscaler_rows.dlss_quality then
+		self.upscaler_rows.dlss_quality:Show(mode == "st_opt_dlss")
+	end
+	if self.upscaler_rows.fsr3_quality then
+		self.upscaler_rows.fsr3_quality:Show(mode == "st_opt_fsr3")
+	end
+	if self.scroll_v then
+		self.scroll_v:ForceUpdate()
+	end
 end
