@@ -276,10 +276,12 @@ void CRender::Render()
 
     VERIFY(0 == mapDistort.size());
 
+    Target->BeginTemporalUpscaleInput();
     rmNormal(cmd_list);
 
     if (ShouldSkipRender())
     {
+        Target->EndTemporalUpscaleInput();
         Target->u_setrt(cmd_list, Device.dwWidth, Device.dwHeight, Target->get_base_rt(), nullptr, nullptr, Target->get_base_zb());
         return;
     }
@@ -287,6 +289,7 @@ void CRender::Render()
     if (m_bFirstFrameAfterReset)
     {
         m_bFirstFrameAfterReset = false;
+        Target->EndTemporalUpscaleInput();
         return;
     }
 
