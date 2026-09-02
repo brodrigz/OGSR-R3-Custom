@@ -666,7 +666,7 @@ public:
         dispatchParameters.reactive = ffxGetResourceDX11(nullptr, {}, L"FSR3_InputReactiveMap");
         dispatchParameters.transparencyAndComposition = ffxGetResourceDX11(nullptr, {}, L"FSR3_TransparencyAndCompositionMap");
 
-	    dispatchParameters.dilatedDepth = ffxGetResourceDX11(dilatedDepth, GetFfxResourceDescriptionDX11(dilatedDepth), L"FSR3_dilatedDepth", FFX_RESOURCE_STATE_UNORDERED_ACCESS);
+        dispatchParameters.dilatedDepth = ffxGetResourceDX11(dilatedDepth, GetFfxResourceDescriptionDX11(dilatedDepth), L"FSR3_dilatedDepth", FFX_RESOURCE_STATE_UNORDERED_ACCESS);
         dispatchParameters.dilatedMotionVectors =
             ffxGetResourceDX11(dilatedMotionVectors, GetFfxResourceDescriptionDX11(dilatedMotionVectors), L"FSR3_DilatedMotion", FFX_RESOURCE_STATE_UNORDERED_ACCESS);
         dispatchParameters.reconstructedPrevNearestDepth = ffxGetResourceDX11(reconstructedPrevNearestDepth, GetFfxResourceDescriptionDX11(reconstructedPrevNearestDepth),
@@ -803,11 +803,15 @@ void CRenderTarget::PhaseAA(CBackend& cmd_list)
             {
                 ps_r_pp_aa_mode = FSR3;
                 temporalOutput = ProcessFSR();
+                if (!temporalOutput)
+                    ps_r_pp_aa_mode = TAA;
             }
         }
         else if (ps_r_pp_aa_mode == FSR3)
         {
             temporalOutput = ProcessFSR();
+            if (!temporalOutput)
+                ps_r_pp_aa_mode = TAA;
         }
 
         EndTemporalUpscaleInput();
@@ -826,6 +830,8 @@ void CRenderTarget::PhaseAA(CBackend& cmd_list)
             {
                 ps_r_pp_aa_mode = FSR3;
                 temporalOutput = ProcessFSR();
+                if (!temporalOutput)
+                    ps_r_pp_aa_mode = TAA;
             }
             break;
         }

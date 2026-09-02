@@ -282,6 +282,7 @@ void CRender::Render()
 
     if (ShouldSkipRender())
     {
+        Target->ResetTemporalHistory();
         Target->EndTemporalUpscaleInput();
         Target->u_setrt(cmd_list, Device.dwWidth, Device.dwHeight, Target->get_base_rt(), nullptr, nullptr, nullptr);
         rmNormal(cmd_list);
@@ -295,6 +296,14 @@ void CRender::Render()
         Target->u_setrt(cmd_list, Device.dwWidth, Device.dwHeight, Target->get_base_rt(), nullptr, nullptr, nullptr);
         rmNormal(cmd_list);
         return;
+    }
+
+    constexpr float temporalCameraCutDistance = 5.f;
+    constexpr float temporalCameraCutDirectionDot = 0.25f;
+    if (Device.vCameraPosition.distance_to_sqr(Device.vCameraPositionSaved) > _sqr(temporalCameraCutDistance) ||
+        Device.vCameraDirection.dotproduct(Device.vCameraDirectionSaved) < temporalCameraCutDirectionDot)
+    {
+        Target->ResetTemporalHistory();
     }
 
     if (ps_pnv_mode < 2 && (ps_r_pp_aa_mode == DLSS || ps_r_pp_aa_mode == FSR3 || ps_r_pp_aa_mode == TAA || ps_r2_ls_flags.test(R2FLAG_DBG_TAA_JITTER_ENABLE)))
