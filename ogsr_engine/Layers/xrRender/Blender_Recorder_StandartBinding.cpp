@@ -341,7 +341,10 @@ static class cl_screen_res final : public R_constant_setup
 {
     void setup(CBackend& cmd_list, R_constant* C) override
     {
-        cmd_list.set_c(C, (float)Device.dwWidth, (float)Device.dwHeight, 1.0f / (float)Device.dwWidth, 1.0f / (float)Device.dwHeight);
+        const CRenderTarget* target = RImplementation.Target;
+        const float width = static_cast<float>(target ? target->GetActiveWidth() : Device.dwWidth);
+        const float height = static_cast<float>(target ? target->GetActiveHeight() : Device.dwHeight);
+        cmd_list.set_c(C, width, height, 1.f / width, 1.f / height);
     }
 } binder_screen_res;
 
@@ -699,7 +702,10 @@ static class cl_pos_decompress_params : public R_constant_setup
         const float VertTan = -1.0f * tanf(deg2rad(Device.fFOV / 2.0f));
         const float HorzTan = -VertTan / Device.fASPECT;
 
-        cmd_list.set_c(C, HorzTan, VertTan, (2.0f * HorzTan) / (float)Device.dwWidth, (2.0f * VertTan) / (float)Device.dwHeight);
+        const CRenderTarget* target = RImplementation.Target;
+        const float width = static_cast<float>(target ? target->GetActiveWidth() : Device.dwWidth);
+        const float height = static_cast<float>(target ? target->GetActiveHeight() : Device.dwHeight);
+        cmd_list.set_c(C, HorzTan, VertTan, (2.0f * HorzTan) / width, (2.0f * VertTan) / height);
     }
 } binder_pos_decompress_params;
 
@@ -707,7 +713,10 @@ static class cl_pos_decompress_params2 : public R_constant_setup
 {
     virtual void setup(CBackend& cmd_list, R_constant* C)
     {
-        cmd_list.set_c(C, (float)Device.dwWidth, (float)Device.dwHeight, 1.0f / (float)Device.dwWidth, 1.0f / (float)Device.dwHeight);
+        const CRenderTarget* target = RImplementation.Target;
+        const float width = static_cast<float>(target ? target->GetActiveWidth() : Device.dwWidth);
+        const float height = static_cast<float>(target ? target->GetActiveHeight() : Device.dwHeight);
+        cmd_list.set_c(C, width, height, 1.f / width, 1.f / height);
     }
 } binder_pos_decompress_params2;
 

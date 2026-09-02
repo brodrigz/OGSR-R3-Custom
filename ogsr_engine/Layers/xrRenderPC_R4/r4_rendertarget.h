@@ -50,7 +50,9 @@ public:
     ref_rt rt_Generic_0; // 32bit		(r,g,b,a)				// post-process, intermidiate results, etc.
     ref_rt rt_Generic_0_prev; // r2_RT_generic0_prev
     ref_rt rt_Generic_1; // 32bit		(r,g,b,a)				// post-process, intermidiate results, etc.
+    ref_rt rt_Generic_scene_scratch; // low-resolution scene ping-pong target
     ref_rt rt_Generic_combine; // r2_RT_generic_combine
+    ref_rt rt_Postprocess_0; // full-resolution color after temporal upscaling
     ref_rt rt_Generic_0_temp;
     ref_rt rt_Generic_combine_scope;
 
@@ -320,6 +322,7 @@ public:
     bool IsTemporalUpscaleInput() const { return m_temporalUpscaleInput; }
 
     void SetTemporalRenderSize(u32 renderWidth, u32 renderHeight, u32 displayWidth, u32 displayHeight);
+    void ConfigureDLSSRenderSize();
     void BeginTemporalUpscaleInput() { m_temporalUpscaleInput = true; }
     void EndTemporalUpscaleInput() { m_temporalUpscaleInput = false; }
 
@@ -373,6 +376,7 @@ private:
     bool reset_3dss_rendertarget(const bool need_reset = false);
 
     void ProcessCAS(CBackend& cmd_list);
+    void BeginPostprocess(CBackend& cmd_list, bool temporalOutput);
 
     void PhaseSSSS(CBackend& cmd_list);
 

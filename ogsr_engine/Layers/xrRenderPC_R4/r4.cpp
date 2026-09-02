@@ -120,7 +120,7 @@ void CRender::create()
 #ifdef DX10_FLUID_ENABLE
     FluidManager.Initialize(70, 70, 70);
     //	FluidManager.Initialize( 100, 100, 100 );
-    FluidManager.SetScreenSize(Device.dwWidth, Device.dwHeight);
+    FluidManager.SetScreenSize(Target->GetRenderWidth(), Target->GetRenderHeight());
 #endif
 }
 
@@ -203,7 +203,7 @@ void CRender::reset_end()
     //-AVO
 
 #ifdef DX10_FLUID_ENABLE
-    FluidManager.SetScreenSize(Device.dwWidth, Device.dwHeight);
+    FluidManager.SetScreenSize(Target->GetRenderWidth(), Target->GetRenderHeight());
 #endif
 
     cleanup_contexts();

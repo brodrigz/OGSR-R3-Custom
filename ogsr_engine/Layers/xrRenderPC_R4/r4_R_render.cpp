@@ -282,7 +282,8 @@ void CRender::Render()
     if (ShouldSkipRender())
     {
         Target->EndTemporalUpscaleInput();
-        Target->u_setrt(cmd_list, Device.dwWidth, Device.dwHeight, Target->get_base_rt(), nullptr, nullptr, Target->get_base_zb());
+        Target->u_setrt(cmd_list, Device.dwWidth, Device.dwHeight, Target->get_base_rt(), nullptr, nullptr, nullptr);
+        rmNormal(cmd_list);
         return;
     }
 
@@ -290,16 +291,20 @@ void CRender::Render()
     {
         m_bFirstFrameAfterReset = false;
         Target->EndTemporalUpscaleInput();
+        Target->u_setrt(cmd_list, Device.dwWidth, Device.dwHeight, Target->get_base_rt(), nullptr, nullptr, nullptr);
+        rmNormal(cmd_list);
         return;
     }
 
     if (ps_pnv_mode < 2 && (ps_r_pp_aa_mode == DLSS || ps_r_pp_aa_mode == FSR3 || ps_r_pp_aa_mode == TAA || ps_r2_ls_flags.test(R2FLAG_DBG_TAA_JITTER_ENABLE)))
     {
-        auto jitterPhaseCount = ffxFsr3UpscalerGetJitterPhaseCount(static_cast<int32_t>(Device.dwWidth), static_cast<int32_t>(Device.dwWidth));
+        const u32 renderWidth = Target->GetRenderWidth();
+        const u32 renderHeight = Target->GetRenderHeight();
+        auto jitterPhaseCount = ffxFsr3UpscalerGetJitterPhaseCount(static_cast<int32_t>(renderWidth), static_cast<int32_t>(Target->GetDisplayWidth()));
         ffxFsr3UpscalerGetJitterOffset(&ps_r_taa_jitter_full.x, &ps_r_taa_jitter_full.y, Device.dwFrame, jitterPhaseCount);
 
-        ps_r_taa_jitter.x = 2.0f * ps_r_taa_jitter_full.x / Device.dwWidth;
-        ps_r_taa_jitter.y = -2.0f * ps_r_taa_jitter_full.y / Device.dwHeight;
+        ps_r_taa_jitter.x = 2.0f * ps_r_taa_jitter_full.x / renderWidth;
+        ps_r_taa_jitter.y = -2.0f * ps_r_taa_jitter_full.y / renderHeight;
         ps_r_taa_jitter.z = static_cast<float>(Device.dwFrame % jitterPhaseCount) / static_cast<float>(jitterPhaseCount) + EPS;
     }
     else

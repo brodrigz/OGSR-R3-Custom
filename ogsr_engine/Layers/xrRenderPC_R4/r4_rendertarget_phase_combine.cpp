@@ -117,12 +117,12 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
 
         HW.get_context(CHW::IMM_CTX_ID)->CopyResource(rt_ssr1->pSurface, rt_ssr2->pSurface);
 
-        RenderScreenTriangle(cmd_list, rt_Generic_combine, s_ssr->E[1], [&]() {
+        RenderScreenTriangle(cmd_list, rt_Generic_scene_scratch, s_ssr->E[1], [&]() {
             cmd_list.set_c("ssr_setup", ps_ssfx_ssr_1);
             cmd_list.set_c("ssfx_ssr_2", ps_ssfx_ssr_2);
         });
 
-        HW.get_context(CHW::IMM_CTX_ID)->CopyResource(rt_Generic_0->pSurface, rt_Generic_combine->pSurface);
+        HW.get_context(CHW::IMM_CTX_ID)->CopyResource(rt_Generic_0->pSurface, rt_Generic_scene_scratch->pSurface);
     }
 
     // Forward rendering
@@ -163,8 +163,8 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
 
         {
             PIX_EVENT(combine_distort);
-            RenderScreenTriangle(cmd_list, rt_Generic_combine, s_combine->E[1]);
-            HW.get_context(cmd_list.context_id)->CopyResource(rt_Generic_0->pSurface, rt_Generic_combine->pSurface);
+            RenderScreenTriangle(cmd_list, rt_Generic_scene_scratch, s_combine->E[1]);
+            HW.get_context(cmd_list.context_id)->CopyResource(rt_Generic_0->pSurface, rt_Generic_scene_scratch->pSurface);
         }
     }
 
@@ -176,8 +176,8 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
 
     {
         PIX_EVENT(combine_tonemap);
-        RenderScreenTriangle(cmd_list, rt_Generic_combine, s_combine->E[2]);
-        HW.get_context(cmd_list.context_id)->CopyResource(rt_Generic_0->pSurface, rt_Generic_combine->pSurface);
+        RenderScreenTriangle(cmd_list, rt_Generic_scene_scratch, s_combine->E[2]);
+        HW.get_context(cmd_list.context_id)->CopyResource(rt_Generic_0->pSurface, rt_Generic_scene_scratch->pSurface);
     }
 
     const bool need_heatvision = (ps_pnv_mode == 2 || ps_pnv_mode == 3);
@@ -198,6 +198,7 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
     {
         EndTemporalUpscaleInput();
         RImplementation.rmNormal(cmd_list);
+        BeginPostprocess(cmd_list, false);
     }
 
     if (!need_heatvision) // должны быть до 3DSS
@@ -211,7 +212,7 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
     {
         PIX_EVENT(phase_3DSSReticle);
 
-        u_setrt(cmd_list, rt_Generic_0, nullptr, nullptr, nullptr, get_base_zb());
+        u_setrt(cmd_list, rt_Postprocess_0, nullptr, nullptr, nullptr, get_base_zb());
 
         cmd_list.set_CullMode(CULL_CCW);
         cmd_list.set_Stencil(FALSE);
@@ -279,7 +280,7 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
             cmd_list.set_c("m_blur", m_blur_scale.x, m_blur_scale.y, 0, 0);
         });
 
-        HW.get_context(cmd_list.context_id)->CopyResource(rt_Generic_0->pSurface, rt_Generic_combine->pSurface);
+        HW.get_context(cmd_list.context_id)->CopyResource(rt_Postprocess_0->pSurface, rt_Generic_combine->pSurface);
     }
 
     {
@@ -309,7 +310,8 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
 
     phase_flares(cmd_list);
 
-    u_setrt(cmd_list, Device.dwWidth, Device.dwHeight, get_base_rt(), nullptr, nullptr, get_base_zb()); /// TODO: check cmd_list
+    u_setrt(cmd_list, Device.dwWidth, Device.dwHeight, get_base_rt(), nullptr, nullptr, nullptr);
+    RImplementation.rmNormal(cmd_list);
 
 #ifdef DEBUG
     cmd_list.set_CullMode(CULL_CCW);
