@@ -455,18 +455,18 @@ CRenderTarget::CRenderTarget()
         s_pp_antialiasing.create("effects_pp_antialiasing");
     }
 
-    // Mrmnwar SunShaft Screen Space
+    // Screen-space sunshafts run after temporal upscale, so they match the
+    // display-sized postprocess targets rather than the scene render size.
     {
-        rt_SunShaftsMask.create(r2_RT_SunShaftsMask, w, h, DXGI_FORMAT_R8G8B8A8_UNORM);
-        rt_SunShaftsMaskSmoothed.create(r2_RT_SunShaftsMaskSmoothed, w, h, DXGI_FORMAT_R8G8B8A8_UNORM);
-        rt_SunShaftsPass0.create(r2_RT_SunShaftsPass0, w, h, DXGI_FORMAT_R8G8B8A8_UNORM);
-        s_ssss_mrmnwar.create("effects\\ss_sunshafts_mrmnwar");
-    }
+        const u32 displayW = GetDisplayWidth(), displayH = GetDisplayHeight();
 
-    // RT - KD Screen space sunshafts
-    {
-        rt_sunshafts_0.create(r2_RT_sunshafts0, w, h, DXGI_FORMAT_R8G8B8A8_UNORM);
-        rt_sunshafts_1.create(r2_RT_sunshafts1, w, h, DXGI_FORMAT_R8G8B8A8_UNORM);
+        rt_SunShaftsMask.create(r2_RT_SunShaftsMask, displayW, displayH, DXGI_FORMAT_R8G8B8A8_UNORM);
+        rt_SunShaftsMaskSmoothed.create(r2_RT_SunShaftsMaskSmoothed, displayW, displayH, DXGI_FORMAT_R8G8B8A8_UNORM);
+        rt_SunShaftsPass0.create(r2_RT_SunShaftsPass0, displayW, displayH, DXGI_FORMAT_R8G8B8A8_UNORM);
+        s_ssss_mrmnwar.create("effects\\ss_sunshafts_mrmnwar");
+
+        rt_sunshafts_0.create(r2_RT_sunshafts0, displayW, displayH, DXGI_FORMAT_R8G8B8A8_UNORM);
+        rt_sunshafts_1.create(r2_RT_sunshafts1, displayW, displayH, DXGI_FORMAT_R8G8B8A8_UNORM);
         s_ssss_ogse.create("effects\\ss_sunshafts_ogse");
     }
 
