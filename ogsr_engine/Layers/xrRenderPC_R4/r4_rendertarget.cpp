@@ -276,7 +276,7 @@ CRenderTarget::CRenderTarget()
         rt_ssr1.create(r2_RT_ssr1, w, h, DXGI_FORMAT_R8G8B8A8_UNORM); // Generic RT
         rt_ssr2.create(r2_RT_ssr2, w, h, DXGI_FORMAT_R8G8B8A8_UNORM); // Temp RT 8B
 
-        rt_flares.create(r2_RT_flares, w, h, DXGI_FORMAT_R8G8B8A8_UNORM);
+        rt_flares.create(r2_RT_flares, displayW, displayH, DXGI_FORMAT_R8G8B8A8_UNORM);
 
         rt_Velocity.create(r2_RT_velocity, w, h, DXGI_FORMAT_R16G16_FLOAT);
         rt_zbuffer.create(r2_RT_zbuffer, w, h, DXGI_FORMAT_R24G8_TYPELESS);

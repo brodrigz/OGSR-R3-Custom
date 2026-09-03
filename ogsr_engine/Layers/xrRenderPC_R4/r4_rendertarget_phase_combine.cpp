@@ -399,7 +399,11 @@ void CRenderTarget::phase_flares(CBackend& cmd_list)
         return;
 
     // clear
-    u_setrt(cmd_list, rt_flares, nullptr, nullptr, nullptr, rt_Base_Depth->pZRT[cmd_list.context_id]);
+    // Flares are generated after temporal upscaling and consumed by the
+    // display-sized combine pass. Keep their target and viewport in the
+    // display domain; the flare shader performs its own depth lookup.
+    u_setrt(cmd_list, rt_flares, nullptr, nullptr, nullptr, nullptr);
+    RImplementation.rmNormal(cmd_list);
 
     // Targets
     if (dwFlareClearMark != Device.dwFrame)
