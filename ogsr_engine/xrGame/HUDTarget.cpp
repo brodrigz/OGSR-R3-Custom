@@ -318,50 +318,52 @@ void CHUDTarget::Render()
         clamp(fuzzyShowInfo, 0.f, 1.f);
     }
 
-    Fvector2 scr_size;
-    scr_size.set(float(Device.dwWidth), float(Device.dwHeight));
-
-    const float w_2 = scr_size.x / 2.0f;
-    const float h_2 = scr_size.y / 2.0f;
-
-    // Convert to screen coords
-    const float cx = (pt.x + 1) * w_2;
-    const float cy = (pt.y + 1) * h_2;
-
-    // отрендерить кружочек или крестик
-    if (!m_bShowCrosshair)
+    if (psHUD_Flags.is(HUD_CROSSHAIR | HUD_CROSSHAIR_RT | HUD_CROSSHAIR_RT2))
     {
-        const float di_size = C_SIZE / powf(pt.w, .2f);
+        Fvector2 scr_size;
+        scr_size.set(float(Device.dwWidth), float(Device.dwHeight));
 
-        // Msg("di_size = [%f] range = [%f]", di_size, RQ.range);
+        const float w_2 = scr_size.x / 2.0f;
+        const float h_2 = scr_size.y / 2.0f;
 
-        const float size_x = scr_size.x * di_size;
-        const float size_y = size_x; // scr_size.y * di_size;
+        // Convert to screen coords
+        const float cx = (pt.x + 1) * w_2;
+        const float cy = (pt.y + 1) * h_2;
 
-        // actual rendering
-        UIRender->StartPrimitive(6, IUIRender::ptTriList, UI()->m_currentPointType);
+        // отрендерить кружочек или крестик
+        if (!m_bShowCrosshair)
+        {
+            const float di_size = C_SIZE / powf(pt.w, .2f);
 
-        //	TODO: return code back to indexed rendering since we use quads
-        //	Tri 1
-        UIRender->PushPoint(cx - size_x, cy + size_y, 0, C, 0, 1);
-        UIRender->PushPoint(cx - size_x, cy - size_y, 0, C, 0, 0);
-        UIRender->PushPoint(cx + size_x, cy + size_y, 0, C, 1, 1);
-        //	Tri 2
-        UIRender->PushPoint(cx + size_x, cy + size_y, 0, C, 1, 1);
-        UIRender->PushPoint(cx - size_x, cy - size_y, 0, C, 0, 0);
-        UIRender->PushPoint(cx + size_x, cy - size_y, 0, C, 1, 0);
+            // Msg("di_size = [%f] range = [%f]", di_size, RQ.range);
 
-        // unlock VB and Render it as triangle LIST
-        UIRender->SetShader(*hShader);
-        UIRender->FlushPrimitive();
+            const float size_x = scr_size.x * di_size;
+            const float size_y = size_x; // scr_size.y * di_size;
+
+            // actual rendering
+            UIRender->StartPrimitive(6, IUIRender::ptTriList, UI()->m_currentPointType);
+
+            //	TODO: return code back to indexed rendering since we use quads
+            //	Tri 1
+            UIRender->PushPoint(cx - size_x, cy + size_y, 0, C, 0, 1);
+            UIRender->PushPoint(cx - size_x, cy - size_y, 0, C, 0, 0);
+            UIRender->PushPoint(cx + size_x, cy + size_y, 0, C, 1, 1);
+            //	Tri 2
+            UIRender->PushPoint(cx + size_x, cy + size_y, 0, C, 1, 1);
+            UIRender->PushPoint(cx - size_x, cy - size_y, 0, C, 0, 0);
+            UIRender->PushPoint(cx + size_x, cy - size_y, 0, C, 1, 0);
+
+            // unlock VB and Render it as triangle LIST
+            UIRender->SetShader(*hShader);
+            UIRender->FlushPrimitive();
+        }
+        else
+        {
+            // отрендерить прицел
+            HUDCrosshair.cross_color = C;
+            HUDCrosshair.OnRender(Fvector2{cx, cy}, scr_size);
+        }
     }
-    else
-    {
-        // отрендерить прицел
-        HUDCrosshair.cross_color = C;
-        HUDCrosshair.OnRender(Fvector2{cx, cy}, scr_size);
-    }
-
 }
 
 float CHUDTarget::GetRealDist() { return m_real_dist; }

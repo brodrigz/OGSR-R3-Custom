@@ -330,7 +330,10 @@ void CHUDManager::RenderUI()
     {
         HitMarker.Render();
 
-        if (psHUD_Flags.is(HUD_CROSSHAIR | HUD_CROSSHAIR_RT | HUD_CROSSHAIR_RT2))
+        // Names/item tips live in CHUDTarget::Render. Radiophobia defaults
+        // hud_crosshair off, so gating that pass on the crosshair flags
+        // made "NPC Identification" (hud_info) a no-op.
+        if (psHUD_Flags.test(HUD_INFO | HUD_CROSSHAIR_DIST) || psHUD_Flags.is(HUD_CROSSHAIR | HUD_CROSSHAIR_RT | HUD_CROSSHAIR_RT2))
             m_pHUDTarget->Render();
     }
 
