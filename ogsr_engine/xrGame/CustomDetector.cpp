@@ -71,10 +71,30 @@ bool CCustomDetector::CheckCompatibility(CHudItem* itm)
     return true;
 }
 
+void CCustomDetector::AbortHudShow()
+{
+    m_bNeedActivation = false;
+    StopCurrentAnimWithoutCallback();
+    SetPending(FALSE);
+    TurnDetectorInternal(false);
+    g_player_hud->detach_item(this);
+    SetState(eHidden);
+    SetNextState(eHidden);
+}
+
 void CCustomDetector::HideDetector(bool bFastMode)
 {
+    CActor* pActor = smart_cast<CActor*>(H_Parent());
+    if (pActor && pActor->HasInfo("ui_inventory"))
+    {
+        AbortHudShow();
+        return;
+    }
+
     if (GetState() == eIdle)
         ToggleDetector(bFastMode);
+    else if (GetState() == eShowing)
+        AbortHudShow();
 }
 
 void CCustomDetector::ShowDetector(bool bFastMode)
@@ -88,9 +108,14 @@ void CCustomDetector::ToggleDetector(bool bFastMode)
     m_bNeedActivation = false;
     m_bFastAnimMode = bFastMode;
 
+    CActor* pActor = smart_cast<CActor*>(H_Parent());
+    if (pActor && pActor->HasInfo("ui_inventory"))
+        return;
+
     if (GetState() == eHidden)
     {
-        CActor* pActor = smart_cast<CActor*>(H_Parent());
+        if (!pActor)
+            return;
         PIItem iitem = pActor->inventory().ActiveItem();
         CHudItem* itm = (iitem) ? iitem->cast_hud_item() : nullptr;
         u16 slot_to_activate = NO_ACTIVE_SLOT;
@@ -122,8 +147,16 @@ void CCustomDetector::OnStateSwitch(u32 S, u32 oldState)
     case eShowing: {
         g_player_hud->attach_item(this);
         HUD_SOUND::PlaySound(sndShow, Fvector{}, this, !!GetHUDmode(), false, false);
-        PlayHUDMotion({m_bFastAnimMode ? "anm_show_fast" : "anm_show"}, false, GetState());
-        SetPending(TRUE);
+        const u32 anim_time = PlayHUDMotion({m_bFastAnimMode ? "anm_show_fast" : "anm_show"}, false, GetState());
+        if (anim_time > 0)
+            SetPending(TRUE);
+        else
+        {
+            // Script HUD motion (backpack open/close) owns both hands, so the
+            // show clip never runs. Leaving pending here blocks weapon restore
+            // after inventory closes — empty hands, talk still works.
+            AbortHudShow();
+        }
     }
     break;
     case eHiding: {

@@ -165,6 +165,7 @@ public:
     void ToggleDetector(bool bFastMode);
     void HideDetector(bool bFastMode);
     void ShowDetector(bool bFastMode);
+    void AbortHudShow();
     float m_fAfDetectRadius;
     virtual bool CheckCompatibility(CHudItem* itm) override;
 
