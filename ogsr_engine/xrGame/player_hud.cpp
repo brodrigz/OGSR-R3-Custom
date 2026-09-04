@@ -34,6 +34,11 @@ player_hud_motion* player_hud_motion_container::find_motion(const shared_str& na
     return it != m_anims.end() ? &it->second : nullptr;
 }
 
+static bool is_optional_hud_motion_alias(const shared_str& name)
+{
+    return 0 == xr_strcmp(name.c_str(), "anm_shoot_aim");
+}
+
 void player_hud_motion_container::load(bool has_separated_hands, IKinematicsAnimated* model, IKinematicsAnimated* animatedHudItem, const shared_str& sect)
 {
     string512 buff;
@@ -176,6 +181,16 @@ void player_hud_motion_container::load(bool has_separated_hands, IKinematicsAnim
 
             if (pm.m_animations.empty())
             {
+                if (has_separated_hands && is_optional_hud_motion_alias(name))
+                {
+                    Msg("! [%s] optional motion [%s](%s) not found in section [%s]; alias skipped, normal fire animation will be used",
+                        __FUNCTION__,
+                        pm.m_base_name.c_str(),
+                        name.c_str(),
+                        sect.c_str());
+                    continue;
+                }
+
                 if (has_separated_hands)
                 {
                     FATAL("[%s] motion [%s](%s) not found in section [%s]", __FUNCTION__, pm.m_base_name.c_str(), name.c_str(), sect.c_str());
