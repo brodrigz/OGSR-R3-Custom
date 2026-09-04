@@ -236,7 +236,21 @@ void CRender::OnFrame()
 // После рендера мира и пост-эффектов --#SM+#-- +SecondVP+
 void CRender::AfterWorldRender() { Target->u_setrt(get_imm_context().cmd_list, Device.dwWidth, Device.dwHeight, Target->rt_second_vp->pRT, nullptr, nullptr, nullptr); }
 
-void CRender::AfterUIRender() { Target->u_setrt(get_imm_context().cmd_list, Device.dwWidth, Device.dwHeight, Target->get_base_rt(), nullptr, nullptr, nullptr); }
+void CRender::AfterUIRender() { SetupDisplayBackbuffer(); }
+
+void CRender::SetupDisplayBackbuffer()
+{
+    if (!Target)
+        return;
+
+    // Loading / 2D UI can run without CRender::Render(), so do not inherit the
+    // scene-resolution viewport or bind render-sized depth onto the swapchain.
+    Target->EndTemporalUpscaleInput();
+
+    auto& cmd_list = get_imm_context().cmd_list;
+    Target->u_setrt(cmd_list, Device.dwWidth, Device.dwHeight, Target->get_base_rt(), nullptr, nullptr, nullptr);
+    rmNormal(cmd_list);
+}
 
 // Implementation
 IRender_ObjectSpecific* CRender::ros_create(IRenderable* parent) { return xr_new<CROS_impl>(); }
