@@ -793,33 +793,6 @@ bool CRenderTarget::ProcessFSR_3DSS(const bool need_reset)
 
 void CRenderTarget::PhaseAA(CBackend& cmd_list)
 {
-    if (ps_pnv_mode > 1) // skip AA for heatvision
-    {
-        bool temporalOutput = false;
-        if (ps_r_pp_aa_mode == DLSS)
-        {
-            temporalOutput = ProcessDLSS();
-            if (!temporalOutput)
-            {
-                ps_r_pp_aa_mode = FSR3;
-                temporalOutput = ProcessFSR();
-                if (!temporalOutput)
-                    ps_r_pp_aa_mode = TAA;
-            }
-        }
-        else if (ps_r_pp_aa_mode == FSR3)
-        {
-            temporalOutput = ProcessFSR();
-            if (!temporalOutput)
-                ps_r_pp_aa_mode = TAA;
-        }
-
-        EndTemporalUpscaleInput();
-        RImplementation.rmNormal(cmd_list);
-        BeginPostprocess(cmd_list, temporalOutput);
-        return;
-    }
-
     bool temporalOutput = false;
 
     switch (ps_r_pp_aa_mode)
