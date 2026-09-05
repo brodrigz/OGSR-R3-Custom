@@ -34,7 +34,7 @@ IBlender* CResourceManager::_GetBlender(LPCSTR Name)
 
     if (I == m_blenders.end())
     {
-        FATAL("!![%s] DX10: Shader [%s] not found in library.", __FUNCTION__, Name);
+        Msg("! [%s] DX10: Shader [%s] not found in library.", __FUNCTION__, Name);
         return nullptr;
     }
 
@@ -126,7 +126,10 @@ Shader* CResourceManager::Create(LPCSTR s_shader, LPCSTR s_textures, LPCSTR s_co
         return pShader;
 
     if (_lua_HasShader("stub_default"))
+    {
+        Msg("! [%s] Using stub_default for missing shader [%s].", __FUNCTION__, s_shader ? s_shader : "null");
         return _lua_Create("stub_default", s_textures);
+    }
 
     FATAL("Can't find stub_default.s");
     return nullptr;
