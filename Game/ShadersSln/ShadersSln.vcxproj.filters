@@ -554,6 +554,7 @@
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\ogsr_fakescope.s" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\ogsr_gasmask.s" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\ogsr_heatvision.ps" />
+    <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\ogsr_heatvision_pp.ps" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\ogsr_dof.s" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\ogsr_heatvision.s" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\ogsr_nightvision.s" />

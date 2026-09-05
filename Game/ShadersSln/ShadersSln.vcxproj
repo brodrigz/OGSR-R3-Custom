@@ -360,6 +360,7 @@
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\ogsr_fakescope.s" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\ogsr_gasmask.s" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\ogsr_heatvision.ps" />
+    <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\ogsr_heatvision_pp.ps" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\hud3d.ps" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\hud3d.vs" />
     <None Include="..\Resources_SoC_1.0006\gamedata\shaders\r3\hud_crosshair.s" />

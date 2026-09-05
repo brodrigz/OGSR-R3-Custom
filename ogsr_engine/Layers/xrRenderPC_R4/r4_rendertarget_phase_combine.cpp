@@ -183,10 +183,9 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
     const bool need_heatvision = (ps_pnv_mode == 2 || ps_pnv_mode == 3);
     const bool need_3dss = !dsgraph.mapScopeHUDSorted.empty();
 
-    if (need_heatvision) // должен быть до 3DSS
-    {
+    // Stable false-color at render resolution so DLSS/FSR can reconstruct heat shapes.
+    if (need_heatvision)
         phase_heatvision(cmd_list);
-    }
 
     const bool upscaled_3dss = (!need_heatvision && need_3dss && Phase3DSSUpscale(cmd_list));
 
@@ -200,6 +199,10 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
         RImplementation.rmNormal(cmd_list);
         BeginPostprocess(cmd_list, false);
     }
+
+    // Sensor noise / lens after temporal upscaling. Before 3DSS so the reticle is not thermal-tinted.
+    if (need_heatvision)
+        phase_heatvision_overlay(cmd_list);
 
     if (!need_heatvision) // должны быть до 3DSS
     { // Screen space sunshafts

@@ -259,6 +259,7 @@ public:
     void phase_gasmask_dudv(CBackend& cmd_list);
     void phase_nightvision(CBackend& cmd_list);
     void phase_heatvision(CBackend& cmd_list); //--DSR-- HeatVision
+    void phase_heatvision_overlay(CBackend& cmd_list);
 
     void draw_rain(CBackend& cmd_list, light& RainSetup);
 

@@ -306,7 +306,7 @@ void CRender::Render()
         Target->ResetTemporalHistory();
     }
 
-    if (ps_pnv_mode < 2 && (ps_r_pp_aa_mode == DLSS || ps_r_pp_aa_mode == FSR3 || ps_r_pp_aa_mode == TAA || ps_r2_ls_flags.test(R2FLAG_DBG_TAA_JITTER_ENABLE)))
+    if (ps_r_pp_aa_mode == DLSS || ps_r_pp_aa_mode == FSR3 || ps_r_pp_aa_mode == TAA || ps_r2_ls_flags.test(R2FLAG_DBG_TAA_JITTER_ENABLE))
     {
         const u32 renderWidth = Target->GetRenderWidth();
         const u32 renderHeight = Target->GetRenderHeight();
