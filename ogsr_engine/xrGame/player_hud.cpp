@@ -7,6 +7,9 @@
 #include "ui_base.h"
 #include "level.h"
 #include "weapon.h"
+#include "../xr_3da/camerabase.h"
+
+ENGINE_API extern float psHUD_FOV;
 
 player_hud* g_player_hud{};
 
@@ -1003,6 +1006,49 @@ void player_hud::update(const Fmatrix& cam_trans)
 
     Fmatrix trans = cam_trans;
     Fmatrix trans_b = cam_trans;
+
+    CActor* pActor = Actor();
+    float sub_z = 0.f;
+    if (pActor)
+    {
+        float& control_factor = pActor->freelook_cam_control;
+        const u8 cam_freelook = pActor->cam_freelook;
+
+        if (!need_update_collision_local)
+        {
+            if (cam_freelook == eflEnabling || cam_freelook == eflEnabled)
+                control_factor += Device.fTimeDelta / .3f;
+            else
+                control_factor -= Device.fTimeDelta / .3f;
+
+            clamp(control_factor, 0.f, 1.f);
+        }
+
+        if (control_factor > 0.f)
+        {
+            Fvector new_k;
+            const float old_pitch = trans.k.getP();
+            const float new_pitch = old_pitch > 0.f ? old_pitch * (1.f - psHUD_FOV) : old_pitch * (1.f - (psHUD_FOV / 2.f));
+            const float final_pitch = angle_lerp(old_pitch, new_pitch, control_factor);
+
+            const float body_yaw = -angle_normalize_signed(pActor->old_torso_yaw);
+            const float cam_yaw = -angle_normalize_signed(pActor->cam_FirstEye()->yaw);
+            const float diff_yaw = angle_difference_signed(body_yaw, cam_yaw);
+
+            if (final_pitch < 0.f)
+                sub_z += final_pitch * .35f;
+
+            sub_z -= _abs(diff_yaw) * .1f;
+            clamp(sub_z, -.2f, 0.f);
+
+            const float new_yaw = trans.k.getH() + diff_yaw * psHUD_FOV;
+            const float final_yaw = angle_lerp(body_yaw, new_yaw, control_factor);
+
+            new_k.setHP(final_yaw, final_pitch);
+            trans.k.lerp(trans.k, new_k, control_factor);
+            Fvector::generate_orthonormal_basis_normalized(trans.k, trans.j, trans.i);
+        }
+    }
     
     auto attach_pos = [this](size_t part) {
         if (m_attached_items[part])
@@ -1026,6 +1072,18 @@ void player_hud::update(const Fmatrix& cam_trans)
 
     Fvector m2pos = attach_pos(1);
     Fvector m2rot = attach_rot(1);
+
+    if (pActor && pActor->freelook_cam_control > 0.f && sub_z < 0.f && (m_attached_items[0] || m_attached_items[1]))
+    {
+        const float z_factor = sub_z * pActor->freelook_cam_control;
+        const float z_off = 0.5f;
+        const float z1 = z_off * z_factor;
+        const float z2 = z_off * z_factor;
+        m1pos.z += z1;
+        m2pos.z += z2;
+        m1pos.y += z1 / 2.f;
+        m2pos.y += z2 / 2.f;
+    }
 
     Fmatrix trans_2 = trans;
 

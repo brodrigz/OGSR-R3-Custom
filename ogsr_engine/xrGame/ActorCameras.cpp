@@ -22,18 +22,179 @@
 #include "EffectorShot.h"
 #include "phcollidevalidator.h"
 #include "PHShell.h"
+#include "player_hud.h"
+#include "Missile.h"
+#include "HudItem.h"
 
 ENGINE_API extern float psHUD_FOV; //--#SM+#--
 ENGINE_API extern float psHUD_FOV_def; //--#SM+#--
 
 void CActor::cam_Set(EActorCameras style)
 {
+    if (style != eacFirstEye && cam_freelook != eflDisabled)
+    {
+        CCameraBase* C = cameras[eacFirstEye];
+        C->lim_yaw.set(0.f, 0.f);
+        C->bClampYaw = false;
+        C->lim_pitch = m_freelook_orig_lim_pitch;
+        C->bClampPitch = m_freelook_orig_clamp_pitch;
+        cam_freelook = eflDisabled;
+        freelook_cam_control = 0.f;
+    }
+
     CCameraBase* old_cam = cam_Active();
     cam_active = style;
     old_cam->OnDeactivate();
     cam_Active()->OnActivate(old_cam);
 }
 float CActor::f_Ladder_cam_limit = 1.f;
+float f_Freelook_cam_limit = PI_DIV_2;
+float f_Freelook_cam_limit_p = .75f;
+
+void CActor::cam_SetFreelook() { cam_freelook = eflEnabling; }
+
+void CActor::cam_UnsetFreelook() { cam_freelook = eflDisabling; }
+
+void CActor::camUpdateFreelook(float dt)
+{
+    CCameraBase* C = cameras[eacFirstEye];
+
+    switch (cam_freelook)
+    {
+    case eflEnabled:
+    case eflDisabled: return;
+
+    case eflEnabling: {
+        if (!C->bClampYaw)
+        {
+            float& cam_yaw = C->yaw;
+            old_torso_yaw = -r_torso.yaw;
+            C->lim_yaw.set(cam_yaw - f_Freelook_cam_limit, cam_yaw + f_Freelook_cam_limit);
+            C->bClampYaw = true;
+        }
+
+        if (C->lim_pitch.similar(m_freelook_orig_lim_pitch))
+        {
+            float& cam_pitch = C->pitch;
+
+            // Unwrap pitch after load so the clamp lerp does not jump.
+            if (_abs(cam_pitch) > 1.5f)
+            {
+                while (cam_pitch < C->lim_pitch[0])
+                    cam_pitch += PI_MUL_2;
+                while (cam_pitch > C->lim_pitch[1])
+                    cam_pitch -= PI_MUL_2;
+            }
+
+            if (cam_pitch < -f_Freelook_cam_limit_p)
+            {
+                float diff_p = angle_difference(cam_pitch, -f_Freelook_cam_limit_p + .05f);
+                if (diff_p < .025f)
+                    cam_pitch = -f_Freelook_cam_limit_p + .005f;
+                else
+                    cam_pitch += diff_p * _min(dt * 10.f, .5f);
+                clamp(cam_pitch, C->lim_pitch.x, -f_Freelook_cam_limit_p);
+            }
+            else if (cam_pitch > f_Freelook_cam_limit_p)
+            {
+                float diff_p = angle_difference(cam_pitch, f_Freelook_cam_limit_p - .05f);
+                if (diff_p < .025f)
+                    cam_pitch = f_Freelook_cam_limit_p - .005f;
+                else
+                    cam_pitch -= diff_p * _min(dt * 10.f, .5f);
+                clamp(cam_pitch, f_Freelook_cam_limit_p, C->lim_pitch.y);
+            }
+            else
+            {
+                C->lim_pitch.set(-f_Freelook_cam_limit_p, f_Freelook_cam_limit_p);
+                C->bClampPitch = true;
+                cam_freelook = eflEnabled;
+            }
+        }
+    }
+    break;
+
+    case eflDisabling: {
+        if (C->bClampYaw)
+        {
+            float& cam_yaw = C->yaw;
+            float delta = angle_difference_signed(old_torso_yaw, cam_yaw);
+
+            if (_abs(delta) < 0.05f)
+            {
+                C->lim_yaw.set(0.f, 0.f);
+                C->bClampYaw = false;
+            }
+            else
+            {
+                cam_yaw += delta * _min(dt * 10.f, 1.f);
+            }
+        }
+
+        if (!C->lim_pitch.similar(m_freelook_orig_lim_pitch))
+        {
+            float& cam_pitch = C->pitch;
+            float delta = angle_difference_signed(0.f, cam_pitch);
+
+            if (_abs(delta) < 0.05f)
+            {
+                C->lim_pitch = m_freelook_orig_lim_pitch;
+                C->bClampPitch = m_freelook_orig_clamp_pitch;
+            }
+            else
+            {
+                cam_pitch += delta * _min(dt * 10.f, 1.f);
+            }
+        }
+
+        if (!C->bClampYaw && C->lim_pitch.similar(m_freelook_orig_lim_pitch))
+            cam_freelook = eflDisabled;
+    }
+    break;
+    }
+}
+
+bool CActor::CanUseFreelook()
+{
+    if (cam_active != eacFirstEye)
+        return false;
+
+    if (g_player_hud && g_player_hud->script_anim_part == 2)
+        return false;
+
+    if (m_holder)
+        return false;
+
+    if (character_physics_support() && character_physics_support()->movement())
+    {
+        if (CElevatorState* es = character_physics_support()->movement()->ElevatorState())
+        {
+            CElevatorState::Estate state = es->State();
+            if (state != CElevatorState::clbNoLadder && state != CElevatorState::clbNone && state != CElevatorState::clbNoState)
+                return false;
+        }
+    }
+
+    if (inventory().ActiveItem())
+    {
+        CWeapon* wep = inventory().ActiveItem()->cast_weapon();
+        CMissile* msl = inventory().ActiveItem()->cast_missile();
+        if (msl && msl->GetState() >= CHudItem::eThrowStart)
+            return false;
+        else if (wep)
+        {
+            if (wep->IsZoomed())
+                return false;
+
+            u32 state = wep->GetState();
+            if (state == CHudItem::eFire || state == CHudItem::eFire2 || state == CHudItem::eReload || state == CHudItem::eSwitch)
+                return false;
+        }
+    }
+
+    return true;
+}
+
 void CActor::cam_SetLadder()
 {
     CCameraBase* C = cameras[eacFirstEye];
@@ -300,8 +461,25 @@ void CActor::cam_Update(float dt, float fFOV)
 	bool on_ladder = false;
     if (mstate_real & mcClimb && cam_active != eacFreeLook)
     {
+        if (cam_freelook != eflDisabled)
+        {
+            CCameraBase* C = cameras[eacFirstEye];
+            C->lim_yaw.set(0.f, 0.f);
+            C->bClampYaw = false;
+            C->lim_pitch = m_freelook_orig_lim_pitch;
+            C->bClampPitch = m_freelook_orig_clamp_pitch;
+            cam_freelook = eflDisabled;
+            freelook_cam_control = 0.f;
+        }
         on_ladder = true;
         camUpdateLadder(dt);
+    }
+
+    if (cam_freelook != eflDisabled && cam_active == eacFirstEye)
+    {
+        if (IsTalking() || m_holder || !g_Alive())
+            cam_UnsetFreelook();
+        camUpdateFreelook(dt);
     }
     current_ik_cam_shift = 0;
 

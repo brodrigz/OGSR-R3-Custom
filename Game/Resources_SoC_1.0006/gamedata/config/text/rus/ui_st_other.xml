@@ -235,12 +235,21 @@
 	<string id="kb_cam_3">
 		<text>Вид от третьего лица (freelook)</text>
 	</string>
+	<string id="kb_freelook">
+		<text>Свободный обзор</text>
+	</string>
 
 	<string id="kb_hide_hud">
 		<text>Скрыть HUD</text>
 	</string>
 	<string id="kb_show_hud">
 		<text>Показать HUD</text>
+	</string>
+	<string id="kb_zoom_alter">
+		<text>Режим прицеливания</text>
+	</string>
+	<string id="kb_wpn_zoom_alter">
+		<text>Режим прицеливания</text>
 	</string>
 
 	<string id="inventory_item_use_or_drag">

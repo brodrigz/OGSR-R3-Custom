@@ -355,6 +355,13 @@ public:
     IC EActorCameras active_cam() { return cam_active; } // KD: need to know which cam active outside actor methods
     CEffectorBobbing* GetEffectorBobbing() { return pCamBobbing; }
 
+    u8 cam_freelook{};
+    float freelook_cam_control{};
+    float old_torso_yaw{};
+    void cam_SetFreelook();
+    void cam_UnsetFreelook();
+    bool CanUseFreelook();
+
 protected:
     void cam_Set(EActorCameras style);
     void cam_Update(float dt, float fFOV);
@@ -362,7 +369,10 @@ protected:
     void camUpdateLadder(float dt);
     void cam_SetLadder();
     void cam_UnsetLadder();
+    void camUpdateFreelook(float dt);
     float currentFOV();
+    Fvector2 m_freelook_orig_lim_pitch{};
+    BOOL m_freelook_orig_clamp_pitch{};
 
     // Cameras
     CCameraBase* cameras[eacMaxCam];
@@ -752,6 +762,7 @@ public:
 };
 
 extern bool isActorAccelerated(u32 mstate, bool ZoomMode);
+extern float f_Freelook_cam_limit;
 
 IC CActorCondition& CActor::conditions() const
 {

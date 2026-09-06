@@ -23,6 +23,15 @@ enum EActorCameras
     eacFreeLook,
     eacMaxCam
 };
+
+// First-person look-around (hold key). Distinct from eacFreeLook (third-person orbit).
+enum EFreelookCam
+{
+    eflDisabled = 0,
+    eflEnabling,
+    eflEnabled,
+    eflDisabling
+};
 enum EDamages
 {
     DAMAGE_FX_COUNT = 12

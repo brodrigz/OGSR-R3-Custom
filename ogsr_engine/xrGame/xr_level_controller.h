@@ -76,6 +76,7 @@ enum EGameActions
     kWPN_ZOOM_ALTER,
     kWPN_BORE,
     kWPN_13,
+    kFREELOOK,
 
     kLASTACTION = u32(-3),
     kNOTBINDED = u32(-2),

@@ -67,6 +67,12 @@ void CActor::IR_OnKeyboardPress(int cmd)
         }
     }
 
+    if (cam_freelook != eflDisabled)
+    {
+        if (cmd == kWPN_FIRE || cmd == kWPN_ZOOM || cmd == kWPN_ZOOM_ALTER)
+            return;
+    }
+
     if (!g_Alive())
         return;
 
@@ -101,7 +107,7 @@ void CActor::IR_OnKeyboardPress(int cmd)
     break;
     case kL_LOOKOUT:
     case kR_LOOKOUT: {
-        if (psActorFlags.test(AF_LEAN_TOGGLE))
+        if (psActorFlags.test(AF_LEAN_TOGGLE) && cam_freelook == eflDisabled)
         {
             const u32 lookout = cmd == kL_LOOKOUT ? mcLLookout : mcRLookout;
             if (mstate_wishful & lookout)
@@ -117,6 +123,11 @@ void CActor::IR_OnKeyboardPress(int cmd)
     case kCAM_1: cam_Set(eacFirstEye); break;
     case kCAM_2: cam_Set(eacLookAt); break;
     case kCAM_3: cam_Set(eacFreeLook); break;
+    case kFREELOOK: {
+        if (cam_freelook == eflDisabled && CanUseFreelook())
+            cam_SetFreelook();
+    }
+    break;
     case kNIGHT_VISION:
     case kTORCH: {
         auto act_it = inventory().ActiveItem();
@@ -181,8 +192,11 @@ void CActor::IR_OnMouseWheel(int direction)
     //	if (psCallbackFlags.test(CF_MOUSE_WHEEL_ROT))
     //		this->callback(GameObject::eOnMouseWheel)(direction);
 
-    if (inventory().Action((direction > 0) ? kWPN_ZOOM_DEC : kWPN_ZOOM_INC, CMD_START))
-        return;
+    if (cam_freelook == eflDisabled)
+    {
+        if (inventory().Action((direction > 0) ? kWPN_ZOOM_DEC : kWPN_ZOOM_INC, CMD_START))
+            return;
+    }
 
     if (psActorFlags.test(AF_MOUSE_WHEEL_SWITCH_SLOTS))
     {
@@ -237,7 +251,11 @@ void CActor::IR_OnKeyboardRelease(int cmd)
             if (GAME_PHASE_INPROGRESS == Game().Phase())
                 g_PerformDrop();
             break;
-        case kCROUCH: g_bAutoClearCrouch = true;
+        case kCROUCH: g_bAutoClearCrouch = true; break;
+        case kFREELOOK:
+            if (cam_freelook == eflEnabled || cam_freelook == eflEnabling)
+                cam_UnsetFreelook();
+            break;
         }
     }
 }
@@ -283,12 +301,15 @@ void CActor::IR_OnKeyboardHold(int cmd)
     switch (cmd)
     {
     case kUP:
-    case kDOWN: cam_Active()->Move((cmd == kUP) ? kDOWN : kUP, 0, LookFactor); break;
+    case kDOWN:
+        if (cam_freelook != eflEnabling && cam_freelook != eflDisabling)
+            cam_Active()->Move((cmd == kUP) ? kDOWN : kUP, 0, LookFactor);
+        break;
     case kSHOWHUD:
     case kHIDEHUD: cam_Active()->Move(cmd); break;
     case kLEFT:
     case kRIGHT:
-        if (eacFreeLook != cam_active)
+        if (eacFreeLook != cam_active && cam_freelook != eflEnabling && cam_freelook != eflDisabling)
             cam_Active()->Move(cmd, 0, LookFactor);
         break;
 
@@ -296,16 +317,20 @@ void CActor::IR_OnKeyboardHold(int cmd)
     case kL_STRAFE: mstate_wishful |= mcLStrafe; break;
     case kR_STRAFE: mstate_wishful |= mcRStrafe; break;
     case kL_LOOKOUT:
-        if (!psActorFlags.test(AF_LEAN_TOGGLE))
+        if (!psActorFlags.test(AF_LEAN_TOGGLE) && cam_freelook == eflDisabled)
             mstate_wishful |= mcLLookout;
         break;
     case kR_LOOKOUT:
-        if (!psActorFlags.test(AF_LEAN_TOGGLE))
+        if (!psActorFlags.test(AF_LEAN_TOGGLE) && cam_freelook == eflDisabled)
             mstate_wishful |= mcRLookout;
         break;
     case kFWD: mstate_wishful |= mcFwd; break;
     case kBACK: mstate_wishful |= mcBack; break;
     case kCROUCH: mstate_wishful |= mcCrouch; break;
+    case kFREELOOK:
+        if (cam_freelook == eflDisabled && CanUseFreelook())
+            cam_SetFreelook();
+        break;
     }
 }
 
@@ -333,6 +358,9 @@ void CActor::IR_OnMouseMove(int dx, int dy)
         m_holder->OnMouseMove(dx, dy);
         return;
     }
+
+    if (cam_freelook == eflEnabling || cam_freelook == eflDisabling)
+        return;
 
     float LookFactor = GetLookFactor();
 
@@ -597,6 +625,9 @@ float CActor::GetLookFactor()
         factor *= pItem->GetControlInertionFactor();
 
     VERIFY(!fis_zero(factor));
+
+    if (cam_freelook != eflDisabled)
+        return 1.5f;
 
     return factor;
 }

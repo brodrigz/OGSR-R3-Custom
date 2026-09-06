@@ -565,8 +565,18 @@ void CActor::g_cl_Orientate(u32 mstate_rl, float dt)
     // capture camera into torso (only for FirstEye & LookAt cameras)
     if (eacFreeLook != cam_active)
     {
-        r_torso.yaw = cam_Active()->GetWorldYaw();
-        r_torso.pitch = cam_Active()->GetWorldPitch();
+        if (cam_freelook == eflDisabled)
+        {
+            r_torso.yaw = cam_Active()->GetWorldYaw();
+            r_torso.pitch = cam_Active()->GetWorldPitch();
+        }
+        else
+        {
+            r_torso.yaw = angle_lerp(cam_Active()->GetWorldYaw(), -old_torso_yaw, freelook_cam_control);
+            float old_pitch = cam_Active()->GetWorldPitch();
+            float new_pitch = old_pitch > 0.f ? old_pitch * .6f : old_pitch * .8f;
+            r_torso.pitch = angle_lerp(old_pitch, new_pitch, freelook_cam_control);
+        }
     }
     else
     {

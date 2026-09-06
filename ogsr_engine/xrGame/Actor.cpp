@@ -108,6 +108,11 @@ CActor::CActor() : CEntityAlive(), current_ik_cam_shift(0)
     cameras[eacFreeLook]->Load("actor_free_cam");
 
     cam_active = eacFirstEye;
+    cam_freelook = eflDisabled;
+    freelook_cam_control = 0.f;
+    old_torso_yaw = 0.f;
+    m_freelook_orig_lim_pitch = cameras[eacFirstEye]->lim_pitch;
+    m_freelook_orig_clamp_pitch = cameras[eacFirstEye]->bClampPitch;
     fPrevCamPos = 0.0f;
     vPrevCamDir.set(0.f, 0.f, 1.f);
     fCurAVelocity = 0.0f;

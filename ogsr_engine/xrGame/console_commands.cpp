@@ -1826,6 +1826,7 @@ void CCC_RegisterCommands()
 
     CMD4(CCC_Float, "g_cam_height_speed", &cam_HeightInterpolationSpeed, 4.0f, 16.0f);
     CMD4(CCC_Float, "g_cam_lookout_speed", &cam_LookoutSpeed, 1.0f, 4.0f);
+    CMD4(CCC_Float, "freelook_cam_limit", &f_Freelook_cam_limit, 0.1f, PI);
 
     CMD3(CCC_Mask, "g_actor_shadow", &psActorFlags, AF_ACTOR_SHADOW);
 

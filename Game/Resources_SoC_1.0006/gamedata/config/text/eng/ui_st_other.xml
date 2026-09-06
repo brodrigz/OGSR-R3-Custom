@@ -235,6 +235,9 @@
 	<string id="kb_cam_3">
 		<text>Third person view (freelook)</text>
 	</string>
+	<string id="kb_freelook">
+		<text>Free look</text>
+	</string>
 
 	<string id="kb_hide_hud">
 		<text>Hide HUD</text>
@@ -244,6 +247,9 @@
 	</string>
 
 	<string id="kb_zoom_alter">
+		<text>Sight mode</text>
+	</string>
+	<string id="kb_wpn_zoom_alter">
 		<text>Sight mode</text>
 	</string>
 
