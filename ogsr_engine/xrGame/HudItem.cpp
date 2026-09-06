@@ -62,7 +62,7 @@ void CHudItem::Load(LPCSTR section)
     m_animation_slot = pSettings->r_u32(section, "animation_slot");
 
     m_nearwall_on = READ_IF_EXISTS(pSettings, r_bool, section, "nearwall_on", IS_OGSR_GA ? true : READ_IF_EXISTS(pSettings, r_bool, "features", "default_nearwall_on", true));
-    //AimAlt = READ_IF_EXISTS(pSettings, r_bool, section, "use_alt_aim_hud", false);
+    AimAlt = READ_IF_EXISTS(pSettings, r_bool, section, "use_alt_aim_hud", false);
 
     if (m_nearwall_on)
     {

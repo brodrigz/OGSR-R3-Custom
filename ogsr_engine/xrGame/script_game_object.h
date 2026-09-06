@@ -716,6 +716,9 @@ public:
     bool HasScopeNightVision() const;
     LPCSTR GetScopeNightVision() const;
     bool Is3dssEnabled() const;
+    bool IsAltSightMode() const;
+    bool CanSwitchSightMode() const;
+    bool SwitchSightMode();
 
     u32 GetCurrAmmo();
 

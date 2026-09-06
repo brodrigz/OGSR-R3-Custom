@@ -25,6 +25,8 @@
 #include "../xr_3da/LightAnimLibrary.h"
 #include "game_object_space.h"
 #include "script_game_object.h"
+#include "ai_space.h"
+#include "script_engine.h"
 
 #include "GamePersistent.h"
 #include "../xr_3da/x_ray.h"
@@ -1246,8 +1248,8 @@ bool CWeapon::Action(s32 cmd, u32 flags)
     case kWPN_ZOOM_DEC: {
         if (IsZoomEnabled() && IsZoomed() && m_bScopeDynamicZoom && IsScopeAttached() && (flags & CMD_START))
         {
-            // если в режиме ПГ - не будем давать использовать динамический зум
-            if (IsGrenadeMode())
+            // если в режиме ПГ или резервного прицела - не будем давать использовать динамический зум
+            if (IsGrenadeMode() || IsAltSightMode())
                 return false;
 
             ZoomChange(cmd == kWPN_ZOOM_INC);
@@ -1256,6 +1258,12 @@ bool CWeapon::Action(s32 cmd, u32 flags)
         }
         else
             return false;
+    }
+
+    case kWPN_ZOOM_ALTER: {
+        if ((flags & CMD_START) && !IsPending() && SwitchSightMode())
+            return true;
+        return false;
     }
     }
     return false;
@@ -1656,10 +1664,73 @@ bool CWeapon::Activate(bool now)
     return inherited::Activate(now);
 }
 
-void CWeapon::InitAddons() {}
+void CWeapon::InitAddons() { UpdateSightModeAvailability(); }
+
+bool CWeapon::CanSwitchSightMode() const
+{
+    if (IsGrenadeMode())
+        return false;
+
+    if (AimAlt)
+        return true;
+
+    if (ScopeAttachable() && IsScopeAttached())
+        return true;
+
+    return m_bUseScopeZoom && IsScopeAttached();
+}
+
+void CWeapon::UpdateSightModeAvailability()
+{
+    AimAlt = READ_IF_EXISTS(pSettings, r_bool, cNameSect(), "use_alt_aim_hud", false);
+    if (IsScopeAttached() && m_sScopeName.size())
+        AimAlt = AimAlt || READ_IF_EXISTS(pSettings, r_bool, m_sScopeName.c_str(), "use_alt_aim_hud", false);
+
+    if (!CanSwitchSightMode())
+        is_second_zoom_offset_enabled = false;
+}
+
+bool CWeapon::SwitchSightMode()
+{
+    if (!CanSwitchSightMode())
+        return false;
+
+    is_second_zoom_offset_enabled = !is_second_zoom_offset_enabled;
+
+    if (IsZoomed())
+    {
+        if (m_bScopeDynamicZoom && !IsAltSightMode() && !IsGrenadeMode() && !Is3dssEnabled())
+            m_fZoomFactor = m_fRTZoomFactor;
+        else
+            m_fZoomFactor = CurrentZoomFactor();
+
+        if (IsScopeAttached() && !IsGrenadeMode() && !IsAltSightMode())
+        {
+            if (!m_bScopeZoomInertionAllow)
+                AllowHudInertion(FALSE);
+        }
+        else if (!m_bZoomInertionAllow)
+            AllowHudInertion(FALSE);
+        else
+            AllowHudInertion(TRUE);
+
+        OnZoomChanged();
+    }
+
+    if (ParentIsActor())
+    {
+        ::luabind::functor<void> funct;
+        if (ai().script_engine().functor("CWeapon_OnSwitchSightMode", funct))
+            funct(lua_game_object(), IsAltSightMode());
+    }
+
+    return true;
+}
 
 float CWeapon::CurrentZoomFactor()
 {
+    if (IsAltSightMode())
+        return m_fIronSightZoomFactor;
     if (Is3dssEnabled())
         return Core.Features.test(xrCore::Feature::ogse_wpn_zoom_system) ? 1.0f : m_fIronSightZoomFactor; // no change to main fov zoom when use second vp
     else if (IsScopeAttached())
@@ -1694,13 +1765,13 @@ void CWeapon::OnZoomIn()
 {
     m_bZoomMode = true;
 
-    // если в режиме ПГ - не будем давать включать динамический зум
-    if (m_bScopeDynamicZoom && !IsGrenadeMode() && !Is3dssEnabled())
+    // если в режиме ПГ или резервного прицела - не будем давать включать динамический зум
+    if (m_bScopeDynamicZoom && !IsGrenadeMode() && !Is3dssEnabled() && !IsAltSightMode())
         m_fZoomFactor = m_fRTZoomFactor;
     else
         m_fZoomFactor = CurrentZoomFactor();
 
-    if (IsScopeAttached() && !IsGrenadeMode())
+    if (IsScopeAttached() && !IsGrenadeMode() && !IsAltSightMode())
     {
         if (!m_bScopeZoomInertionAllow)
             AllowHudInertion(FALSE);
@@ -1738,7 +1809,7 @@ void CWeapon::OnZoomOut()
 
 bool CWeapon::UseScopeTexture()
 {
-    return !Is3dssEnabled() && m_UIScope; // только если есть текстура прицела - для простого создания коллиматоров
+    return !IsAltSightMode() && !Is3dssEnabled() && m_UIScope; // только если есть текстура прицела - для простого создания коллиматоров
 }
 
 void CWeapon::SwitchState(u32 S)
@@ -1900,7 +1971,7 @@ u8 CWeapon::GetCurrentHudOffsetIdx() const
     {
         const bool has_gl = GrenadeLauncherAttachable() && IsGrenadeLauncherAttached();
         const bool has_scope = ScopeAttachable() && IsScopeAttached();
-        //const bool has_aim_alt = AimAlt && is_second_zoom_offset_enabled;
+        const bool alt_sight = IsAltSightMode();
 
         if (IsGrenadeMode())
         {
@@ -1908,6 +1979,15 @@ u8 CWeapon::GetCurrentHudOffsetIdx() const
                 return hud_item_measures::m_hands_offset_type_gl_scope;
             else
                 return hud_item_measures::m_hands_offset_type_gl;
+        }
+        else if (alt_sight)
+        {
+            if (AimAlt)
+                return hud_item_measures::m_hands_offset_type_alt_aim;
+            else if (has_gl)
+                return hud_item_measures::m_hands_offset_type_aim_gl_normal;
+            else
+                return hud_item_measures::m_hands_offset_type_aim;
         }
         else if (has_gl)
         {
@@ -1920,8 +2000,6 @@ u8 CWeapon::GetCurrentHudOffsetIdx() const
         {
             if (m_bUseScopeZoom && has_scope)
                 return hud_item_measures::m_hands_offset_type_aim_scope;
-            //else if (has_aim_alt)
-            //    return hud_item_measures::m_hands_offset_type_alt_aim;
             else
                 return hud_item_measures::m_hands_offset_type_aim;
         }
@@ -2109,6 +2187,9 @@ const float& CWeapon::hit_probability() const
 
 bool CWeapon::Is3dssEnabled() const
 {
+    if (IsAltSightMode())
+        return false;
+
     const auto& zoom_params = shader_exports.get_custom_params("s3ds_param_2");
     return !fis_zero(zoom_params.w) && !IsGrenadeMode() && psActorFlags.test(AF_3D_SCOPES);
 }
@@ -2149,7 +2230,7 @@ float CWeapon::GetHudFov()
             const float fDiff = last_nw_hf - m_f3dssHudFov;
             return m_f3dssHudFov + (fDiff * (1 - m_fZoomRotationFactor));
         }
-        if ((m_eScopeStatus == CSE_ALifeItemWeapon::eAddonDisabled || IsScopeAttached()) && !IsGrenadeMode() && m_fZoomHudFov > 0.0f)
+        if (!IsAltSightMode() && (m_eScopeStatus == CSE_ALifeItemWeapon::eAddonDisabled || IsScopeAttached()) && !IsGrenadeMode() && m_fZoomHudFov > 0.0f)
         {
             // В процессе зума
             const float fDiff = last_nw_hf - m_fZoomHudFov;

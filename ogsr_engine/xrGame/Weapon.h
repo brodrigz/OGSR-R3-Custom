@@ -272,6 +272,10 @@ public:
     virtual void OnZoomIn();
     virtual void OnZoomOut();
     bool IsZoomed() const override { return m_bZoomMode; }
+    bool IsAltSightMode() const { return is_second_zoom_offset_enabled && !IsGrenadeMode(); }
+    bool CanSwitchSightMode() const;
+    bool SwitchSightMode();
+    void UpdateSightModeAvailability();
     bool ZoomHideCrosshair()
     {
         auto* pA = smart_cast<CActor*>(H_Parent());

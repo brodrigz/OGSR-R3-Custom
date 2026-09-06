@@ -610,6 +610,24 @@ bool CScriptGameObject::Is3dssEnabled() const
     return weapon && weapon->Is3dssEnabled();
 }
 
+bool CScriptGameObject::IsAltSightMode() const
+{
+    const auto* weapon = smart_cast<const CWeapon*>(&object());
+    return weapon && weapon->IsAltSightMode();
+}
+
+bool CScriptGameObject::CanSwitchSightMode() const
+{
+    const auto* weapon = smart_cast<const CWeapon*>(&object());
+    return weapon && weapon->CanSwitchSightMode();
+}
+
+bool CScriptGameObject::SwitchSightMode()
+{
+    auto* weapon = smart_cast<CWeapon*>(&object());
+    return weapon && weapon->SwitchSightMode();
+}
+
 u32 CScriptGameObject::GetCurrAmmo()
 {
     CWeaponAmmo* k = smart_cast<CWeaponAmmo*>(&object());

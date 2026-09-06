@@ -394,6 +394,9 @@ class_<CScriptGameObject> script_register_game_object2(class_<CScriptGameObject>
         .def("has_scope_nightvision", &CScriptGameObject::HasScopeNightVision)
         .def("get_scope_nightvision", &CScriptGameObject::GetScopeNightVision)
         .def("is_3dss_enabled", &CScriptGameObject::Is3dssEnabled)
+        .def("is_alt_aim", &CScriptGameObject::IsAltSightMode)
+        .def("can_switch_sight_mode", &CScriptGameObject::CanSwitchSightMode)
+        .def("switch_sight_mode", &CScriptGameObject::SwitchSightMode)
 
         .def("get_current_ammo", &CScriptGameObject::GetCurrAmmo)
 

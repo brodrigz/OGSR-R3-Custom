@@ -243,6 +243,10 @@
 		<text>Show HUD</text>
 	</string>
 
+	<string id="kb_zoom_alter">
+		<text>Sight mode</text>
+	</string>
+
 	<string id="inventory_item_use_or_drag">
 		<text>Pick up item ($$ACTION_USE$$)\nDrag item (SHIFT+$$ACTION_USE$$)</text>
 	</string>

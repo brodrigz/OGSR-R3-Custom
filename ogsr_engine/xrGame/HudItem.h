@@ -290,8 +290,8 @@ protected:
     virtual Fvector GetDirectionForCollision() { return Device.vCameraDirection; }
     float m_fZoomRotationFactor{}; //от 0 до 1, показывает насколько процентов мы перемещаем HUD
     float m_fZoomRotateTime{}; //время приближения
-    //bool is_second_zoom_offset_enabled{};
-    //bool AimAlt{};
+    bool is_second_zoom_offset_enabled{};
+    bool AimAlt{};
     u32 skip_updated_frame{};
     bool HudInertionAllowed() const { return m_huditem_flags.test(fl_inertion_allow); }
     void AllowHudInertion(BOOL B) { m_huditem_flags.set(fl_inertion_allow, B); }

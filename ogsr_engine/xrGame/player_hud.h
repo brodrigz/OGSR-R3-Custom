@@ -82,6 +82,7 @@ struct hud_item_measures
         m_hands_offset_type_aim_gl_normal, // Смотрим в механический прицел если гранатомет присоединен
         m_hands_offset_type_gl_normal_scope, // Смотрим в присоединяемый нетекстурный прицел (будь то 3д прицел или колиматор) если включен "use_scope_zoom" и гранатомет
                                              // присоединен
+        m_hands_offset_type_alt_aim, // Альтернативное прицеливание (резервный / canted прицел)
         m_hands_offset_type_size
     };
     Fvector m_hands_offset[m_hands_offset_size][m_hands_offset_type_size]{};

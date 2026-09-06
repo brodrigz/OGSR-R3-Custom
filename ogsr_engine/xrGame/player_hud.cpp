@@ -477,6 +477,34 @@ void hud_item_measures::load(const shared_str& sect_name, IKinematics* K)
     else
         m_hands_offset[m_hands_offset_rot][m_hands_offset_type_aim] = READ_IF_EXISTS(pSettings, r_fvector3, sect_name, val_name, Fvector{});
 
+    strconcat(sizeof(val_name), val_name, "aim_hud_offset_alt_pos", _prefix);
+    if (is_16x9 && !pSettings->line_exist(sect_name, val_name))
+        xr_strcpy(val_name, "aim_hud_offset_alt_pos");
+    if (!pSettings->line_exist(sect_name, val_name))
+    {
+        strconcat(sizeof(val_name), val_name, "aim_alt_hud_offset_pos", _prefix);
+        if (is_16x9 && !pSettings->line_exist(sect_name, val_name))
+            xr_strcpy(val_name, "aim_alt_hud_offset_pos");
+    }
+    if (pSettings->line_exist(sect_name, val_name))
+        m_hands_offset[m_hands_offset_pos][m_hands_offset_type_alt_aim] = pSettings->r_fvector3(sect_name, val_name);
+    else
+        m_hands_offset[m_hands_offset_pos][m_hands_offset_type_alt_aim] = m_hands_offset[m_hands_offset_pos][m_hands_offset_type_aim];
+
+    strconcat(sizeof(val_name), val_name, "aim_hud_offset_alt_rot", _prefix);
+    if (is_16x9 && !pSettings->line_exist(sect_name, val_name))
+        xr_strcpy(val_name, "aim_hud_offset_alt_rot");
+    if (!pSettings->line_exist(sect_name, val_name))
+    {
+        strconcat(sizeof(val_name), val_name, "aim_alt_hud_offset_rot", _prefix);
+        if (is_16x9 && !pSettings->line_exist(sect_name, val_name))
+            xr_strcpy(val_name, "aim_alt_hud_offset_rot");
+    }
+    if (pSettings->line_exist(sect_name, val_name))
+        m_hands_offset[m_hands_offset_rot][m_hands_offset_type_alt_aim] = pSettings->r_fvector3(sect_name, val_name);
+    else
+        m_hands_offset[m_hands_offset_rot][m_hands_offset_type_alt_aim] = m_hands_offset[m_hands_offset_rot][m_hands_offset_type_aim];
+
     strconcat(sizeof(val_name), val_name, "gl_hud_offset_pos", _prefix);
     if (is_16x9 && !pSettings->line_exist(sect_name, val_name))
         xr_strcpy(val_name, "gl_hud_offset_pos");
