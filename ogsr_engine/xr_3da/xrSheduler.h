@@ -22,6 +22,7 @@ private:
 private:
     xr_vector<Item> ItemsRT;
     xr_vector<Item> Items;
+    xr_vector<Item> ItemsProcessed; // Reused between steps; visible to callback-driven unregistration.
     xr_vector<ItemReg> Registration;
 
     ISheduled* m_current_step_obj{};

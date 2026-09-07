@@ -15,6 +15,7 @@ void CSheduler::Destroy()
 
     ItemsRT.clear();
     Items.clear();
+    ItemsProcessed.clear();
     Registration.clear();
 }
 
@@ -61,7 +62,7 @@ void CSheduler::internal_Registration()
 
 void CSheduler::internal_Register(ISheduled* object, BOOL RT)
 {
-    VERIFY(!O->shedule.b_locked);
+    VERIFY(!object->shedule.b_locked);
 
     if (RT)
     {
@@ -101,6 +102,15 @@ bool CSheduler::internal_Unregister(const ISheduled* object, BOOL RT)
     else
     {
         for (auto& Item : Items)
+        {
+            if (Item.Object == object)
+            {
+                Item.Object = nullptr;
+                return true;
+            }
+        }
+        // A later callback can unregister an object already updated this step.
+        for (auto& Item : ItemsProcessed)
         {
             if (Item.Object == object)
             {
@@ -162,6 +172,12 @@ bool CSheduler::Registered(ISheduled* object) const
             }
     }
 
+    if (m_current_step_obj == object)
+    {
+        VERIFY(!count);
+        count = 1;
+    }
+
     typedef xr_vector<ItemReg> ITEMS_REG;
     ITEMS_REG::const_iterator I = Registration.begin();
     ITEMS_REG::const_iterator E = Registration.end();
@@ -221,28 +237,32 @@ void CSheduler::Unregister(ISheduled* A, bool force)
 void CSheduler::ProcessStep()
 {
     ZoneScoped;
+    ZoneValue(Items.size());
 
     // Normal priority
     u32 dwTime = Device.dwTimeGlobal;
 
     const bool prefetch = Device.dwPrecacheFrame > 0;
-    decltype(Items) ItemsProcessed;
+    ItemsProcessed.clear();
     bool stopped{};
     //size_t cnt{};
     CTimer t_total;
     t_total.Start();
 
-    for (size_t it{}; it < Items.size();)
+    for (size_t it{}; it < Items.size(); ++it)
     {
-        Item curr = Items.at(it++);
-        bool skip{curr.Object == nullptr}, shed_need{true};
-
-        if (curr.dwTimeForExecute >= dwTime)
+        if (!Items[it].Object || Items[it].dwTimeForExecute >= dwTime)
         {
             continue;
         }
 
-        if (!skip)
+        Item curr = Items[it];
+        // Logically remove the entry before calling user code. Moving the tail
+        // for each due object is quadratic; compact the holes once below.
+        Items[it].Object = nullptr;
+        m_current_step_obj = curr.Object;
+        bool skip{false}, shed_need{true};
+
         {
             __try
             {
@@ -255,10 +275,9 @@ void CSheduler::ProcessStep()
             }
         }
 
-        Items.erase(Items.begin() + (--it));
-
-        if (skip || !shed_need)
+        if (skip || !shed_need || !m_current_step_obj)
         {
+            m_current_step_obj = nullptr;
             continue;
         }
 
@@ -269,13 +288,13 @@ void CSheduler::ProcessStep()
             const u32 dwMax = (1000u + curr.Object->shedule.t_max) / 2;
 
             const float scale = curr.Object->shedule_Scale();
+            if (!m_current_step_obj)
+                continue;
 
             u32 dwUpdate = dwMin + iFloor(float(dwMax - dwMin) * scale);
             clamp(dwUpdate, std::max(dwMin, 20u), dwMax);
 
             const u32 elapsed = dwTime - curr.dwTimeOfLastExecute;
-
-            m_current_step_obj = curr.Object;
 
             // if (!Core.DebugFlags.test(xrCore::dbg_DisableObjectsScheduler))
             curr.Object->shedule_Update(std::clamp(elapsed, 1u, std::max(curr.Object->shedule.t_max, 1000u)));
@@ -285,20 +304,23 @@ void CSheduler::ProcessStep()
                 continue;
             }
 
-            m_current_step_obj = nullptr;
+            // Publish only after the callbacks complete, so cancellation or an
+            // exception cannot leave a partially rescheduled object behind.
+            curr.scheduled_name = curr.Object->shedule_Name();
+            if (!m_current_step_obj)
+                continue;
 
-            // Fill item structure
-            auto& next = ItemsProcessed.emplace_back();
-            next.dwTimeForExecute = dwTime + dwUpdate;
-            next.dwTimeOfLastExecute = dwTime;
-            next.Object = curr.Object;
-            next.scheduled_name = curr.Object->shedule_Name();
+            curr.dwTimeForExecute = dwTime + dwUpdate;
+            curr.dwTimeOfLastExecute = dwTime;
+            ItemsProcessed.emplace_back(std::move(curr));
+            m_current_step_obj = nullptr;
 
             //cnt++;
         }
         __except (ExceptStackTrace("[CSheduler::ProcessStep2] stack trace:\n"))
         {
             Msg("Scheduler tried to update object %s", *curr.scheduled_name);
+            m_current_step_obj = nullptr;
             curr.Object = nullptr;
             continue;
         }
@@ -326,8 +348,16 @@ void CSheduler::ProcessStep()
     //if (prefetch)
     //    Msg("Prefetch frame, updated: [%u] objects!", cnt);
 
-    // Push "processed" back
-    Items.insert(Items.end(), std::make_move_iterator(ItemsProcessed.begin()), std::make_move_iterator(ItemsProcessed.end()));
+    // Stable compaction preserves pending-object order, including when the
+    // time budget stops the step early. Rescheduled objects remain at the end.
+    {
+        ZoneScopedN("Scheduler compact");
+        std::erase_if(Items, [](const Item& item) { return !item.Object; });
+        std::erase_if(ItemsProcessed, [](const Item& item) { return !item.Object; });
+        ZoneValue(ItemsProcessed.size());
+        Items.insert(Items.end(), std::make_move_iterator(ItemsProcessed.begin()), std::make_move_iterator(ItemsProcessed.end()));
+        ItemsProcessed.clear(); // Release references, retain allocation for the next step.
+    }
 
     if (!stopped)
     {
