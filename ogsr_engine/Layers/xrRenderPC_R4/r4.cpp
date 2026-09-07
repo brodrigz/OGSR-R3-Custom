@@ -126,6 +126,8 @@ void CRender::create()
 
 void CRender::destroy()
 {
+    calculate_particles_wait();
+
 #ifdef DX10_FLUID_ENABLE
     FluidManager.Destroy();
 #endif
@@ -133,6 +135,7 @@ void CRender::destroy()
     lstRenderables.clear();
     lstLights.clear();
     lstParticlesCalculation.clear();
+    lstParticleInstances.clear();
     lstBonesCalculation.clear();
     lstUpdateSector.clear();
 

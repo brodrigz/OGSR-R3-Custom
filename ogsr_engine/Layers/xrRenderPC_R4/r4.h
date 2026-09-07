@@ -45,6 +45,7 @@ private:
 };
 
 class dxRender_Visual;
+class CPS_Instance;
 struct light_ctx;
 
 // definition
@@ -180,6 +181,7 @@ private:
     std::future<void> update_sectors_awaiter;
 
     xr_vector<ISpatial*> lstParticlesCalculation;
+    xr_vector<CPS_Instance*> lstParticleInstances;
     xr_vector<ISpatial*> lstBonesCalculation; 
     xr_vector<ISpatial*> lstUpdateSector; 
 

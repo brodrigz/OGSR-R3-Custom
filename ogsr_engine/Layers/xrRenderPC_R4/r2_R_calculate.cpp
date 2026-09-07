@@ -95,10 +95,11 @@ void render_main::sync() const
 //     return d1 < d2;
 // }
 
-constexpr u32 batch_size = 5;
-
 void CRender::calculate_particles_async()
 {
+    // The coordinator owns both lists until every particle worker has finished.
+    calculate_particles_wait();
+
     if (!ps_r2_ls_flags_ext.test(R2FLAGEXT_DISABLE_PARTICLES))
     {
         CFrustum v{};
@@ -115,65 +116,54 @@ void CRender::calculate_particles_async()
 
             t_total.Start();
 
-            // (almost) Exact sorting order (front-to-back)
-            // std::sort(lstParticlesCalculation.begin(), lstParticlesCalculation.end(), pred_sp_sort);
-
-            xr_vector<CPS_Instance*> batch;
-
-            // Traverse
-            for (const auto& spatial : lstParticlesCalculation)
+            lstParticleInstances.clear();
             {
-                if (const auto ps = smart_cast<CPS_Instance*>(spatial))
+                ZoneScopedN("Particles collect");
+                for (const auto spatial : lstParticlesCalculation)
                 {
-                    // is it correct ???
+                    if (const auto ps = smart_cast<CPS_Instance*>(spatial))
+                        lstParticleInstances.emplace_back(ps);
+                }
+                ZoneValue(lstParticleInstances.size());
+            }
 
-                    // vis_data& v_orig = ps->renderable.visual->getVisData();
+            const size_t count = lstParticleInstances.size();
+            if (count != 0)
+            {
+                // The old size > 5 test submitted six instances per task.
+                // Keep that minimum granularity, with up to two tasks per worker
+                // for larger lists. No per-task vector copies or vector allocations.
+                constexpr size_t minBatchSize = 6;
+                const size_t maxTasks = 2 * std::max<size_t>(1, particles_pool.get_num_threads());
+                const size_t batchSize = std::max(minBatchSize, 1 + (count - 1) / maxTasks);
 
-                    // Fvector pos;
-                    // ps->renderable.xform.transform_tiny(pos, v_orig.sphere.P);
-
-                    // if (!ps->renderable.visual->ignore_optimization && !InFieldOfViewR(pos, ps_r__opt_dist, false))
-                    //    continue;
-
-                    batch.emplace_back(ps);
-
-                    if (batch.size() > batch_size)
+                {
+                    ZoneScopedN("Particles dispatch");
+                    for (size_t begin = 0; begin < count; begin += batchSize)
                     {
-                        const xr_vector<CPS_Instance*> t = batch;
-
-                        batch.clear();
-
-                        particles_pool.submit_detach([](const xr_vector<CPS_Instance*>& l) {
-                            for (CPS_Instance* instance : l)
-                            {
-                                instance->PerformFrame();   
-                            }
-                        }, t);
+                        const size_t end = std::min(begin + batchSize, count);
+                        particles_pool.submit_detach([this, begin, end] {
+                            ZoneScopedN("Particles batch");
+                            ZoneValue(end - begin);
+                            for (size_t i = begin; i < end; ++i)
+                                lstParticleInstances[i]->PerformFrame();
+                        });
                     }
+                }
+
+                // Even small batches stay on the particle pool: moving them to
+                // the main/TTAPI thread can change thread-dependent callbacks.
+                {
+                    ZoneScopedN("Particles wait");
+                    particles_pool.wait_for_tasks();
                 }
             }
 
-            if (!batch.empty())
-            {
-                const xr_vector<CPS_Instance*> t = batch;
-
-                batch.clear();
-
-                particles_pool.submit_detach(
-                    [](const xr_vector<CPS_Instance*>& l) {
-                        for (CPS_Instance* instance : l)
-                        {
-                            instance->PerformFrame();
-                        }
-                    },
-                    t);
-            }
-
-            particles_pool.wait_for_tasks();
+            lstParticleInstances.clear(); // Retain capacity; no stale pointers between frames.
 
             if (t_total.GetElapsed_ms() > 5)
             {
-                MsgDbg("Long PerformAllTheWork !!! duration [%d]ms. updated: %d objects!", t_total.GetElapsed_ms(), lstParticlesCalculation.size());
+                MsgDbg("Long PerformAllTheWork !!! duration [%d]ms. updated: %zu objects!", t_total.GetElapsed_ms(), count);
             }
         };
 
