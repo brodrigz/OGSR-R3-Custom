@@ -502,6 +502,7 @@ public:
     virtual void IR_OnKeyboardRelease(int dik);
     virtual void IR_OnKeyboardHold(int dik);
     virtual void IR_OnMouseWheel(int direction);
+    bool OnActionPress(int cmd);
     virtual float GetLookFactor();
     IC void ResetStates()
     {

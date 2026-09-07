@@ -38,24 +38,26 @@
 bool g_bAutoClearCrouch = true;
 extern int g_bHudAdjustMode;
 
-void CActor::IR_OnKeyboardPress(int cmd)
+void CActor::IR_OnKeyboardPress(int cmd) { OnActionPress(cmd); }
+
+bool CActor::OnActionPress(int cmd)
 {
     if (g_bHudAdjustMode && pInput->iGetAsyncKeyState(DIK_LSHIFT))
     {
         if (pInput->iGetAsyncKeyState(DIK_RETURN) || pInput->iGetAsyncKeyState(DIK_BACKSPACE) || pInput->iGetAsyncKeyState(DIK_DELETE))
             g_player_hud->tune(Ivector{});
 
-        return;
+        return true;
     }
 
     if (Remote())
-        return;
+        return true;
 
     //	if (conditions().IsSleeping())	return;
     if (IsTalking())
-        return;
+        return true;
     if (m_input_external_handler && !m_input_external_handler->authorized(cmd))
-        return;
+        return true;
 
     //	if (psCallbackFlags.test(CF_KEY_PRESS))
     //		callback(GameObject::eOnKeyPress)(cmd);
@@ -71,41 +73,41 @@ void CActor::IR_OnKeyboardPress(int cmd)
     if (cam_freelook != eflDisabled)
     {
         if (cmd == kWPN_FIRE || cmd == kWPN_ZOOM || cmd == kWPN_ZOOM_ALTER)
-            return;
+            return true;
     }
 
     if (!g_Alive())
-        return;
+        return true;
 
     if (m_holder && kUSE != cmd)
     {
         m_holder->OnKeyboardPress(cmd);
         if (m_holder->allowWeapon() && inventory().Action(cmd, CMD_START))
-            return;
-        return;
+            return true;
+        return true;
     }
     else if (inventory().Action(cmd, CMD_START))
-        return;
+        return true;
 
     switch (cmd)
     {
     case kJUMP: {
         mstate_wishful |= mcJump;
+        return true;
     }
-    break;
     case kCROUCH_TOGGLE: {
         g_bAutoClearCrouch = !g_bAutoClearCrouch;
         if (!g_bAutoClearCrouch)
             mstate_wishful |= mcCrouch;
+        return true;
     }
-    break;
     case kSPRINT_TOGGLE: {
         if (mstate_wishful & mcSprint)
             mstate_wishful &= ~mcSprint;
         else
             mstate_wishful |= mcSprint;
+        return true;
     }
-    break;
     case kL_LOOKOUT:
     case kR_LOOKOUT: {
         if (psActorFlags.test(AF_LEAN_TOGGLE) && cam_freelook == eflDisabled)
@@ -118,56 +120,57 @@ void CActor::IR_OnKeyboardPress(int cmd)
                 mstate_wishful &= ~mcLookout;
                 mstate_wishful |= lookout;
             }
+            return true;
         }
+        return false;
     }
-    break;
-    case kCAM_1: cam_Set(eacFirstEye); break;
-    case kCAM_2: cam_Set(eacLookAt); break;
-    case kCAM_3: cam_Set(eacFreeLook); break;
+    case kCAM_1: cam_Set(eacFirstEye); return true;
+    case kCAM_2: cam_Set(eacLookAt); return true;
+    case kCAM_3: cam_Set(eacFreeLook); return true;
     case kFREELOOK: {
         if (cam_freelook == eflDisabled && CanUseFreelook())
             cam_SetFreelook();
+        return true;
     }
-    break;
     case kCYCLE_INTERACT:
         if (HUD().GetUI() && HUD().GetUI()->UIMainIngameWnd)
             HUD().GetUI()->UIMainIngameWnd->CycleNearbyInteract();
-        break;
+        return true;
     case kNIGHT_VISION:
     case kTORCH: {
         auto act_it = inventory().ActiveItem();
         auto active_hud = smart_cast<CHudItem*>(act_it);
         if (active_hud && active_hud->GetState() != CHudItem::eIdle && Core.Features.test(xrCore::Feature::busy_actor_restrictions))
-            return;
+            return true;
         auto pTorch = smart_cast<CTorch*>(inventory().ItemFromSlot(TORCH_SLOT));
         if (pTorch && !smart_cast<CWeaponMagazined*>(act_it) && !smart_cast<CWeaponKnife*>(act_it) && !smart_cast<CMissile*>(act_it))
             cmd == kNIGHT_VISION ? pTorch->SwitchNightVision() : pTorch->Switch();
+        return true;
     }
-    break;
     case kWPN_8: {
         if (auto det = smart_cast<CCustomDetector*>(inventory().ItemFromSlot(DETECTOR_SLOT)))
             det->ToggleDetector(g_player_hud->attached_item(0) != nullptr);
+        return true;
     }
-    break;
-    case kUSE: ActorUse(); break;
+    case kUSE: ActorUse(); return true;
     case kDROP:
         b_DropActivated = TRUE;
         f_DropPower = 0;
-        break;
+        return true;
     case kNEXT_SLOT: {
         OnNextWeaponSlot();
+        return true;
     }
-    break;
     case kPREV_SLOT: {
         OnPrevWeaponSlot();
+        return true;
     }
-    break;
 
     case kUSE_BANDAGE:
     case kUSE_MEDKIT: {
         auto active_hud = smart_cast<CHudItem*>(inventory().ActiveItem());
         if (active_hud && active_hud->GetState() != CHudItem::eIdle && Core.Features.test(xrCore::Feature::busy_actor_restrictions))
-            return;
+            return true;
 
         if (!(GetTrade()->IsInTradeState()))
         {
@@ -182,9 +185,10 @@ void CActor::IR_OnKeyboardPress(int cmd)
                 _s->wnd()->SetText(str);
             }
         }
+        return true;
     }
-    break;
     }
+    return false;
 }
 void CActor::IR_OnMouseWheel(int direction)
 {
@@ -194,9 +198,7 @@ void CActor::IR_OnMouseWheel(int direction)
         return;
     }
 
-    //	if (psCallbackFlags.test(CF_MOUSE_WHEEL_ROT))
-    //		this->callback(GameObject::eOnMouseWheel)(direction);
-
+    // Unbound wheel (no mouse_wheel_up/down binds): keep the old hardcoded chain.
     if (cam_freelook == eflDisabled)
     {
         if (inventory().Action((direction > 0) ? kWPN_ZOOM_DEC : kWPN_ZOOM_INC, CMD_START))

@@ -5,6 +5,7 @@
 #include "..\xr_3da\xr_ioc_cmd.h"
 #include "xr_level_controller.h"
 #include "string_table.h"
+#include "../xrCore/XML_Parser/xrXMLParser.h"
 
 #define DEF_ACTION(a1, a2) {a1, a2, #a2},
 
@@ -177,6 +178,8 @@ _keyboard keyboards[] = {{"kESCAPE", DIK_ESCAPE},
                          {"mouse6", MOUSE_6},
                          {"mouse7", MOUSE_7},
                          {"mouse8", MOUSE_8},
+                         {"mouse_wheel_up", MOUSE_WHEEL_UP},
+                         {"mouse_wheel_down", MOUSE_WHEEL_DOWN},
                          {NULL, 0}};
 
 void initialize_bindings()
@@ -253,11 +256,18 @@ void remap_keys()
     {
         buff[0] = 0;
         _keyboard& kb = keyboards[idx];
-        bool res = pInput->get_dik_name(kb.dik, buff, 128);
-        if (res)
-            kb.key_local_name = buff;
+        if (kb.dik == MOUSE_WHEEL_UP)
+            kb.key_local_name = *CStringTable().translate("st_mouse_wheel_up");
+        else if (kb.dik == MOUSE_WHEEL_DOWN)
+            kb.key_local_name = *CStringTable().translate("st_mouse_wheel_down");
         else
-            kb.key_local_name = kb.key_name;
+        {
+            bool res = pInput->get_dik_name(kb.dik, buff, 128);
+            if (res)
+                kb.key_local_name = buff;
+            else
+                kb.key_local_name = kb.key_name;
+        }
 
         //.		Msg("[%s]-[%s]",kb.key_name, kb.key_local_name.c_str());
         ++idx;
@@ -376,17 +386,29 @@ int get_action_dik(EGameActions _action_id)
     return 0;
 }
 
-EGameActions get_binded_action(int _dik)
+u32 get_binded_actions(int _dik, EGameActions* dst, u32 dst_sz)
 {
+    u32 n = 0;
+    if (!dst || !dst_sz)
+        return 0;
+
     for (const auto& binding : g_key_bindings)
     {
-        if (binding.m_keyboard[0] && binding.m_keyboard[0]->dik == _dik)
-            return binding.m_action->id;
+        const bool match = (binding.m_keyboard[0] && binding.m_keyboard[0]->dik == _dik) || (binding.m_keyboard[1] && binding.m_keyboard[1]->dik == _dik);
+        if (!match)
+            continue;
 
-        if (binding.m_keyboard[1] && binding.m_keyboard[1]->dik == _dik)
-            return binding.m_action->id;
+        dst[n++] = binding.m_action->id;
+        if (n >= dst_sz)
+            break;
     }
-    return kNOTBINDED;
+    return n;
+}
+
+EGameActions get_binded_action(int _dik)
+{
+    EGameActions action = kNOTBINDED;
+    return get_binded_actions(_dik, &action, 1) ? action : kNOTBINDED;
 }
 
 void GetActionAllBinding(LPCSTR _action, char* dst_buff, int dst_buff_sz)
@@ -431,6 +453,66 @@ void GetActionAllBinding(LPCSTR _action, char* dst_buff, int dst_buff_sz)
 
 ConsoleBindCmds bindConsoleCmds;
 BOOL bRemapped = FALSE;
+
+static xr_vector<shared_str> g_action_bind_group;
+static bool g_action_bind_groups_loaded = false;
+
+static void load_action_bind_groups()
+{
+    if (g_action_bind_groups_loaded)
+        return;
+    g_action_bind_groups_loaded = true;
+
+    CXml xml;
+    if (!xml.Load(CONFIG_PATH, UI_PATH, "ui_keybinding.xml", false))
+        return;
+
+    int groupsCount = xml.GetNodesNum("", 0, "group");
+    for (int i = 0; i < groupsCount; ++i)
+    {
+        shared_str grp_name = xml.ReadAttrib("group", i, "name");
+        int commandsCount = xml.GetNodesNum("group", i, "command");
+        XML_NODE* tab_node = xml.NavigateToNode("group", i);
+        xml.SetLocalRoot(tab_node);
+
+        for (int j = 0; j < commandsCount; ++j)
+        {
+            shared_str exe = xml.ReadAttrib("command", j, "exe");
+            if (!exe.size())
+                continue;
+
+            const EGameActions id = action_name_to_id(*exe);
+            if (id == kNOTBINDED)
+                continue;
+
+            if ((u32)id >= g_action_bind_group.size())
+                g_action_bind_group.resize((u32)id + 1);
+
+            g_action_bind_group[id] = grp_name;
+        }
+
+        xml.SetLocalRoot(xml.GetRoot());
+    }
+}
+
+bool actions_share_bind_group(LPCSTR action_a, LPCSTR action_b)
+{
+    if (!action_a || !action_b)
+        return false;
+
+    load_action_bind_groups();
+
+    const EGameActions id_a = action_name_to_id(action_a);
+    const EGameActions id_b = action_name_to_id(action_b);
+    if (id_a == kNOTBINDED || id_b == kNOTBINDED)
+        return false;
+    if ((u32)id_a >= g_action_bind_group.size() || (u32)id_b >= g_action_bind_group.size())
+        return false;
+    if (!g_action_bind_group[id_a].size() || !g_action_bind_group[id_b].size())
+        return false;
+
+    return g_action_bind_group[id_a] == g_action_bind_group[id_b];
+}
 
 class CCC_Bind : public IConsole_Command
 {
@@ -480,12 +562,11 @@ public:
         {
             if (&binding == &curr_pbinding)
                 continue;
-
-            if (binding.m_keyboard[0] == pkeyboard)
-                binding.m_keyboard[0] = NULL;
-
-            if (binding.m_keyboard[1] == pkeyboard)
-                binding.m_keyboard[1] = NULL;
+            if (binding.m_keyboard[m_work_idx] != pkeyboard)
+                continue;
+            if (!actions_share_bind_group(action, binding.m_action->action_name))
+                continue;
+            binding.m_keyboard[m_work_idx] = NULL;
         }
 
         CStringTable::ReparseKeyBindings();

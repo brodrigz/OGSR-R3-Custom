@@ -5,6 +5,7 @@
 #include <dinput.h>
 
 #include "UIColorAnimatorWrapper.h"
+#include "UIMessages.h"
 #include "../xr_level_controller.h"
 #include "../object_broker.h"
 
@@ -80,26 +81,53 @@ void CUIEditKeyBind::OnFocusLost()
     m_lines.SetTextColor((subst_alpha(m_lines.GetTextColor(), color_get_A(0xffffffff))));
 }
 
-bool CUIEditKeyBind::OnMouseDown(int mouse_btn)
+bool CUIEditKeyBind::OnMouse(float x, float y, EUIMessages mouse_action)
 {
     if (m_bEditMode)
     {
-        string64 message;
+        if (mouse_action == WINDOW_MOUSE_WHEEL_UP)
+            return AssignKey(MOUSE_WHEEL_UP);
+        if (mouse_action == WINDOW_MOUSE_WHEEL_DOWN)
+            return AssignKey(MOUSE_WHEEL_DOWN);
+    }
+    return CUIWindow::OnMouse(x, y, mouse_action);
+}
 
-        m_keyboard = dik_to_ptr(mouse_btn, true);
-        if (!m_keyboard)
-            return true;
-        SetText(m_keyboard->key_local_name.c_str());
-        OnFocusLost();
-        m_bChanged = true;
+bool CUIEditKeyBind::AssignKey(int dik)
+{
+    if (!m_bEditMode)
+        return false;
 
-        strcpy_s(message, m_action->action_name);
-        strcat_s(message, "=");
-        strcat_s(message, m_keyboard->key_name);
-        SendMessage2Group("key_binding", message);
-
+    if (dik == DIK_ESCAPE)
+    {
+        if (m_keyboard)
+        {
+            SetText("---");
+            m_keyboard = nullptr;
+            OnFocusLost();
+            m_bChanged = true;
+        }
         return true;
     }
+
+    m_keyboard = dik_to_ptr(dik, true);
+    if (!m_keyboard)
+        return true;
+
+    SetText(m_keyboard->key_local_name.c_str());
+    OnFocusLost();
+    m_bChanged = true;
+
+    string256 buff;
+    sprintf_s(buff, "%s=%s=%d", m_action->action_name, m_keyboard->key_name, m_bPrimary ? 0 : 1);
+    SendMessage2Group("key_binding", buff);
+    return true;
+}
+
+bool CUIEditKeyBind::OnMouseDown(int mouse_btn)
+{
+    if (m_bEditMode)
+        return AssignKey(mouse_btn);
 
     if (mouse_btn == MOUSE_1)
         m_bEditMode = m_bCursorOverWindow;
@@ -114,32 +142,10 @@ bool CUIEditKeyBind::OnKeyboard(int dik, EUIMessages keyboard_action)
     if (CUILabel::OnKeyboard(dik, keyboard_action))
         return true;
 
-    string64 message;
     if (m_bEditMode)
     {
-        if (dik == DIK_DELETE)
-        {
-            if (m_keyboard)
-            {
-                SetText("---");
-                m_keyboard = nullptr;
-                OnFocusLost();
-                m_bChanged = true;
-                return true;
-            }
-        }
-
-        m_keyboard = dik_to_ptr(dik, true);
-        if (!m_keyboard)
-            return true;
-
-        strcpy_s(message, m_action->action_name);
-        strcat_s(message, "=");
-        strcat_s(message, m_keyboard->key_name);
-        SetText(m_keyboard->key_local_name.c_str());
-        OnFocusLost();
-        m_bChanged = true;
-        SendMessage2Group("key_binding", message);
+        if (keyboard_action == WINDOW_KEY_PRESSED)
+            return AssignKey(dik);
         return true;
     }
     return false;
@@ -206,22 +212,26 @@ bool CUIEditKeyBind::IsChanged() { return m_bChanged; }
 
 void CUIEditKeyBind::OnMessage(const char* message)
 {
-    // message = "command=key"
-    int eq = (int)strcspn(message, "=");
-
-    if (!m_keyboard)
+    // message = "command=key=slot"  (slot 0 = primary, 1 = alternative)
+    if (!m_keyboard || !message)
         return;
 
-    if (0 != xr_strcmp(m_keyboard->key_name, message + eq + 1))
+    string256 command;
+    string256 key;
+    int slot = -1;
+    if (sscanf(message, "%255[^=]=%255[^=]=%d", command, key, &slot) != 3)
         return;
 
-    string64 command;
-    strcpy_s(command, message);
-    command[eq] = 0;
-
+    if (slot != (m_bPrimary ? 0 : 1))
+        return;
+    if (0 != xr_strcmp(m_keyboard->key_name, key))
+        return;
     if (0 == xr_strcmp(m_action->action_name, command))
-        return; // fuck
+        return;
+    if (!actions_share_bind_group(m_action->action_name, command))
+        return;
 
     SetText("---");
     m_keyboard = NULL;
+    m_bChanged = true;
 }

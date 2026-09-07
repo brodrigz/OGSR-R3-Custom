@@ -1191,6 +1191,12 @@ bool CWeaponMagazined::Action(s32 cmd, u32 flags)
     case kWPN_FIREMODE_PREV: {
         if (flags & CMD_START)
         {
+            if (IsPending())
+                return true;
+            if (!m_bHasDifferentFireModes || m_aFireModes.size() < 2)
+                return false;
+            if ((flags & CMD_OPT) && m_iCurFireMode == 0)
+                return false;
             OnPrevFireMode(flags & CMD_OPT);
             return true;
         }
@@ -1199,6 +1205,12 @@ bool CWeaponMagazined::Action(s32 cmd, u32 flags)
     case kWPN_FIREMODE_NEXT: {
         if (flags & CMD_START)
         {
+            if (IsPending())
+                return true;
+            if (!m_bHasDifferentFireModes || m_aFireModes.size() < 2)
+                return false;
+            if ((flags & CMD_OPT) && (m_iCurFireMode + 1 == (int)m_aFireModes.size()))
+                return false;
             OnNextFireMode(flags & CMD_OPT);
             return true;
         }

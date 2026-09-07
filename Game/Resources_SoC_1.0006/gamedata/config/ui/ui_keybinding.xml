@@ -28,10 +28,10 @@
 		<command id="kb_weapon5"					  exe="wpn_5"/>
 		<command id="kb_weapon6"					  exe="wpn_6"/>
 		<command id="kb_wpn_next"					  exe="wpn_next"/>
-		<!--<command id="kb_next_slot"				  exe="next_slot"/>
-		<command id="kb_prev_slot"				  exe="prev_slot"/>-->
 		<command id="kb_fire"						    exe="wpn_fire"/>
 		<command id="kb_zoom"						    exe="wpn_zoom"/>
+		<command id="kb_wpn_zoom_inc"				exe="wpn_zoom_inc"/>
+		<command id="kb_wpn_zoom_dec"				exe="wpn_zoom_dec"/>
 		<command id="kb_free_zoom"						    exe="free_zoom"/>
 		<command id="kb_reload"						  exe="wpn_reload"/>
 		<command id="kb_func"						    exe="wpn_func"/>
@@ -60,6 +60,8 @@
 		<command id="kb_use_radio"				exe="use_radio"/>
 	</group>
 	<group name="kb_grp_common">
+		<command id="kb_next_slot"				  exe="next_slot"/>
+		<command id="kb_prev_slot"				  exe="prev_slot"/>
 		<command id="kb_hide_hud"					exe="hide_hud"/>
 		<command id="kb_show_hud"					exe="show_hud"/>
 		<command id="kb_freelook"					exe="freelook"/>

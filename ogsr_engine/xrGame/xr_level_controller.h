@@ -120,6 +120,7 @@ extern xr_vector<_binding> g_key_bindings;
 bool is_binded(EGameActions action_id, int dik);
 int get_action_dik(EGameActions action_id);
 EGameActions get_binded_action(int dik);
+u32 get_binded_actions(int dik, EGameActions* dst, u32 dst_sz);
 
 extern void CCC_RegisterInput();
 
@@ -141,6 +142,7 @@ public:
 };
 
 void GetActionAllBinding(LPCSTR action, char* dst_buff, int dst_buff_sz);
+bool actions_share_bind_group(LPCSTR action_a, LPCSTR action_b);
 
 extern ConsoleBindCmds bindConsoleCmds;
 
@@ -154,3 +156,5 @@ extern ConsoleBindCmds bindConsoleCmds;
 #define MOUSE_6 (0xED + 105)
 #define MOUSE_7 (0xED + 106)
 #define MOUSE_8 (0xED + 107)
+#define MOUSE_WHEEL_UP (0xED + 108)
+#define MOUSE_WHEEL_DOWN (0xED + 109)

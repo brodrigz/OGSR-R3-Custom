@@ -26,6 +26,7 @@ public:
     // CUIWindow methods
     virtual void Init(float x, float y, float width, float height);
     virtual void Update();
+    virtual bool OnMouse(float x, float y, EUIMessages mouse_action);
     virtual bool OnMouseDown(int mouse_btn);
     virtual void OnFocusLost();
     virtual bool OnKeyboard(int dik, EUIMessages keyboard_action);
@@ -33,6 +34,7 @@ public:
     virtual void SetText(const char* text);
 
 protected:
+    bool AssignKey(int dik);
     void BindAction2Key();
     virtual void InitTexture(LPCSTR texture, bool horizontal = true);
 

@@ -15,6 +15,18 @@
 	<string id="kb_wpn_zoom_alter">
 		<text>Sight mode</text>
 	</string>
+	<string id="kb_wpn_zoom_inc">
+		<text>Zoom in</text>
+	</string>
+	<string id="kb_wpn_zoom_dec">
+		<text>Zoom out</text>
+	</string>
+	<string id="st_mouse_wheel_up">
+		<text>Mouse Wheel Up</text>
+	</string>
+	<string id="st_mouse_wheel_down">
+		<text>Mouse Wheel Down</text>
+	</string>
 	<string id="kb_laser_on">
 		<text>Laser</text>
 	</string>
@@ -254,5 +266,8 @@
 	</string>
 	<string id="kb_cycle_interact">
 		<text>Cycle nearby item</text>
+	</string>
+	<string id="ui_mm_unbind_hint">
+		<text>Press Esc to unbind</text>
 	</string>
 </string_table>

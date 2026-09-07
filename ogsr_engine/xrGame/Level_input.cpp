@@ -41,8 +41,32 @@ extern void restore_actor();
 bool g_bDisableAllInput = false;
 
 extern float g_fTimeFactor;
+extern int g_bHudAdjustMode;
 
 #define CURRENT_ENTITY() (game ? CurrentEntity() : nullptr)
+
+namespace
+{
+constexpr u32 kMaxBindedActions = 16;
+
+u32 fill_key_actions(int key, EGameActions* dst)
+{
+    u32 n = get_binded_actions(key, dst, kMaxBindedActions);
+    if (!n)
+    {
+        dst[0] = kNOTBINDED;
+        n = 1;
+    }
+    return n;
+}
+
+bool action_blocked(const xr_set<EGameActions>& blocked, EGameActions cmd) { return blocked.find(cmd) != blocked.end(); }
+
+bool action_allowed_when_movement_only(EGameActions cmd)
+{
+    return (cmd < kCAM_1 || cmd == kPAUSE || cmd == kSCREENSHOT || cmd == kQUIT || cmd == kCONSOLE);
+}
+} // namespace
 
 void CLevel::IR_OnMouseWheel(int direction)
 {
@@ -51,6 +75,17 @@ void CLevel::IR_OnMouseWheel(int direction)
 
     if (g_bDisableAllInput)
         return;
+
+    if (g_bHudAdjustMode)
+    {
+        if (CURRENT_ENTITY())
+        {
+            IInputReceiver* IR = smart_cast<IInputReceiver*>(smart_cast<CGameObject*>(CURRENT_ENTITY()));
+            if (IR)
+                IR->IR_OnMouseWheel(direction);
+        }
+        return;
+    }
 
     if (HUD().GetUI()->IR_OnMouseWheel(direction))
         return;
@@ -65,6 +100,14 @@ void CLevel::IR_OnMouseWheel(int direction)
 
     if (HUD().GetUI()->MainInputReceiver())
         return;
+
+    const int dik = (direction > 0) ? MOUSE_WHEEL_UP : MOUSE_WHEEL_DOWN;
+    if (get_binded_action(dik) != kNOTBINDED)
+    {
+        IR_OnKeyboardPress(dik);
+        return;
+    }
+
     if (CURRENT_ENTITY())
     {
         IInputReceiver* IR = smart_cast<IInputReceiver*>(smart_cast<CGameObject*>(CURRENT_ENTITY()));
@@ -116,51 +159,69 @@ void CLevel::IR_OnKeyboardPress(int key)
     if (GamePersistent().OnKeyboardPress(key))
         return;
 
-    EGameActions _curr = get_binded_action(key);
-
-    if (m_blocked_actions.find(_curr) != m_blocked_actions.end())
-        return; // Real Wolf. 14.10.2014
+    EGameActions cmds[kMaxBindedActions];
+    const u32 cmd_count = fill_key_actions(key, cmds);
+    EGameActions _curr = cmds[0];
 
     const bool b_ui_exist = (Has_HUD() && HUD().GetUI());
 
-    switch (_curr)
+    for (u32 i = 0; i < cmd_count; ++i)
     {
-    case kSCREENSHOT:
-        Render->Screenshot();
-        return;
+        _curr = cmds[i];
+        if (action_blocked(m_blocked_actions, _curr))
+            continue;
 
-    case kCONSOLE:
-        Console->Show();
-        return;
-
-    case kQUIT: {
-        if (b_ui_exist && HUD().GetUI()->MainInputReceiver())
+        switch (_curr)
         {
-            if (HUD().GetUI()->MainInputReceiver()->IR_OnKeyboardPress(key))
-                return; // special case for mp and main_menu
+        case kSCREENSHOT:
+            Render->Screenshot();
+            return;
 
-            if (MainMenu()->IsActive() || !Device.Paused())
-                HUD().GetUI()->StartStopMenu(HUD().GetUI()->MainInputReceiver(), true);
-        }
-        else
-            Console->Execute("main_menu");
-        return;
+        case kCONSOLE:
+            Console->Show();
+            return;
+
+        case kQUIT: {
+            if (b_ui_exist && HUD().GetUI()->MainInputReceiver())
+            {
+                if (HUD().GetUI()->MainInputReceiver()->IR_OnKeyboardPress(key))
+                    return; // special case for mp and main_menu
+
+                if (MainMenu()->IsActive() || !Device.Paused())
+                    HUD().GetUI()->StartStopMenu(HUD().GetUI()->MainInputReceiver(), true);
+            }
+            else
+                Console->Execute("main_menu");
+            return;
         }
 
-    case kPAUSE:
-        if (!g_block_pause)
-        {
-            Device.Pause(!Device.Paused(), TRUE, TRUE, "li_pause_key");
+        case kPAUSE:
+            if (!g_block_pause)
+            {
+                Device.Pause(!Device.Paused(), TRUE, TRUE, "li_pause_key");
+            }
+            return;
+        default: break;
         }
-        return;
     }
+
+    _curr = cmds[0];
 
     if (g_bDisableAllInput)
         return;
-    
+
     if (g_block_all_except_movement)
     {
-        if (!(_curr < kCAM_1 || _curr == kPAUSE || _curr == kSCREENSHOT || _curr == kQUIT || _curr == kCONSOLE))
+        bool any = false;
+        for (u32 i = 0; i < cmd_count; ++i)
+        {
+            if (!action_blocked(m_blocked_actions, cmds[i]) && action_allowed_when_movement_only(cmds[i]))
+            {
+                any = true;
+                break;
+            }
+        }
+        if (!any)
             return;
     }
 
@@ -184,62 +245,69 @@ void CLevel::IR_OnKeyboardPress(int key)
     if (game && Game().IR_OnKeyboardPress(key))
         return;
 
-    if (_curr == kQUICK_SAVE)
+    for (u32 i = 0; i < cmd_count; ++i)
     {
-        Console->Execute("save");
-        return;
-    }
-    else if (_curr == kQUICK_LOAD)
-    {
-#ifdef DEBUG
-        FS.get_path("$game_config$")->m_Flags.set(FS_Path::flNeedRescan, TRUE);
-        FS.get_path("$game_scripts$")->m_Flags.set(FS_Path::flNeedRescan, TRUE);
-        FS.rescan_pathes();
-#endif // DEBUG
-        string_path saved_game, command;
-        strconcat(sizeof(saved_game), saved_game, Core.UserName, "_", "quicksave");
-        if (!CSavedGameWrapper::valid_saved_game(saved_game))
-            return;
+        _curr = cmds[i];
+        if (action_blocked(m_blocked_actions, _curr))
+            continue;
+        if (g_block_all_except_movement && !action_allowed_when_movement_only(_curr))
+            continue;
 
-        strconcat(sizeof(command), command, "load ", saved_game);
-        Console->Execute(command);
-        return;
-    }
-
-#ifdef DEBUG
-    case DIK_RETURN:
-    case DIK_NUMPADENTER: bDebug = !bDebug; return;
-
-    case DIK_BACK: HW.Caps.SceneMode = (HW.Caps.SceneMode + 1) % 3; return;
-
-    case DIK_F4: {
-        if (pInput->iGetAsyncKeyState(DIK_LALT))
-            break;
-
-        if (pInput->iGetAsyncKeyState(DIK_RALT))
-            break;
-
-        bool bOk = false;
-        u32 i = 0, j, n = Objects.o_count();
-        if (pCurrentEntity)
-            for (; i < n; ++i)
-                if (Objects.o_get_by_iterator(i) == pCurrentEntity)
-                    break;
-        if (i < n)
+        if (_curr == kQUICK_SAVE)
         {
-            j = i;
-            bOk = false;
-            for (++i; i < n; ++i)
+            Console->Execute("save");
+            return;
+        }
+        if (_curr == kQUICK_LOAD)
+        {
+#ifdef DEBUG
+            FS.get_path("$game_config$")->m_Flags.set(FS_Path::flNeedRescan, TRUE);
+            FS.get_path("$game_scripts$")->m_Flags.set(FS_Path::flNeedRescan, TRUE);
+            FS.rescan_pathes();
+#endif // DEBUG
+            string_path saved_game, command;
+            strconcat(sizeof(saved_game), saved_game, Core.UserName, "_", "quicksave");
+            if (!CSavedGameWrapper::valid_saved_game(saved_game))
+                return;
+
+            strconcat(sizeof(command), command, "load ", saved_game);
+            Console->Execute(command);
+            return;
+        }
+    }
+
+#ifdef DEBUG
+    if (key == DIK_RETURN || key == DIK_NUMPADENTER)
+    {
+        bDebug = !bDebug;
+        return;
+    }
+
+    if (key == DIK_BACK)
+    {
+        HW.Caps.SceneMode = (HW.Caps.SceneMode + 1) % 3;
+        return;
+    }
+
+    if (key == DIK_F4)
+    {
+        if (pInput->iGetAsyncKeyState(DIK_LALT))
+            ;
+        else if (pInput->iGetAsyncKeyState(DIK_RALT))
+            ;
+        else
+        {
+            bool bOk = false;
+            u32 i = 0, j, n = Objects.o_count();
+            if (pCurrentEntity)
+                for (; i < n; ++i)
+                    if (Objects.o_get_by_iterator(i) == pCurrentEntity)
+                        break;
+            if (i < n)
             {
-                CEntityAlive* tpEntityAlive = smart_cast<CEntityAlive*>(Objects.o_get_by_iterator(i));
-                if (tpEntityAlive)
-                {
-                    bOk = true;
-                    break;
-                }
-            }
-            if (!bOk)
-                for (i = 0; i < j; ++i)
+                j = i;
+                bOk = false;
+                for (++i; i < n; ++i)
                 {
                     CEntityAlive* tpEntityAlive = smart_cast<CEntityAlive*>(Objects.o_get_by_iterator(i));
                     if (tpEntityAlive)
@@ -248,43 +316,55 @@ void CLevel::IR_OnKeyboardPress(int key)
                         break;
                     }
                 }
-            if (bOk)
-            {
-                CObject* tpObject = CurrentEntity();
-                CObject* __I = Objects.o_get_by_iterator(i);
-                CObject** I = &__I;
-
-                SetEntity(*I);
-                if (tpObject != *I)
-                {
-                    CActor* pActor = smart_cast<CActor*>(tpObject);
-                    if (pActor)
-                        pActor->inventory().Items_SetCurrentEntityHud(false);
-                }
-                if (tpObject)
-                {
-                    Engine.Sheduler.Unregister(tpObject);
-                    Engine.Sheduler.Register(tpObject, TRUE);
-                };
-                Engine.Sheduler.Unregister(*I);
-                Engine.Sheduler.Register(*I, TRUE);
-
-                CActor* pActor = smart_cast<CActor*>(*I);
-                if (pActor)
-                {
-                    pActor->inventory().Items_SetCurrentEntityHud(true);
-
-                    CHudItem* pHudItem = smart_cast<CHudItem*>(pActor->inventory().ActiveItem());
-                    if (pHudItem)
+                if (!bOk)
+                    for (i = 0; i < j; ++i)
                     {
-                        pHudItem->OnStateSwitch(pHudItem->GetState());
+                        CEntityAlive* tpEntityAlive = smart_cast<CEntityAlive*>(Objects.o_get_by_iterator(i));
+                        if (tpEntityAlive)
+                        {
+                            bOk = true;
+                            break;
+                        }
+                    }
+                if (bOk)
+                {
+                    CObject* tpObject = CurrentEntity();
+                    CObject* __I = Objects.o_get_by_iterator(i);
+                    CObject** I = &__I;
+
+                    SetEntity(*I);
+                    if (tpObject != *I)
+                    {
+                        CActor* pActor = smart_cast<CActor*>(tpObject);
+                        if (pActor)
+                            pActor->inventory().Items_SetCurrentEntityHud(false);
+                    }
+                    if (tpObject)
+                    {
+                        Engine.Sheduler.Unregister(tpObject);
+                        Engine.Sheduler.Register(tpObject, TRUE);
+                    };
+                    Engine.Sheduler.Unregister(*I);
+                    Engine.Sheduler.Register(*I, TRUE);
+
+                    CActor* pActor = smart_cast<CActor*>(*I);
+                    if (pActor)
+                    {
+                        pActor->inventory().Items_SetCurrentEntityHud(true);
+
+                        CHudItem* pHudItem = smart_cast<CHudItem*>(pActor->inventory().ActiveItem());
+                        if (pHudItem)
+                        {
+                            pHudItem->OnStateSwitch(pHudItem->GetState());
+                        }
                     }
                 }
             }
+            return;
         }
-        return;
     }
-    case MOUSE_1: {
+    if (key == MOUSE_1)
+    {
         if (pInput->iGetAsyncKeyState(DIK_LALT))
         {
             if (CurrentEntity()->CLS_ID == CLSID_OBJECT_ACTOR)
@@ -293,24 +373,23 @@ void CLevel::IR_OnKeyboardPress(int key)
                 restore_actor();
             return;
         }
-        break;
     }
-        /**/
 
-    case DIK_DIVIDE:
+    if (key == DIK_DIVIDE)
+    {
         if (OnServer())
         {
-            //			float NewTimeFactor				= pSettings->r_float("alife","time_factor");
             Server->game->SetGameTimeFactor(g_fTimeFactor);
         }
-        break;
-    case DIK_MULTIPLY:
+    }
+    else if (key == DIK_MULTIPLY)
+    {
         if (OnServer())
         {
             float NewTimeFactor = 1000.f;
             Server->game->SetGameTimeFactor(NewTimeFactor);
         }
-        break;
+    }
 #endif
 
     if (bindConsoleCmds.execute(key))
@@ -323,7 +402,30 @@ void CLevel::IR_OnKeyboardPress(int key)
     {
         IInputReceiver* IR = smart_cast<IInputReceiver*>(smart_cast<CGameObject*>(CURRENT_ENTITY()));
         if (IR)
-            IR->IR_OnKeyboardPress(_curr);
+        {
+            CActor* actor = smart_cast<CActor*>(CURRENT_ENTITY());
+            for (u32 i = 0; i < cmd_count; ++i)
+            {
+                _curr = cmds[i];
+                if (_curr == kNOTBINDED)
+                    continue;
+                if (action_blocked(m_blocked_actions, _curr))
+                    continue;
+                if (g_block_all_except_movement && !action_allowed_when_movement_only(_curr))
+                    continue;
+
+                if (actor)
+                {
+                    if (actor->OnActionPress(_curr))
+                        break;
+                }
+                else
+                {
+                    IR->IR_OnKeyboardPress(_curr);
+                    break;
+                }
+            }
+        }
     }
 
 #ifdef DEBUG
@@ -345,14 +447,25 @@ void CLevel::IR_OnKeyboardRelease(int key)
     if (g_bDisableAllInput)
         return;
 
-    EGameActions _curr = get_binded_action(key);
+    EGameActions cmds[kMaxBindedActions];
+    const u32 cmd_count = fill_key_actions(key, cmds);
+    EGameActions _curr = cmds[0];
 
-   if (m_blocked_actions.find(_curr) != m_blocked_actions.end())
-        return; // Real Wolf. 14.10.2014
+    if (action_blocked(m_blocked_actions, _curr) && cmd_count == 1)
+        return;
 
     if (g_block_all_except_movement)
     {
-        if (!(_curr < kCAM_1 || _curr == kPAUSE || _curr == kSCREENSHOT || _curr == kQUIT || _curr == kCONSOLE))
+        bool any = false;
+        for (u32 i = 0; i < cmd_count; ++i)
+        {
+            if (!action_blocked(m_blocked_actions, cmds[i]) && action_allowed_when_movement_only(cmds[i]))
+            {
+                any = true;
+                break;
+            }
+        }
+        if (!any)
             return;
     }
 
@@ -377,7 +490,19 @@ void CLevel::IR_OnKeyboardRelease(int key)
     {
         IInputReceiver* IR = smart_cast<IInputReceiver*>(smart_cast<CGameObject*>(CURRENT_ENTITY()));
         if (IR)
-            IR->IR_OnKeyboardRelease(_curr);
+        {
+            for (u32 i = 0; i < cmd_count; ++i)
+            {
+                _curr = cmds[i];
+                if (_curr == kNOTBINDED)
+                    continue;
+                if (action_blocked(m_blocked_actions, _curr))
+                    continue;
+                if (g_block_all_except_movement && !action_allowed_when_movement_only(_curr))
+                    continue;
+                IR->IR_OnKeyboardRelease(_curr);
+            }
+        }
     }
 }
 
@@ -389,14 +514,22 @@ void CLevel::IR_OnKeyboardHold(int key)
     if (g_bDisableAllInput)
         return;
 
-    EGameActions _curr = get_binded_action(key);
-
-    if (m_blocked_actions.find(_curr) != m_blocked_actions.end())
-        return; // Real Wolf. 14.10.2014
+    EGameActions cmds[kMaxBindedActions];
+    const u32 cmd_count = fill_key_actions(key, cmds);
+    EGameActions _curr = cmds[0];
 
     if (g_block_all_except_movement)
     {
-        if (!(_curr < kCAM_1 || _curr == kPAUSE || _curr == kSCREENSHOT || _curr == kQUIT || _curr == kCONSOLE))
+        bool any = false;
+        for (u32 i = 0; i < cmd_count; ++i)
+        {
+            if (!action_blocked(m_blocked_actions, cmds[i]) && action_allowed_when_movement_only(cmds[i]))
+            {
+                any = true;
+                break;
+            }
+        }
+        if (!any)
             return;
     }
 
@@ -416,7 +549,19 @@ void CLevel::IR_OnKeyboardHold(int key)
     {
         IInputReceiver* IR = smart_cast<IInputReceiver*>(smart_cast<CGameObject*>(CURRENT_ENTITY()));
         if (IR)
-            IR->IR_OnKeyboardHold(_curr);
+        {
+            for (u32 i = 0; i < cmd_count; ++i)
+            {
+                _curr = cmds[i];
+                if (_curr == kNOTBINDED)
+                    continue;
+                if (action_blocked(m_blocked_actions, _curr))
+                    continue;
+                if (g_block_all_except_movement && !action_allowed_when_movement_only(_curr))
+                    continue;
+                IR->IR_OnKeyboardHold(_curr);
+            }
+        }
     }
 }
 

@@ -5,6 +5,8 @@
 
 #define MOUSE_1 (0xED + 100)
 #define MOUSE_8 (0xED + 107)
+#define MOUSE_WHEEL_UP (0xED + 108)
+#define MOUSE_WHEEL_DOWN (0xED + 109)
 
 class ENGINE_API IInputReceiver;
 
