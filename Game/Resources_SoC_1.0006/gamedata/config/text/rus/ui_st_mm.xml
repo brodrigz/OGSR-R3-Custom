@@ -225,6 +225,9 @@
 	<string id="st_ssdo">
 		<text>SSDO</text>
 	</string>
+	<string id="st_xegtao">
+		<text>XeGTAO</text>
+	</string>
 	<string id="ui_mm_ssao_quality">
 		<text>Качество AO</text>
 	</string>
