@@ -135,6 +135,8 @@ protected:
     float m_fCollisionEnergyMin;
     //сколькол процентов энергии устанется у пули при любом столкновении
     float m_fCollisionEnergyMax;
+    // pierce multiplier used when g_bullet_penetration is "reduced"
+    float m_fPenetrationReducedK = 0.5f;
 
     //параметры отрисовки трассеров
     float m_fTracerWidth;

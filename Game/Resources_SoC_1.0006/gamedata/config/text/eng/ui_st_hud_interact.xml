@@ -21,4 +21,16 @@
 	<string id="ui_mm_hud_interact">
 		<text>Interaction HUD</text>
 	</string>
+	<string id="ui_mm_bullet_penetration">
+		<text>Bullet penetration</text>
+	</string>
+	<string id="st_bullet_pen_on">
+		<text>On</text>
+	</string>
+	<string id="st_bullet_pen_reduced">
+		<text>Reduced</text>
+	</string>
+	<string id="st_bullet_pen_off">
+		<text>Off</text>
+	</string>
 </string_table>

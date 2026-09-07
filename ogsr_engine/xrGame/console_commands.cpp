@@ -237,6 +237,12 @@ static xr_token rad3_game_difficulty_token[] = {
 static xr_token rad3_economy_difficulty_token[] = {
     {"econ_1", 1}, {"econ_2", 2}, {"econ_3", 3}, {"econ_4", 4}, {nullptr, 0}};
 
+// World (wall/cover) penetration. 0=vanilla, 1=scaled pierce, 2=stop on first solid hit.
+// Fully shoot-through materials (glass, foliage, fShootFactor≈1) stay transparent.
+u32 g_bullet_world_penetration = 0;
+static xr_token bullet_world_penetration_token[] = {
+    {"st_bullet_pen_on", 0}, {"st_bullet_pen_reduced", 1}, {"st_bullet_pen_off", 2}, {nullptr, 0}};
+
 static xr_vector<xr_token>* pLanguagesToken{};
 static u32 LanguageID{};
 const xr_token* GetLanguagesToken() { return &pLanguagesToken->at(LanguageID); }
@@ -1557,6 +1563,7 @@ void CCC_RegisterCommands()
     CMD1(CCC_GameDifficulty, "g_game_difficulty");
     CMD3(CCC_Token, "g_rad3_game_diff", &g_rad3_game_diff, rad3_game_difficulty_token);
     CMD3(CCC_Token, "g_rad3_economy_diff", &g_rad3_economy_diff, rad3_economy_difficulty_token);
+    CMD3(CCC_Token, "g_bullet_penetration", &g_bullet_world_penetration, bullet_world_penetration_token);
     CMD4(CCC_Float, "g_hit_pwr_modif", &hit_modifier, 0.5f, 3.f);
     CMD4(CCC_Float, "g_dispersion_base", &g_dispersion_base, 0.f, 5.f);
     CMD4(CCC_Float, "g_dispersion_factor", &g_dispersion_factor, 0.1f, 10.f);

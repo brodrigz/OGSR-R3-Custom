@@ -272,6 +272,7 @@ void CBulletManager::StaticObjectHit(CBulletManager::_event& E)
 
 static bool g_clear = false;
 extern float hit_modifier;
+extern u32 g_bullet_world_penetration;
 
 void CBulletManager::DynamicObjectHit(CBulletManager::_event& E)
 {
@@ -416,6 +417,20 @@ std::pair<float, float> CBulletManager::ObjectHit(SBullet* bullet, const Fvector
     //(Если меньше 1, то пуля либо рикошетит(если контакт идёт по касательной), либо застряёт в текущем
     //объекте, если больше 1, то пуля прошивает объект)
     float shoot_factor = mtl->fShootFactor * bullet->pierce * speed_factor;
+    if (!fsimilar(mtl->fShootFactor, 1.0f, EPS))
+    {
+        switch (g_bullet_world_penetration)
+        {
+        case 2: // off: first solid hit stops or ricochets
+            shoot_factor = 0.f;
+            break;
+        case 1: // reduced
+            shoot_factor *= m_fPenetrationReducedK;
+            break;
+        default: // on: vanilla
+            break;
+        }
+    }
 
     float impulse = 0.f;
 

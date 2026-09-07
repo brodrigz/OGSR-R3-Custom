@@ -93,6 +93,8 @@ void CBulletManager::Load()
     m_fMinBulletSpeed = pSettings->r_float(BULLET_MANAGER_SECTION, "min_bullet_speed");
     m_fCollisionEnergyMin = pSettings->r_float(BULLET_MANAGER_SECTION, "collision_energy_min");
     m_fCollisionEnergyMax = pSettings->r_float(BULLET_MANAGER_SECTION, "collision_energy_max");
+    m_fPenetrationReducedK = READ_IF_EXISTS(pSettings, r_float, BULLET_MANAGER_SECTION, "penetration_reduced_k", 0.5f);
+    clamp(m_fPenetrationReducedK, 0.f, 1.f);
 
     m_fHPMaxDist = pSettings->r_float(BULLET_MANAGER_SECTION, "hit_probability_max_dist");
 
