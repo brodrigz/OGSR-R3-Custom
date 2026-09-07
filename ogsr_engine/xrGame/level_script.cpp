@@ -450,6 +450,52 @@ void show_indicators()
 
 bool game_indicators_shown() { return HUD().GetUI()->GameIndicatorsShown(); }
 
+luabind::object map_minimap_spots()
+{
+    lua_State* L = ai().script_engine().lua();
+    luabind::object result = luabind::newtable(L);
+
+    if (!g_pGameLevel)
+        return result;
+
+    int idx = 1;
+    Locations& ls = Level().MapManager().Locations();
+    for (auto& l : ls)
+    {
+        CMapLocation* ml = l.location;
+        if (!ml)
+            continue;
+
+        LPCSTR type = ml->GetType();
+        if (!type || !type[0])
+            continue;
+        if (!xr_strcmp(type, "actor_location") || !xr_strcmp(type, "actor_location_p"))
+            continue;
+        if (!xr_strcmp(type, "level_changer") || strstr(type, "level_changer") || strstr(type, "lchanger_"))
+            continue;
+        if (!ml->VisibleOnMiniMap())
+            continue;
+
+        const Fvector pos = ml->GetLastPosition();
+        float w = 12.f, h = 12.f;
+        ml->MiniMapSpotSize(w, h);
+
+        luabind::object row = luabind::newtable(L);
+        row["type"] = type;
+        row["id"] = ml->ObjectID();
+        row["x"] = pos.x;
+        row["y"] = pos.y;
+        row["z"] = pos.z;
+        LPCSTR tex = ml->MiniMapTexture();
+        row["texture"] = tex ? tex : "";
+        row["w"] = w;
+        row["h"] = h;
+        result[idx++] = row;
+    }
+
+    return result;
+}
+
 Flags32 get_hud_flags() { return psHUD_Flags; }
 
 bool is_level_present() { return (!!g_pGameLevel); }
@@ -1139,7 +1185,7 @@ void CLevel::script_register(lua_State* L)
 
             def("map_add_object_spot_ser", &map_add_object_spot_ser), def("map_add_object_spot", &map_add_object_spot), def("map_remove_object_spot", &map_remove_object_spot),
             def("map_has_object_spot", &map_has_object_spot), def("map_change_spot_hint", &map_change_spot_hint), def("map_change_spot_ser", &map_change_spot_ser),
-            def("map_add_user_spot", &map_add_user_spot),
+            def("map_add_user_spot", &map_add_user_spot), def("map_minimap_spots", &map_minimap_spots),
 
             def("start_stop_menu", &start_stop_menu), def("add_dialog_to_render", &add_dialog_to_render), def("remove_dialog_to_render", &remove_dialog_to_render),
             def("main_input_receiver", &main_input_receiver), def("hide_indicators", &hide_indicators), def("show_indicators", &show_indicators),

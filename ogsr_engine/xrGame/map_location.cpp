@@ -509,6 +509,43 @@ void CMapLocation::UpdateSpotPointer(CUICustomMap* map, CMapSpotPointer* sp, con
     }
 }
 
+bool CMapLocation::VisibleOnMiniMap()
+{
+    if (!m_minimap_spot || !SpotEnabled())
+        return false;
+    if (!Update())
+        return false;
+    if (LevelName() != Level().name())
+        return false;
+
+    if (ai().get_alife() && !IsUserDefined())
+    {
+        CSE_ALifeDynamicObject* obj = ai().alife().objects().object(m_objectID, true);
+        if (!obj)
+            return false;
+        if (m_flags.test(eHideInOffline) && !obj->m_bOnline)
+            return false;
+        if (!obj->m_flags.test(CSE_ALifeObject::flVisibleForMap))
+            return false;
+    }
+
+    return true;
+}
+
+LPCSTR CMapLocation::MiniMapTexture() const { return m_minimap_spot ? m_minimap_spot->GetTextureName() : ""; }
+
+void CMapLocation::MiniMapSpotSize(float& w, float& h) const
+{
+    if (m_minimap_spot)
+    {
+        w = m_minimap_spot->GetWidth();
+        h = m_minimap_spot->GetHeight();
+        return;
+    }
+
+    w = h = 12.f;
+}
+
 void CMapLocation::UpdateMiniMap(CUICustomMap* map)
 {
     CMapSpot* sp = m_minimap_spot;
@@ -720,6 +757,8 @@ bool CRelationMapLocation::IsVisible()
     m_b_was_visible_last_frame = res;
     return res;
 }
+
+bool CRelationMapLocation::VisibleOnMiniMap() { return inherited::VisibleOnMiniMap() && IsVisible(); }
 
 void CRelationMapLocation::UpdateMiniMap(CUICustomMap* map)
 {

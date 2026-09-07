@@ -84,6 +84,9 @@ public:
     bool SpotEnabled() { return !!m_flags.test(eSpotEnabled); };
     void EnableSpot() { m_flags.set(eSpotEnabled, TRUE); };
     void DisableSpot() { m_flags.set(eSpotEnabled, FALSE); };
+    virtual bool VisibleOnMiniMap();
+    LPCSTR MiniMapTexture() const;
+    void MiniMapSpotSize(float& w, float& h) const;
     virtual void UpdateMiniMap(CUICustomMap* map);
     virtual void UpdateLevelMap(CUICustomMap* map);
 
@@ -129,6 +132,7 @@ public:
     virtual ~CRelationMapLocation();
     virtual bool Update(); // returns actual
 
+    virtual bool VisibleOnMiniMap();
     virtual void UpdateMiniMap(CUICustomMap* map);
     virtual void UpdateLevelMap(CUICustomMap* map);
 

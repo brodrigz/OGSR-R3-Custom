@@ -818,6 +818,25 @@
 			<text font="letterica16" r="215" g="195" b="170">ui_st_weapon_bobbing</text>
 		</check_weapon_bobbing>
 
+		<cap_compass x="195" y="130" width="80" height="21">
+			<text font="letterica16" r="215" g="195" b="170">ui_mm_tactical_compass</text>
+		</cap_compass>
+		<list_compass x="280" y="125" width="155" height="21" list_length="3" always_show_scroll="0">
+			<options_item entry="g_tactical_compass" group="mm_opt_gameplay"/>
+			<text_color>
+				<e r="216" g="186" b="140"/>
+			</text_color>
+			<list_font_s r="240" g="217" b="182"/>
+			<list_font r="216" g="186" b="140" font="letterica16"/>
+		</list_compass>
+
+		<cap_compass_range x="195" y="155" width="80" height="21">
+			<text font="letterica16" r="215" g="195" b="170">ui_mm_compass_range</text>
+		</cap_compass_range>
+		<track_compass_range x="280" y="150" width="175" height="21" invert="0" step="25" min="25" max="500" is_integer="1">
+			<options_item entry="g_tactical_compass_range" group="mm_opt_gameplay"/>
+		</track_compass_range>
+
 	</tab_gameplay>
 	<tab_controls>
 		<cap_mousesens x="20" y="25" width="150" height="21">

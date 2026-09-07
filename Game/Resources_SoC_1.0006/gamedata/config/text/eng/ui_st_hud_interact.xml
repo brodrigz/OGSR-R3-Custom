@@ -33,4 +33,19 @@
 	<string id="st_bullet_pen_off">
 		<text>Off</text>
 	</string>
+	<string id="ui_mm_tactical_compass">
+		<text>Compass</text>
+	</string>
+	<string id="st_compass_stalker2">
+		<text>Stalker 2</text>
+	</string>
+	<string id="st_compass_classic">
+		<text>Classic</text>
+	</string>
+	<string id="st_compass_off">
+		<text>Off</text>
+	</string>
+	<string id="ui_mm_compass_range">
+		<text>Compass range</text>
+	</string>
 </string_table>

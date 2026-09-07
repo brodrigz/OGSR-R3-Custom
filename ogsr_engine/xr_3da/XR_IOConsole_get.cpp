@@ -103,13 +103,28 @@ int CConsole::GetInteger(LPCSTR cmd, int& min, int& max) const
 		return (cm->GetValue()) ? 1 : 0;
 	}
 
-    CCC_Mask64* cf64 = smart_cast<CCC_Mask64*>(cc);
+	CCC_Mask64* cf64 = smart_cast<CCC_Mask64*>(cc);
     if (cf64)
     {
         min = 0;
         max = 1;
         return (cf64->GetValue() != 0);
     }
+
+	CCC_Token* ct = smart_cast<CCC_Token*>(cc);
+	if (ct)
+	{
+		min = 0;
+		max = 0;
+		const xr_token* tok = ct->GetToken();
+		while (tok && tok->name)
+		{
+			if (tok->id > max)
+				max = tok->id;
+			++tok;
+		}
+		return (int)ct->GetValue();
+	}
 
 	return 0;
 }
