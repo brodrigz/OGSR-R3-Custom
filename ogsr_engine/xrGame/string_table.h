@@ -35,7 +35,7 @@ public:
 
 private:
     void Init();
-    void Load(LPCSTR xml_file);
+    void Load(LPCSTR xml_file, bool optional = false);
 
     static STRING_VALUE ParseLine(LPCSTR str, LPCSTR key, bool bFirst);
     static STRING_TABLE_DATA* pData;

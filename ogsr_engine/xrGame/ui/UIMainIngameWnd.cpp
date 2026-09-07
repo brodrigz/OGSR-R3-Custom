@@ -6,9 +6,11 @@
 
 #include <dinput.h>
 #include "../actor.h"
+#include "../GameObject.h"
 #include "../HUDManager.h"
 #include "../PDA.h"
 #include "../character_info.h"
+#include "../character_community.h"
 #include "../inventory.h"
 #include "../UIGameSP.h"
 #include "../weaponmagazined.h"
@@ -28,6 +30,8 @@
 #include "UIInventoryUtilities.h"
 
 #include "UIXmlInit.h"
+#include "UITextureMaster.h"
+#include "../ui_base.h"
 #include "UIPdaMsgListItem.h"
 #include "../alife_registry_wrappers.h"
 #include "../actorcondition.h"
@@ -36,6 +40,9 @@
 #include "clsid_game.h"
 #include "UIArtefactPanel.h"
 #include "UIMap.h"
+#include "../inventory_item.h"
+#include "../InventoryOwner.h"
+#include "../xr_level_controller.h"
 
 #ifdef DEBUG
 #include "../attachable_item.h"
@@ -189,6 +196,10 @@ void CUIMainIngameWnd::Init()
     // Подсказки, которые возникают при наведении прицела на объект
     AttachChild(&UIStaticQuickHelp);
     xml_init.InitStatic(uiXml, "quick_info", 0, &UIStaticQuickHelp);
+    m_quick_help_xml_pos = UIStaticQuickHelp.GetWndPos();
+    m_quick_help_xml_size.set(UIStaticQuickHelp.GetWidth(), UIStaticQuickHelp.GetHeight());
+    m_quick_help_xml_clr = UIStaticQuickHelp.GetTextColor();
+    InitInteractOverlay();
 
     uiXml.SetLocalRoot(uiXml.GetRoot());
 
@@ -285,8 +296,6 @@ void CUIMainIngameWnd::Draw()
     UIMotionIcon.SetNoise((s16)(0xffff & iFloor(m_pActor->m_snd_noise * 100.0f)));
     CUIWindow::Draw();
     UIZoneMap->Render();
-
-    RenderQuickInfos();
 }
 
 void CUIMainIngameWnd::SetAmmoIcon(const shared_str& sect_name)
@@ -327,6 +336,8 @@ void CUIMainIngameWnd::Update()
         m_pItem = NULL;
         m_pWeapon = NULL;
         m_pGrenade = NULL;
+        HideInteractPrompt();
+        HideInteractDots();
         CUIWindow::Update();
         return;
     }
@@ -438,6 +449,7 @@ void CUIMainIngameWnd::Update()
     UIZoneMap->SetHeading(-h);
 
     UpdatePickUpItem();
+    RenderQuickInfos();
     CUIWindow::Update();
 }
 
@@ -476,27 +488,867 @@ bool CUIMainIngameWnd::OnKeyboardPress(int dik)
     return false;
 }
 
+namespace
+{
+struct HudInteractCfg
+{
+    bool floating_prompt;
+    bool hide_pickup_icon;
+    bool show_item_name;
+    bool quiet_action;
+    bool nearby_dots;
+    u32 dot_limit;
+    float offset_x;
+    float offset_y;
+    float world_y;
+    float name_offset_y;
+    float action_offset_y;
+    float dot_radius;
+};
+
+const HudInteractCfg& GetHudInteractCfg()
+{
+    static const HudInteractCfg cfg{
+        !!READ_IF_EXISTS(pSettings, r_bool, "hud_interact", "floating_prompt", TRUE),
+        !!READ_IF_EXISTS(pSettings, r_bool, "hud_interact", "hide_pickup_icon", TRUE),
+        !!READ_IF_EXISTS(pSettings, r_bool, "hud_interact", "show_item_name", TRUE),
+        !!READ_IF_EXISTS(pSettings, r_bool, "hud_interact", "quiet_action", TRUE),
+        !!READ_IF_EXISTS(pSettings, r_bool, "hud_interact", "nearby_dots", TRUE),
+        READ_IF_EXISTS(pSettings, r_u32, "hud_interact", "dot_limit", 12u),
+        READ_IF_EXISTS(pSettings, r_float, "hud_interact", "offset_x", -13.f),
+        READ_IF_EXISTS(pSettings, r_float, "hud_interact", "offset_y", 24.f),
+        READ_IF_EXISTS(pSettings, r_float, "hud_interact", "world_y", 0.2f),
+        READ_IF_EXISTS(pSettings, r_float, "hud_interact", "name_offset_y", 0.f),
+        READ_IF_EXISTS(pSettings, r_float, "hud_interact", "action_offset_y", 0.f),
+        READ_IF_EXISTS(pSettings, r_float, "hud_interact", "dot_radius", 4.f),
+    };
+    return cfg;
+}
+
+LPCSTR InteractObjectName(CGameObject* obj)
+{
+    if (!obj)
+        return nullptr;
+
+    if (auto* item = smart_cast<CInventoryItem*>(obj))
+    {
+        LPCSTR name = item->NameShort();
+        if (!name || !name[0])
+            name = item->Name();
+        if (name && name[0])
+            return name;
+    }
+
+    if (auto* owner = smart_cast<CInventoryOwner*>(obj))
+    {
+        LPCSTR name = owner->Name();
+        if (name && name[0])
+            return name;
+    }
+
+    return nullptr;
+}
+
+LPCSTR InteractFactionCaption(CGameObject* obj)
+{
+    if (!obj || smart_cast<CInventoryItem*>(obj))
+        return nullptr;
+
+    auto* owner = smart_cast<CInventoryOwner*>(obj);
+    if (!owner)
+        return nullptr;
+
+    const CHARACTER_COMMUNITY_ID id = owner->CharacterInfo().Community().id();
+    if (!id || !id.size())
+        return nullptr;
+
+    const shared_str translated = CStringTable().translate(id);
+    if (!translated || !translated.size())
+        return nullptr;
+    return *translated;
+}
+
+LPCSTR InteractFactionPatch(CGameObject* obj)
+{
+    if (!obj || smart_cast<CInventoryItem*>(obj))
+        return nullptr;
+
+    auto* owner = smart_cast<CInventoryOwner*>(obj);
+    if (!owner)
+        return nullptr;
+
+    const CHARACTER_COMMUNITY_ID id = owner->CharacterInfo().Community().id();
+    if (!id || !id.size())
+        return nullptr;
+
+    LPCSTR slug = *id;
+    if (!xr_strcmp(slug, "military") || !xr_strcmp(slug, "stalker_army"))
+        slug = "army";
+    else if (!xr_strcmp(slug, "freedom_fake") || !xr_strcmp(slug, "actor_freedom"))
+        slug = "freedom";
+    else if (!xr_strcmp(slug, "actor_dolg"))
+        slug = "dolg";
+    else if (!xr_strcmp(slug, "stalker_stalker"))
+        slug = "stalker";
+    else if (!xr_strcmp(slug, "stalker_bandit") || !xr_strcmp(slug, "actor_prebandit"))
+        slug = "bandit";
+    else if (!xr_strcmp(slug, "stalker_killer"))
+        slug = "killer";
+
+    static string64 buf;
+    strconcat(sizeof(buf), buf, "ui_mm_faction_", slug);
+    if (!CUITextureMaster::ItemExists(buf))
+        return nullptr;
+    return buf;
+}
+
+LPCSTR ShortInteractVerb(LPCSTR action_id)
+{
+    LPCSTR id = "st_hud_interact_use";
+    LPCSTR fallback = "Use";
+
+    if (action_id)
+    {
+        if (!xr_strcmp(action_id, "inventory_item_use") || !xr_strcmp(action_id, "inventory_item_use_or_drag"))
+        {
+            id = "st_hud_interact_take";
+            fallback = "Take";
+        }
+        else if (!xr_strcmp(action_id, "character_use"))
+        {
+            id = "st_hud_interact_talk";
+            fallback = "Talk";
+        }
+        else if (!xr_strcmp(action_id, "dead_character_use") || !xr_strcmp(action_id, "dead_character_use_or_drag"))
+        {
+            id = "st_hud_interact_search";
+            fallback = "Search";
+        }
+        else if (!xr_strcmp(action_id, "car_character_use"))
+        {
+            id = "st_hud_interact_enter";
+            fallback = "Enter";
+        }
+        else if (!xr_strcmp(action_id, "game_object_drag"))
+        {
+            id = "st_hud_interact_drag";
+            fallback = "Drag";
+        }
+        else
+            return nullptr;
+    }
+
+    const shared_str translated = CStringTable().translate(id);
+    if (!translated || !xr_strcmp(*translated, id))
+        return fallback;
+    return *translated;
+}
+
+constexpr float kInteractKeyH = 20.f;
+constexpr float kInteractKeySingleW = 15.f;
+constexpr float kInteractKeySlice = 5.3125f;
+constexpr float kInteractKeyGap = 5.f;
+constexpr float kInteractDropPadX = 8.f;
+constexpr float kInteractDropPadY = 4.f;
+constexpr float kInteractDotSize = 6.6f;
+constexpr float kInteractDotFocused = 8.8f;
+constexpr float kInteractPatchW = 18.f;
+constexpr float kInteractPatchH = 23.f;
+constexpr float kInteractPatchGap = 4.f;
+
+void ApplyLetterica(CUIStatic& s)
+{
+    CFontManager& fonts = HUD().Font();
+    if (fonts.pFontLetterica16Russian)
+        s.SetFont(fonts.pFontLetterica16Russian);
+    s.SetTextAlignment(CGameFont::alLeft);
+    s.SetTextComplexMode(false);
+}
+
+void InitHudTex(CUIStatic& s, LPCSTR id, float w, float h)
+{
+    s.Init(0.f, 0.f, w, h);
+    s.SetAlignment(waNone);
+    s.SetStretchTexture(true);
+    s.InitTexture(id);
+    s.TextureOn();
+    s.Show(false);
+}
+
+void FitText(CUIStatic& s, LPCSTR text, u32 color)
+{
+    s.SetText(text ? text : "");
+    s.SetTextColor(color);
+    if (s.GetFont() && text && text[0])
+    {
+        s.AdjustWidthToText();
+        s.AdjustHeightToText();
+    }
+}
+
+void PlaceAt(CUIStatic& s, float x, float y)
+{
+    Fvector2 pos;
+    pos.set(x, y);
+    s.SetWndPos(pos);
+    s.Show(true);
+}
+
+void PrimaryUseKey(char* buf, u32 sz)
+{
+    GetActionAllBinding("use", buf, sz);
+    if (char* sep = strstr(buf, " , "))
+        *sep = 0;
+}
+
+u8 InteractFadeAlpha(float dist, float radius, float keep)
+{
+    if (radius <= EPS_L)
+        return 255;
+
+    const float t = _min(1.f, _max(0.f, dist / radius));
+    return u8(255.f * (keep + (1.f - keep) * (1.f - t)));
+}
+
+bool IsNearbyPickupItem(CObject* obj)
+{
+    auto* item = smart_cast<CInventoryItem*>(obj);
+    if (!item || !obj->getVisible() || obj->getDestroy())
+        return false;
+    if (item->object().H_Parent())
+        return false;
+    if (!item->CanTake())
+        return false;
+    if (obj->CLS_ID == CLSID_OBJECT_G_RPG7 || obj->CLS_ID == CLSID_OBJECT_G_FAKE)
+        return false;
+    if (auto* grenade = smart_cast<CGrenade*>(obj))
+    {
+        if (!grenade->Useful())
+            return false;
+    }
+    if (auto* missile = smart_cast<CMissile*>(obj))
+    {
+        if (!missile->Useful())
+            return false;
+    }
+    return true;
+}
+
+void InitTextClone(CUIStatic& dst, CUIStatic& src)
+{
+    dst.Init(0.f, 0.f, src.GetWidth(), src.GetHeight());
+    dst.SetAlignment(waNone);
+    dst.TextureOff();
+    dst.SetFont(src.GetFont());
+    dst.SetTextAlignment(CGameFont::alLeft);
+    dst.SetTextComplexMode(false);
+    dst.Show(false);
+}
+
+bool ProjectWorldToUI(const Fvector& position, Fvector2& out)
+{
+    Fmatrix world;
+    world.identity();
+    world.c.set(position);
+
+    Fmatrix projected;
+    projected.mul(Device.mFullTransform, world);
+
+    const float clip_w = projected._44;
+    if (_abs(clip_w) <= EPS_S)
+        return false;
+
+    const float x = projected._41 / clip_w;
+    const float y = projected._42 / clip_w;
+    const float z = projected._43 / clip_w;
+
+    if (z < 0.f || clip_w < 0.f || _abs(x) > 1.f || _abs(y) > 1.f)
+        return false;
+
+    out.set((1.f + x) * 0.5f * UI_BASE_WIDTH, (1.f - y) * 0.5f * UI_BASE_HEIGHT);
+    return true;
+}
+} // namespace
+
+bool HudInteractEnabled() { return psHUD_Flags.test(HUD_INTERACT) && GetHudInteractCfg().floating_prompt; }
+
+bool HudInteractSuppressVanillaItemLabels() { return HudInteractEnabled(); }
+
+void CUIMainIngameWnd::InitInteractOverlay()
+{
+    InitTextClone(UIStaticQuickHelpSh, UIStaticQuickHelp);
+    InitTextClone(UIStaticInteractName, UIStaticQuickHelp);
+    InitTextClone(UIStaticInteractNameSh, UIStaticQuickHelp);
+    InitTextClone(UIStaticInteractFaction, UIStaticQuickHelp);
+    InitTextClone(UIStaticInteractFactionSh, UIStaticQuickHelp);
+    InitTextClone(UIInteractKeyBind, UIStaticQuickHelp);
+    ApplyLetterica(UIStaticInteractName);
+    ApplyLetterica(UIStaticInteractNameSh);
+    ApplyLetterica(UIStaticInteractFaction);
+    ApplyLetterica(UIStaticInteractFactionSh);
+    ApplyLetterica(UIStaticQuickHelp);
+    ApplyLetterica(UIStaticQuickHelpSh);
+    ApplyLetterica(UIInteractKeyBind);
+
+    InitHudTex(UIInteractDrop, "ui_dotmarks_main_drop", 80.f, 28.f);
+    InitHudTex(UIInteractKey, "ui_catsy_keybind_bg_single_v4", kInteractKeySingleW, kInteractKeyH);
+    InitHudTex(UIInteractKeyL, "ui_catsy_keybind_bg_left_v4", kInteractKeySlice, kInteractKeyH);
+    InitHudTex(UIInteractKeyC, "ui_catsy_keybind_bg_center_v4", 9.f, kInteractKeyH);
+    InitHudTex(UIInteractKeyR, "ui_catsy_keybind_bg_right_v4", kInteractKeySlice, kInteractKeyH);
+
+    UIInteractFactionPatch.Init(0.f, 0.f, kInteractPatchW, kInteractPatchH);
+    UIInteractFactionPatch.SetAlignment(waNone);
+    UIInteractFactionPatch.SetStretchTexture(true);
+    UIInteractFactionPatch.Show(false);
+
+    DetachChild(&UIStaticQuickHelp);
+    for (auto& dot : m_interact_dots)
+    {
+        dot.Init(0.f, 0.f, kInteractDotSize, kInteractDotSize);
+        dot.SetAlignment(waCenter);
+        dot.SetStretchTexture(true);
+        dot.InitTexture("ui_catsy_marker_intdot");
+        dot.TextureOn();
+        dot.SetColor(color_rgba(255, 255, 255, 220));
+        AttachChild(&dot);
+        dot.Show(false);
+    }
+    AttachChild(&UIInteractDrop);
+    AttachChild(&UIInteractFactionPatch);
+    AttachChild(&UIInteractKeyL);
+    AttachChild(&UIInteractKeyC);
+    AttachChild(&UIInteractKeyR);
+    AttachChild(&UIInteractKey);
+    AttachChild(&UIStaticQuickHelpSh);
+    AttachChild(&UIStaticInteractNameSh);
+    AttachChild(&UIStaticInteractFactionSh);
+    AttachChild(&UIInteractKeyBind);
+    AttachChild(&UIStaticInteractName);
+    AttachChild(&UIStaticInteractFaction);
+    AttachChild(&UIStaticQuickHelp);
+}
+
+void CUIMainIngameWnd::HideInteractPrompt()
+{
+    UIStaticQuickHelp.Show(false);
+    UIStaticQuickHelpSh.Show(false);
+    UIStaticInteractName.Show(false);
+    UIStaticInteractNameSh.Show(false);
+    UIStaticInteractFaction.Show(false);
+    UIStaticInteractFactionSh.Show(false);
+    UIInteractFactionPatch.Show(false);
+    UIInteractDrop.Show(false);
+    UIInteractKey.Show(false);
+    UIInteractKeyL.Show(false);
+    UIInteractKeyC.Show(false);
+    UIInteractKeyR.Show(false);
+    UIInteractKeyBind.Show(false);
+}
+
+void CUIMainIngameWnd::HideInteractDots()
+{
+    for (auto& dot : m_interact_dots)
+        dot.Show(false);
+}
+
+void CUIMainIngameWnd::ClearInteractCycle()
+{
+    m_interact_cycle_count = 0;
+    m_interact_sticky = nullptr;
+    m_interact_last_look = nullptr;
+    m_interact_cycle_lock = false;
+}
+
+CGameObject* CUIMainIngameWnd::InteractFocusObject(CGameObject* look_at, LPCSTR look_action) const
+{
+    const bool look_is_pickup = look_at && IsNearbyPickupItem(look_at);
+    if (look_at && look_action && look_action[0] && !look_is_pickup)
+        return look_at;
+    if (m_interact_sticky)
+        return m_interact_sticky;
+    return look_at;
+}
+
+CInventoryItem* CUIMainIngameWnd::InteractPickupItem()
+{
+    if (!HudInteractEnabled() || !m_pActor)
+        return nullptr;
+
+    CGameObject* look_at = m_pActor->ObjectWeLookingAt();
+    CGameObject* focus = InteractFocusObject(look_at, m_pActor->GetDefaultActionForObject());
+    if (!focus || !IsNearbyPickupItem(focus))
+        return nullptr;
+    return smart_cast<CInventoryItem*>(focus);
+}
+
+void CUIMainIngameWnd::CycleNearbyInteract()
+{
+    if (!HudInteractEnabled() || !m_pActor)
+        return;
+
+    UpdateNearbyInteractDots(m_pActor->ObjectWeLookingAt());
+    if (m_interact_cycle_count == 0)
+        return;
+
+    u32 idx = 0;
+    bool found = false;
+    if (m_interact_sticky)
+    {
+        for (u32 i = 0; i < m_interact_cycle_count; ++i)
+        {
+            if (m_interact_cycle[i] == m_interact_sticky)
+            {
+                idx = i;
+                found = true;
+                break;
+            }
+        }
+    }
+    if (!found)
+    {
+        CGameObject* look_at = m_pActor->ObjectWeLookingAt();
+        for (u32 i = 0; i < m_interact_cycle_count; ++i)
+        {
+            if (m_interact_cycle[i] == look_at)
+            {
+                idx = i;
+                break;
+            }
+        }
+    }
+
+    m_interact_sticky = m_interact_cycle[(idx + 1) % m_interact_cycle_count];
+    m_interact_cycle_lock = true;
+}
+
+void CUIMainIngameWnd::UpdateNearbyInteractDots(CGameObject* look_at)
+{
+    const HudInteractCfg& cfg = GetHudInteractCfg();
+    if (!HudInteractEnabled() || !cfg.nearby_dots || !m_pActor)
+    {
+        HideInteractDots();
+        ClearInteractCycle();
+        return;
+    }
+
+    float radius = cfg.dot_radius;
+    if (radius <= EPS_L)
+        radius = m_pActor->inventory().GetTakeDist() * 2.f;
+
+    const u32 limit = _min(cfg.dot_limit, u32(kMaxInteractDots));
+    if (limit == 0 || radius <= EPS_L)
+    {
+        HideInteractDots();
+        ClearInteractCycle();
+        return;
+    }
+
+    Level().ObjectSpace.GetNearest(m_interact_nearest, m_pActor->Position(), radius, m_pActor);
+
+    struct Candidate
+    {
+        CGameObject* obj;
+        float dist_sq;
+        Fvector2 ui;
+    };
+    Candidate found[kMaxInteractDots];
+    u32 found_count = 0;
+
+    const float radius_sq = radius * radius;
+    for (CObject* obj : m_interact_nearest)
+    {
+        if (!IsNearbyPickupItem(obj))
+            continue;
+
+        auto* go = smart_cast<CGameObject*>(obj);
+        if (!go)
+            continue;
+
+        Fvector world_pos;
+        go->Center(world_pos);
+        world_pos.y += cfg.world_y;
+
+        const float dist_sq = m_pActor->Position().distance_to_sqr(world_pos);
+        if (dist_sq > radius_sq)
+            continue;
+
+        Fvector2 ui_pos;
+        if (!ProjectWorldToUI(world_pos, ui_pos))
+            continue;
+
+        u32 slot = found_count;
+        if (found_count < limit)
+            ++found_count;
+        else
+        {
+            slot = 0;
+            for (u32 i = 1; i < limit; ++i)
+            {
+                if (found[i].dist_sq > found[slot].dist_sq)
+                    slot = i;
+            }
+            if (dist_sq >= found[slot].dist_sq)
+                continue;
+        }
+
+        found[slot] = {go, dist_sq, ui_pos};
+    }
+
+    for (u32 i = 0; i + 1 < found_count; ++i)
+    {
+        u32 best = i;
+        for (u32 j = i + 1; j < found_count; ++j)
+        {
+            if (found[j].dist_sq < found[best].dist_sq)
+                best = j;
+        }
+        if (best != i)
+        {
+            Candidate tmp = found[i];
+            found[i] = found[best];
+            found[best] = tmp;
+        }
+    }
+
+    m_interact_cycle_count = found_count;
+    bool sticky_alive = false;
+    for (u32 i = 0; i < found_count; ++i)
+    {
+        m_interact_cycle[i] = found[i].obj;
+        if (found[i].obj == m_interact_sticky)
+            sticky_alive = true;
+    }
+    if (!sticky_alive)
+        m_interact_sticky = nullptr;
+
+    // Empty world must not drop the cycle lock. Aim jitter onto another
+    // pickup, or a real look-at change to a different loot item, may snap.
+    if (look_at && IsNearbyPickupItem(look_at) && look_at != m_interact_sticky)
+    {
+        if (!m_interact_cycle_lock)
+            m_interact_sticky = look_at;
+        else if (look_at != m_interact_last_look)
+        {
+            m_interact_cycle_lock = false;
+            m_interact_sticky = look_at;
+        }
+    }
+    if (look_at)
+        m_interact_last_look = look_at;
+
+    CGameObject* selected = m_interact_sticky;
+    u32 used = 0;
+    for (u32 i = 0; i < found_count; ++i)
+    {
+        const bool focused = found[i].obj == selected || (!selected && found[i].obj == look_at);
+        const u8 alpha = InteractFadeAlpha(_sqrt(found[i].dist_sq), radius, focused ? 0.85f : 0.35f);
+        auto& dot = m_interact_dots[used++];
+        const float size = focused ? kInteractDotFocused : kInteractDotSize;
+        dot.SetWndSize(Fvector2().set(size, size));
+        dot.SetColor(color_rgba(255, 255, 255, alpha));
+        Fvector2 pos = found[i].ui;
+        clamp(pos.x, 0.f, UI_BASE_WIDTH);
+        clamp(pos.y, 0.f, UI_BASE_HEIGHT);
+        dot.SetWndPos(pos);
+        dot.Show(true);
+    }
+    for (; used < kMaxInteractDots; ++used)
+        m_interact_dots[used].Show(false);
+}
+
+void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR key, LPCSTR action, LPCSTR name, LPCSTR faction, LPCSTR patch, u8 alpha)
+{
+    const HudInteractCfg& cfg = GetHudInteractCfg();
+    const u32 name_clr = color_rgba(255, 255, 255, alpha);
+    const u32 faction_clr = color_rgba(200, 200, 200, alpha);
+    const u32 action_clr = color_rgba(240, 240, 240, alpha);
+    const u32 key_clr = color_rgba(0, 0, 0, alpha);
+    const u32 shadow_clr = color_argb(_min(u32(alpha), 200u), 0, 0, 0);
+    const u32 tex_clr = color_rgba(255, 255, 255, alpha);
+    const u32 drop_clr = color_rgba(255, 255, 255, u8(0.7f * float(alpha)));
+
+    ApplyLetterica(UIInteractKeyBind);
+    ApplyLetterica(UIStaticQuickHelp);
+    ApplyLetterica(UIStaticQuickHelpSh);
+    ApplyLetterica(UIStaticInteractName);
+    ApplyLetterica(UIStaticInteractNameSh);
+    ApplyLetterica(UIStaticInteractFaction);
+    ApplyLetterica(UIStaticInteractFactionSh);
+
+    FitText(UIInteractKeyBind, key, key_clr);
+    FitText(UIStaticQuickHelp, action, action_clr);
+    FitText(UIStaticQuickHelpSh, action, shadow_clr);
+
+    const bool has_name = name && name[0];
+    if (has_name)
+    {
+        FitText(UIStaticInteractName, name, name_clr);
+        FitText(UIStaticInteractNameSh, name, shadow_clr);
+    }
+    else
+    {
+        UIStaticInteractName.Show(false);
+        UIStaticInteractNameSh.Show(false);
+    }
+
+    const bool has_faction = faction && faction[0];
+    if (has_faction)
+    {
+        FitText(UIStaticInteractFaction, faction, faction_clr);
+        FitText(UIStaticInteractFactionSh, faction, shadow_clr);
+    }
+    else
+    {
+        UIStaticInteractFaction.Show(false);
+        UIStaticInteractFactionSh.Show(false);
+    }
+
+    const bool has_patch = patch && patch[0] && CUITextureMaster::ItemExists(patch);
+    if (has_patch)
+    {
+        if (!m_interact_patch_tex.size() || xr_strcmp(*m_interact_patch_tex, patch))
+        {
+            UIInteractFactionPatch.InitTexture(patch);
+            UIInteractFactionPatch.TextureOn();
+            m_interact_patch_tex = patch;
+        }
+        UIInteractFactionPatch.SetColor(tex_clr);
+        Fvector2 patch_size;
+        patch_size.set(kInteractPatchW, kInteractPatchH);
+        UIInteractFactionPatch.SetWndSize(patch_size);
+    }
+    else
+    {
+        UIInteractFactionPatch.Show(false);
+        m_interact_patch_tex = shared_str();
+    }
+
+    const bool one_char = key && xr_strlen(key) == 1;
+    const float bind_w = UIInteractKeyBind.GetWidth();
+    const float bind_h = UIInteractKeyBind.GetHeight();
+    const float action_w = UIStaticQuickHelp.GetWidth();
+    const float action_h = UIStaticQuickHelp.GetHeight();
+    const float name_w = has_name ? UIStaticInteractName.GetWidth() : 0.f;
+    const float name_h = has_name ? UIStaticInteractName.GetHeight() : 0.f;
+    const float faction_w = has_faction ? UIStaticInteractFaction.GetWidth() : 0.f;
+    const float faction_h = has_faction ? UIStaticInteractFaction.GetHeight() : 0.f;
+
+    const float key_w = one_char ? kInteractKeySingleW : (kInteractKeySlice + _max(bind_w, 9.f) + kInteractKeySlice);
+    const float row_h = kInteractKeyH;
+    const float name_gap = 3.f;
+    const float faction_gap = 1.f;
+
+    float text_h = 0.f;
+    if (has_name)
+        text_h += name_h;
+    if (has_faction)
+        text_h += (text_h > 0.f ? faction_gap : 0.f) + faction_h;
+
+    const float patch_col = has_patch ? kInteractPatchW + kInteractPatchGap : 0.f;
+    const float header_text_w = _max(name_w, faction_w);
+    const float header_w = patch_col + header_text_w;
+    const float header_h = _max(text_h, has_patch ? kInteractPatchH : 0.f);
+    const bool has_header = header_h > 0.f;
+
+    float origin_x = projected.x + cfg.offset_x;
+    float origin_y = projected.y + cfg.offset_y + cfg.action_offset_y;
+
+    const float cluster_left = -kInteractDropPadX;
+    const float cluster_top = has_header ? -(header_h + name_gap) + cfg.name_offset_y : -kInteractDropPadY;
+    const float cluster_right = _max(key_w + kInteractKeyGap + action_w + kInteractDropPadX, has_header ? header_w : 0.f);
+    const float cluster_bottom = row_h + kInteractDropPadY;
+
+    if (origin_x + cluster_left < 0.f)
+        origin_x = -cluster_left;
+    if (origin_x + cluster_right > UI_BASE_WIDTH)
+        origin_x = UI_BASE_WIDTH - cluster_right;
+    if (origin_y + cluster_top < 0.f)
+        origin_y = -cluster_top;
+    if (origin_y + cluster_bottom > UI_BASE_HEIGHT)
+        origin_y = UI_BASE_HEIGHT - cluster_bottom;
+
+    UIInteractDrop.SetColor(drop_clr);
+    Fvector2 drop_size;
+    drop_size.set(key_w + kInteractKeyGap + action_w + kInteractDropPadX * 2.f, row_h + kInteractDropPadY * 2.f);
+    UIInteractDrop.SetWndSize(drop_size);
+    PlaceAt(UIInteractDrop, origin_x - kInteractDropPadX, origin_y - kInteractDropPadY);
+
+    UIInteractKey.SetColor(tex_clr);
+    UIInteractKeyL.SetColor(tex_clr);
+    UIInteractKeyC.SetColor(tex_clr);
+    UIInteractKeyR.SetColor(tex_clr);
+
+    if (one_char)
+    {
+        Fvector2 key_size;
+        key_size.set(key_w, row_h);
+        UIInteractKey.SetWndSize(key_size);
+        PlaceAt(UIInteractKey, origin_x, origin_y);
+        UIInteractKeyL.Show(false);
+        UIInteractKeyC.Show(false);
+        UIInteractKeyR.Show(false);
+    }
+    else
+    {
+        UIInteractKey.Show(false);
+        const float center_w = key_w - kInteractKeySlice * 2.f;
+        Fvector2 slice_size;
+        slice_size.set(kInteractKeySlice, row_h);
+        Fvector2 center_size;
+        center_size.set(center_w, row_h);
+        UIInteractKeyL.SetWndSize(slice_size);
+        UIInteractKeyC.SetWndSize(center_size);
+        UIInteractKeyR.SetWndSize(slice_size);
+        PlaceAt(UIInteractKeyL, origin_x, origin_y);
+        PlaceAt(UIInteractKeyC, origin_x + kInteractKeySlice, origin_y);
+        PlaceAt(UIInteractKeyR, origin_x + kInteractKeySlice + center_w, origin_y);
+    }
+
+    PlaceAt(UIInteractKeyBind, origin_x + (key_w - bind_w) * 0.5f, origin_y + (row_h - bind_h) * 0.5f);
+
+    const float action_x = origin_x + key_w + kInteractKeyGap;
+    const float action_y = origin_y + (row_h - action_h) * 0.5f;
+    constexpr float shadow = 2.f;
+    PlaceAt(UIStaticQuickHelpSh, action_x + shadow, action_y + shadow);
+    PlaceAt(UIStaticQuickHelp, action_x, action_y);
+
+    if (has_header)
+    {
+        const float header_top = origin_y - header_h - name_gap + cfg.name_offset_y;
+        const float text_x = origin_x + patch_col;
+        float text_y = header_top + (header_h - text_h) * 0.5f;
+
+        if (has_patch)
+            PlaceAt(UIInteractFactionPatch, origin_x, header_top + (header_h - kInteractPatchH) * 0.5f);
+
+        if (has_name)
+        {
+            PlaceAt(UIStaticInteractNameSh, text_x + shadow, text_y + shadow);
+            PlaceAt(UIStaticInteractName, text_x, text_y);
+            text_y += name_h + (has_faction ? faction_gap : 0.f);
+        }
+        if (has_faction)
+        {
+            PlaceAt(UIStaticInteractFactionSh, text_x + shadow, text_y + shadow);
+            PlaceAt(UIStaticInteractFaction, text_x, text_y);
+        }
+    }
+}
+
 void CUIMainIngameWnd::RenderQuickInfos()
 {
     if (!m_pActor)
+    {
+        HideInteractPrompt();
+        HideInteractDots();
+        ClearInteractCycle();
         return;
+    }
 
-    static CGameObject* pObject = NULL;
+    static CGameObject* pObject = nullptr;
     LPCSTR actor_action = m_pActor->GetDefaultActionForObject();
-    UIStaticQuickHelp.Show(NULL != actor_action);
+    CGameObject* look_at = m_pActor->ObjectWeLookingAt();
+    const HudInteractCfg& cfg = GetHudInteractCfg();
+    const bool interact = HudInteractEnabled();
 
-    if (NULL != actor_action)
+    if (interact)
+        UpdateNearbyInteractDots(look_at);
+    else
     {
-        if (_stricmp(actor_action, UIStaticQuickHelp.GetText()))
+        HideInteractDots();
+        ClearInteractCycle();
+    }
+
+    CGameObject* focus = look_at;
+    LPCSTR prompt_action = actor_action;
+    if (interact)
+    {
+        focus = InteractFocusObject(look_at, actor_action);
+        if (focus && focus != look_at)
+            prompt_action = "inventory_item_use";
+    }
+
+    bool show = prompt_action != nullptr;
+    Fvector2 ui_pos{};
+    if (show && interact)
+    {
+        if (!focus)
+            show = false;
+        else
+        {
+            Fvector world_pos;
+            focus->Center(world_pos);
+            world_pos.y += cfg.world_y;
+            if (!ProjectWorldToUI(world_pos, ui_pos))
+                show = false;
+        }
+    }
+    else if (!interact)
+    {
+        HideInteractPrompt();
+        UIStaticQuickHelp.SetWndPos(m_quick_help_xml_pos);
+        UIStaticQuickHelp.SetWndSize(m_quick_help_xml_size);
+    }
+
+    if (!show)
+    {
+        if (interact)
+            HideInteractPrompt();
+        else
+            UIStaticQuickHelp.Show(false);
+        pObject = look_at;
+        return;
+    }
+
+    LPCSTR object_name = (interact && cfg.show_item_name) ? InteractObjectName(focus) : nullptr;
+    const bool object_changed = pObject != focus;
+    const float dist = focus ? m_pActor->Position().distance_to(focus->Position()) : 0.f;
+    const float fade_radius = m_pActor->inventory().GetTakeDist();
+    const u8 alpha = InteractFadeAlpha(dist, fade_radius, 0.55f);
+
+    if (interact)
+    {
+        UIStaticQuickHelp.SetClrLightAnim(nullptr);
+        UIStaticQuickHelp.TextureOff();
+
+        string128 key{};
+        PrimaryUseKey(key, sizeof(key));
+        LPCSTR verb = cfg.quiet_action ? ShortInteractVerb(prompt_action) : nullptr;
+        if (!verb || !verb[0])
+        {
+            if (object_changed || _stricmp(prompt_action, UIStaticQuickHelp.GetText()))
+                UIStaticQuickHelp.SetTextST(prompt_action);
+            verb = UIStaticQuickHelp.GetText();
+        }
+
+        LPCSTR faction = InteractFactionCaption(focus);
+        LPCSTR patch = InteractFactionPatch(focus);
+        LayoutInteractPrompt(ui_pos, key, verb, object_name, faction, patch, alpha);
+    }
+    else
+    {
+        if (object_changed || _stricmp(actor_action, UIStaticQuickHelp.GetText()))
+        {
             UIStaticQuickHelp.SetTextST(actor_action);
+            UIStaticQuickHelp.SetTextComplexMode(true);
+        }
+        UIStaticQuickHelp.Show(true);
+        UIStaticQuickHelpSh.Show(false);
+        UIStaticInteractName.Show(false);
+        UIStaticInteractNameSh.Show(false);
+        UIStaticInteractFaction.Show(false);
+        UIStaticInteractFactionSh.Show(false);
+        UIInteractFactionPatch.Show(false);
+        UIInteractDrop.Show(false);
+        UIInteractKey.Show(false);
+        UIInteractKeyL.Show(false);
+        UIInteractKeyC.Show(false);
+        UIInteractKeyR.Show(false);
+        UIInteractKeyBind.Show(false);
     }
 
-    if (pObject != m_pActor->ObjectWeLookingAt())
-    {
-        UIStaticQuickHelp.SetTextST(actor_action);
-        UIStaticQuickHelp.ResetClrAnimation();
-        pObject = m_pActor->ObjectWeLookingAt();
-    }
+    if (object_changed)
+        pObject = focus;
 }
 
 void CUIMainIngameWnd::ReceiveNews(GAME_NEWS_DATA* news)
@@ -679,7 +1531,8 @@ CUIStatic* init_addon(CUIWeaponCellItem* cell_item, LPCSTR sect, float scale, fl
 
 void CUIMainIngameWnd::UpdatePickUpItem()
 {
-    if (!m_pPickUpItem || !Level().CurrentViewEntity() || Level().CurrentViewEntity()->CLS_ID != CLSID_OBJECT_ACTOR)
+    if (!m_pPickUpItem || !Level().CurrentViewEntity() || Level().CurrentViewEntity()->CLS_ID != CLSID_OBJECT_ACTOR ||
+        (HudInteractEnabled() && GetHudInteractCfg().hide_pickup_icon))
     {
         if (UIPickUpItemIcon.IsShown())
         {
@@ -779,6 +1632,9 @@ void CUIMainIngameWnd::reset_ui()
     m_pItem = NULL;
     m_pPickUpItem = NULL;
     UIMotionIcon.ResetVisibility();
+    HideInteractPrompt();
+    HideInteractDots();
+    ClearInteractCycle();
 }
 
 using namespace luabind::detail;

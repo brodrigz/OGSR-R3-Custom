@@ -216,3 +216,8 @@ TEX_INFO CUITextureMaster::FindItem(LPCSTR texture_name, LPCSTR def_texture_name
         return FindItem(def_texture_name, NULL);
     }
 }
+
+bool CUITextureMaster::ItemExists(LPCSTR texture_name)
+{
+    return texture_name && texture_name[0] && m_textures.find(texture_name) != m_textures.end();
+}

@@ -43,6 +43,7 @@ xr_vector<_action> actions = {
                                                                                                             DEF_ACTION("wpn_zoom_alter", kWPN_ZOOM_ALTER)
                                                                                                                 DEF_ACTION("wpn_bore", kWPN_BORE) DEF_ACTION("wpn_13", kWPN_13)
                                                                                                                     DEF_ACTION("freelook", kFREELOOK)
+                                                                                                                        DEF_ACTION("cycle_interact", kCYCLE_INTERACT)
 };
 
 xr_vector<_binding> g_key_bindings;

@@ -33,6 +33,7 @@ public:
     static Frect GetTextureRect(LPCSTR texture_name);
     static LPCSTR GetTextureFileName(LPCSTR texture_name);
     static TEX_INFO FindItem(LPCSTR texture_name, LPCSTR def_texture_name);
+    static bool ItemExists(LPCSTR texture_name);
     static void WriteLog();
 
 protected:

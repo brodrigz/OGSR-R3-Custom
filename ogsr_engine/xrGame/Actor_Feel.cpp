@@ -64,6 +64,33 @@ void CActor::PickupModeOn() { m_bPickupMode = true; }
 
 void CActor::PickupModeOff() { m_bPickupMode = false; }
 
+#include "script_game_object.h"
+
+bool CActor::TryTakeInventoryItem(CInventoryItem* item)
+{
+    if (!item || !item->Useful() || !item->CanTake() || item->object().H_Parent() || item->object().getDestroy() || !item->object().getVisible())
+        return false;
+
+    CGameObject* go = &item->object();
+    if (Level().m_feel_deny.is_object_denied(go))
+        return false;
+
+    bool allow_pickup = true;
+    if (pSettings->line_exist("engine_callbacks", "actor_on_item_before_pickup"))
+    {
+        std::string on_item_before_pickup = pSettings->r_string("engine_callbacks", "actor_on_item_before_pickup");
+        luabind::functor<bool> func;
+        if (ai().script_engine().functor(on_item_before_pickup.c_str(), func))
+            allow_pickup = func(go->lua_game_object());
+    }
+
+    if (!allow_pickup)
+        return false;
+
+    Game().SendPickUpEvent(ID(), go->ID());
+    return true;
+}
+
 ICF static BOOL info_trace_callback(collide::rq_result& result, LPVOID params)
 {
     BOOL& bOverlaped = *(BOOL*)params;
@@ -139,7 +166,6 @@ void CActor::PickupModeUpdate()
 }
 
 #include "../xr_3da/camerabase.h"
-#include "script_game_object.h"
 
 void CActor::PickupModeUpdate_COD()
 {
@@ -149,6 +175,17 @@ void CActor::PickupModeUpdate_COD()
     if (!g_Alive() || eacFirstEye != cam_active)
     {
         HUD().GetUI()->UIMainIngameWnd->SetPickUpItem(NULL);
+        return;
+    }
+
+    if (HudInteractEnabled())
+    {
+        CInventoryItem* look_item = nullptr;
+        if (HUD().GetUI() && HUD().GetUI()->UIMainIngameWnd)
+        {
+            look_item = HUD().GetUI()->UIMainIngameWnd->InteractPickupItem();
+            HUD().GetUI()->UIMainIngameWnd->SetPickUpItem(look_item);
+        }
         return;
     }
 
@@ -292,7 +329,8 @@ void CActor::PickupModeUpdate_COD()
 
 void CActor::PickupInfoDraw(CObject* object)
 {
-    LPCSTR draw_str = NULL;
+    if (HudInteractSuppressVanillaItemLabels())
+        return;
 
     CInventoryItem* item = smart_cast<CInventoryItem*>(object);
     //.	CInventoryOwner* inventory_owner = smart_cast<CInventoryOwner*>(object);
@@ -305,7 +343,7 @@ void CActor::PickupInfoDraw(CObject* object)
     Fvector4 v_res;
     Fvector shift;
 
-    draw_str = item->Name /*Complex*/ ();
+    LPCSTR draw_str = item->Name /*Complex*/ ();
     shift.set(0, 0, 0);
 
     res.transform(v_res, shift);

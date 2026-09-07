@@ -154,6 +154,31 @@ default_allow_scope_zoom_inertion = true
 default_nearwall_on = true
 ;-------------------------------------------------------------------------------------
 
+[hud_interact]
+; Master on/off is the console flag hud_interact (gameplay options). This section is layout/features only.
+; Use prompt follows the looked-at object instead of staying in the XML quick_info slot.
+floating_prompt = true
+; Hide the CoP-style inventory sprite that appears when targeting a pickup.
+hide_pickup_icon = true
+; Show inv_name / character name above the use key on the look-at prompt.
+show_item_name = true
+; Keycap + short verb (Take / Talk / Search) instead of the vanilla string-table line.
+quiet_action = true
+; Small dots on nearby takeable items (capped, no LOS).
+nearby_dots = true
+dot_limit = 12
+; World radius in metres. 0 = twice take distance.
+dot_radius = 4
+; Prompt origin on the 1024x768 canvas, measured from the projected object/dot (IDM pri_use).
+offset_x = -13
+offset_y = 24
+; Extra world-space height so the prompt sits above the mesh origin.
+world_y = 0.2
+; Extra offsets on top of the auto-laid-out name / key row.
+name_offset_y = 0
+action_offset_y = 0
+
+
 ; Жажда - ещё один ресурс для ГГ наравне с голодом.
 ; Инструкция по адаптации к модам находится в Wiki в официальном репозитории движка.
 actor_thirst = false

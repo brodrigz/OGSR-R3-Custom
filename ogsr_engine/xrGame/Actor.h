@@ -432,6 +432,7 @@ protected:
 
     void PickupModeUpdate();
     void PickupModeUpdate_COD();
+    bool TryTakeInventoryItem(CInventoryItem* item);
 
 public:
     void PickupModeOn();

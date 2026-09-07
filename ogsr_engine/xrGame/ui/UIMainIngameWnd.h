@@ -25,6 +25,8 @@ class CActor;
 class CWeapon;
 class CMissile;
 class CInventoryItem;
+class CGameObject;
+class CObject;
 
 class CUIMainIngameWnd : public CUIWindow
 {
@@ -160,10 +162,50 @@ protected:
     float m_iPickUpItemIconWidth{};
     float m_iPickUpItemIconHeight{};
 
+    Fvector2 m_quick_help_xml_pos{};
+    Fvector2 m_quick_help_xml_size{};
+    u32 m_quick_help_xml_clr{0xffffffff};
+
+    CUIStatic UIStaticInteractName;
+    CUIStatic UIStaticInteractNameSh;
+    CUIStatic UIStaticInteractFaction;
+    CUIStatic UIStaticInteractFactionSh;
+    CUIStatic UIInteractFactionPatch;
+    shared_str m_interact_patch_tex;
+    CUIStatic UIStaticQuickHelpSh;
+    CUIStatic UIInteractDrop;
+    CUIStatic UIInteractKey;
+    CUIStatic UIInteractKeyL;
+    CUIStatic UIInteractKeyC;
+    CUIStatic UIInteractKeyR;
+    CUIStatic UIInteractKeyBind;
+
+    enum
+    {
+        kMaxInteractDots = 16
+    };
+    CUIStatic m_interact_dots[kMaxInteractDots];
+    xr_vector<CObject*> m_interact_nearest;
+    CGameObject* m_interact_cycle[kMaxInteractDots]{};
+    u32 m_interact_cycle_count{};
+    CGameObject* m_interact_sticky{};
+    CGameObject* m_interact_last_look{};
+    bool m_interact_cycle_lock{};
+
+    void InitInteractOverlay();
+    void HideInteractPrompt();
+    void HideInteractDots();
+    void ClearInteractCycle();
+    void UpdateNearbyInteractDots(CGameObject* look_at);
+    CGameObject* InteractFocusObject(CGameObject* look_at, LPCSTR look_action) const;
+    void LayoutInteractPrompt(const Fvector2& projected, LPCSTR key, LPCSTR action, LPCSTR name, LPCSTR faction, LPCSTR patch, u8 alpha);
+
     void UpdatePickUpItem();
 
 public:
     void SetPickUpItem(CInventoryItem* PickUpItem);
+    void CycleNearbyInteract();
+    CInventoryItem* InteractPickupItem();
 
     DECLARE_SCRIPT_REGISTER_FUNCTION
 };
@@ -171,3 +213,6 @@ public:
 add_to_type_list(CUIMainIngameWnd)
 #undef script_type_list
 #define script_type_list save_type_list(CUIMainIngameWnd)
+
+bool HudInteractEnabled();
+bool HudInteractSuppressVanillaItemLabels();

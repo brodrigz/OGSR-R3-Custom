@@ -33,6 +33,7 @@
 #include "Missile.h"
 #include "PDA.h"
 #include "ui/UIPDAWnd.h"
+#include "ui/UIMainIngameWnd.h"
 
 bool g_bAutoClearCrouch = true;
 extern int g_bHudAdjustMode;
@@ -128,6 +129,10 @@ void CActor::IR_OnKeyboardPress(int cmd)
             cam_SetFreelook();
     }
     break;
+    case kCYCLE_INTERACT:
+        if (HUD().GetUI() && HUD().GetUI()->UIMainIngameWnd)
+            HUD().GetUI()->UIMainIngameWnd->CycleNearbyInteract();
+        break;
     case kNIGHT_VISION:
     case kTORCH: {
         auto act_it = inventory().ActiveItem();
@@ -525,6 +530,16 @@ void CActor::ActorUse()
                 return;
             }
         }
+    }
+
+    if (HudInteractEnabled())
+    {
+        CInventoryItem* item = nullptr;
+        if (HUD().GetUI() && HUD().GetUI()->UIMainIngameWnd)
+            item = HUD().GetUI()->UIMainIngameWnd->InteractPickupItem();
+        TryTakeInventoryItem(item);
+        PickupModeOff();
+        return;
     }
 
     PickupModeOn();

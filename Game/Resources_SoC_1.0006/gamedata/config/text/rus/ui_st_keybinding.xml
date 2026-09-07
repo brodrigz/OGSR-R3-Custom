@@ -255,4 +255,7 @@
 	<string id="kb_freelook">
 		<text>Свободный обзор</text>
 	</string>
+	<string id="kb_cycle_interact">
+		<text>Следующий предмет рядом</text>
+	</string>
 </string_table>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="windows-1251" ?>
+<string_table>
+	<string id="st_hud_interact_use">
+		<text>Использовать</text>
+	</string>
+	<string id="st_hud_interact_take">
+		<text>Взять</text>
+	</string>
+	<string id="st_hud_interact_talk">
+		<text>Говорить</text>
+	</string>
+	<string id="st_hud_interact_search">
+		<text>Обыскать</text>
+	</string>
+	<string id="st_hud_interact_enter">
+		<text>Сесть</text>
+	</string>
+	<string id="st_hud_interact_drag">
+		<text>Тащить</text>
+	</string>
+	<string id="ui_mm_hud_interact">
+		<text>Интерактивный HUD</text>
+	</string>
+</string_table>

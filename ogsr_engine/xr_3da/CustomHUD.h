@@ -28,6 +28,7 @@ enum HUD_Flags : u32
     HUD_DEBUG_MAIN = 1 << 13,
 
     HUD_INFO_OVERHEAD = 1 << 14,
+    HUD_INTERACT = 1 << 15,
 };
 
 class CUI;

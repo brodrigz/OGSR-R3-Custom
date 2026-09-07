@@ -20,6 +20,7 @@
 #include "character_info.h"
 
 #include "string_table.h"
+#include "ui/UIMainIngameWnd.h"
 #include "entity_alive.h"
 
 #include "inventory_item.h"
@@ -259,7 +260,7 @@ void CHUDTarget::Render()
                         default:;
                         }
 
-                        if (fuzzyShowInfo > 0.5f)
+                        if (fuzzyShowInfo > 0.5f && !HudInteractEnabled())
                         {
                             F->SetColor(subst_alpha(C, u8(iFloor(255.f * (fuzzyShowInfo - 0.5f) * 2.f))));
 
@@ -278,7 +279,7 @@ void CHUDTarget::Render()
 
                     fuzzyShowInfo += SHOW_INFO_SPEED * Device.fTimeDelta;
                 }
-                else if (I && our_inv_owner)
+                else if (I && our_inv_owner && !HudInteractSuppressVanillaItemLabels())
                 {
                     if (fuzzyShowInfo > 0.5f)
                     {

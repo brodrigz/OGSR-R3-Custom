@@ -43,9 +43,11 @@ void CStringTable::Init()
         for (const auto& i : files.Ordered_Data)
             Load(i.first.c_str());
     }
+
+    Load("ui_st_hud_interact", true);
 }
 
-void CStringTable::Load(LPCSTR xml_file)
+void CStringTable::Load(LPCSTR xml_file, bool optional)
 {
     CUIXml uiXml;
     string_path xml_file_full;
@@ -55,7 +57,11 @@ void CStringTable::Load(LPCSTR xml_file)
 
     bool xml_result = uiXml.Init(CONFIG_PATH, _s, xml_file_full);
     if (!xml_result)
+    {
+        if (optional)
+            return;
         Debug.fatal(DEBUG_INFO, "string table xml file not found %s, for language %s", xml_file_full, *(pData->m_sLanguage));
+    }
 
     //общий список всех записей таблицы в файле
     int string_num = uiXml.GetNodesNum(uiXml.GetRoot(), "string");

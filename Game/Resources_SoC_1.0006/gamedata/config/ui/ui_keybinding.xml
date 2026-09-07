@@ -63,6 +63,7 @@
 		<command id="kb_hide_hud"					exe="hide_hud"/>
 		<command id="kb_show_hud"					exe="show_hud"/>
 		<command id="kb_freelook"					exe="freelook"/>
+		<command id="kb_cycle_interact"				exe="cycle_interact"/>
 		<command id="kb_pause"						  exe="pause"/>
 		<command id="kb_use"						    exe="use"/>			
 		<command id="kb_screenshot"				  exe="screenshot"/>

@@ -252,4 +252,7 @@
 	<string id="kb_freelook">
 		<text>Free look</text>
 	</string>
+	<string id="kb_cycle_interact">
+		<text>Cycle nearby item</text>
+	</string>
 </string_table>

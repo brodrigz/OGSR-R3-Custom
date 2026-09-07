@@ -1588,6 +1588,7 @@ void CCC_RegisterCommands()
 #endif // MASTER_GOLD
 
     CMD3(CCC_Mask, "hud_info", &psHUD_Flags, HUD_INFO);
+    CMD3(CCC_Mask, "hud_interact", &psHUD_Flags, HUD_INTERACT);
     CMD3(CCC_Mask, "hud_draw", &psHUD_Flags, HUD_DRAW);
     CMD3(CCC_Mask, "hud_crosshair_build", &psHUD_Flags, HUD_CROSSHAIR_BUILD); // билдокурсор
 
