@@ -236,7 +236,8 @@ inline void trim(T& s)
 template <typename T>
 inline void _strlwr(T& data)
 {
-    std::transform(data.begin(), data.end(), data.begin(), [](unsigned char c) { return std::tolower(c); });
+    using CharT = typename T::value_type;
+    std::transform(data.begin(), data.end(), data.begin(), [](unsigned char c) { return static_cast<CharT>(std::tolower(c)); });
 }
 
 } // namespace xr_string_utils
