@@ -841,9 +841,24 @@ bool CUICarBodyWnd::OnItemStartDrag(CUICellItem* itm)
 bool CUICarBodyWnd::OnItemDrop(CUICellItem* itm)
 {
     CUIDragDropListEx* old_owner = itm->OwnerList();
-    CUIDragDropListEx* new_owner = CUIDragDropListEx::m_drag_item->BackList();
+    CUIDragDropListEx* new_owner = CUIDragDropListEx::m_drag_item ? CUIDragDropListEx::m_drag_item->BackList() : nullptr;
 
-    if (old_owner == new_owner || !old_owner || !new_owner)
+    if (!new_owner)
+    {
+        Frect wnd;
+        GetAbsoluteRect(wnd);
+        if (!wnd.in(GetUICursor()->GetCursorPosition()) && old_owner == m_pUIOurBagList)
+        {
+            SetCurrentItem(itm);
+            PIItem item = CurrentIItem();
+            if (item && !item->IsQuestItem())
+                DropItemsfromCell(CurrentItem() && CurrentItem()->ChildsCount() > 0);
+            return true;
+        }
+        return false;
+    }
+
+    if (old_owner == new_owner || !old_owner)
         return false;
 
     if (pInput->iGetAsyncKeyState(DIK_LSHIFT) || pInput->iGetAsyncKeyState(DIK_RSHIFT))
