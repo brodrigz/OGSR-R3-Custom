@@ -16,6 +16,7 @@
 #include "../weaponmagazined.h"
 #include "../missile.h"
 #include "../Grenade.h"
+#include "../torch.h"
 #include "../xrServer_objects_ALife.h"
 #include "../alife_simulator.h"
 #include "../alife_object_registry.h"
@@ -233,6 +234,14 @@ void CUIMainIngameWnd::Init()
         UIThirstIcon.Show(false);
     }
 
+    m_bFlashlightIcon = uiXml.NavigateToNode("flashlight_static", 0) != nullptr;
+    if (m_bFlashlightIcon)
+    {
+        AttachChild(&UIFlashlightIcon);
+        xml_init.InitStatic(uiXml, "flashlight_static", 0, &UIFlashlightIcon);
+        UIFlashlightIcon.Show(false);
+    }
+
     constexpr const char* warningStrings[] = {
         "jammed",     "radiation", "wounds", "starvation",
         "fatigue", // PsyHealth ???
@@ -338,6 +347,8 @@ void CUIMainIngameWnd::Update()
         m_pGrenade = NULL;
         HideInteractPrompt();
         HideInteractDots();
+        if (m_bFlashlightIcon)
+            UIFlashlightIcon.Show(false);
         CUIWindow::Update();
         return;
     }
@@ -450,6 +461,7 @@ void CUIMainIngameWnd::Update()
 
     UpdatePickUpItem();
     RenderQuickInfos();
+    UpdateFlashlightIcon();
     CUIWindow::Update();
 }
 
@@ -1594,6 +1606,24 @@ void CUIMainIngameWnd::UpdatePickUpItem()
 
     UIPickUpItemIcon.Show(true);
 };
+
+void CUIMainIngameWnd::UpdateFlashlightIcon()
+{
+    if (!m_bFlashlightIcon)
+        return;
+
+    bool on = false;
+    if (CTorch* torch = smart_cast<CTorch*>(m_pActor->inventory().ItemFromSlot(TORCH_SLOT)))
+        on = torch->torch_active();
+
+    if (!on)
+    {
+        if (CWeapon* wpn = smart_cast<CWeapon*>(m_pActor->inventory().ActiveItem()))
+            on = wpn->IsFlashlightOn();
+    }
+
+    UIFlashlightIcon.Show(on);
+}
 
 void CUIMainIngameWnd::UpdateActiveItemInfo()
 {

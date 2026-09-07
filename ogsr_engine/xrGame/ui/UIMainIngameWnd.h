@@ -78,6 +78,8 @@ protected:
     CUIStatic UIPsyHealthIcon;
     CUIStatic UIInvincibleIcon;
     CUIStatic UIThirstIcon;
+    CUIStatic UIFlashlightIcon;
+    bool m_bFlashlightIcon{};
     //	CUIStatic			UISleepIcon;
     //	CUIStatic			UIArtefactIcon;
 
@@ -131,6 +133,7 @@ protected:
     void DestroyFlashingIcons();
     void UpdateFlashingIcons();
     void UpdateActiveItemInfo();
+    void UpdateFlashlightIcon();
 
     void SetAmmoIcon(const shared_str& seсt_name);
 
