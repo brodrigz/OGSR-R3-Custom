@@ -38,10 +38,13 @@ class CMiniMapSpot : public CMapSpot
     typedef CMapSpot inherited;
     ui_shader m_icon_above, m_icon_normal, m_icon_below;
     Frect m_tex_rect_above, m_tex_rect_normal, m_tex_rect_below;
+    shared_str m_tex_name_normal;
 
 public:
     CMiniMapSpot(CMapLocation*);
     virtual ~CMiniMapSpot();
     virtual void Load(CUIXml* xml, LPCSTR path);
     virtual void Draw();
+    LPCSTR NormalTextureName() const { return m_tex_name_normal.c_str(); }
+    const Frect& NormalTextureRect() const { return m_tex_rect_normal; }
 };

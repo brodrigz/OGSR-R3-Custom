@@ -160,6 +160,7 @@ void CMiniMapSpot::Load(CUIXml* xml, LPCSTR path)
         else
             m_tex_rect_normal = m_UIStaticItem.GetOriginalRect();
 
+        m_tex_name_normal = texture;
         m_icon_normal = m_UIStaticItem.GetShader();
     }
 

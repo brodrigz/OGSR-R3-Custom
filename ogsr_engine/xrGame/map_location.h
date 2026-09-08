@@ -87,6 +87,7 @@ public:
     virtual bool VisibleOnMiniMap();
     LPCSTR MiniMapTexture() const;
     void MiniMapSpotSize(float& w, float& h) const;
+    void MiniMapTextureRect(float& x, float& y, float& w, float& h) const;
     virtual void UpdateMiniMap(CUICustomMap* map);
     virtual void UpdateLevelMap(CUICustomMap* map);
 

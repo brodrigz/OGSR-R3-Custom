@@ -22,6 +22,7 @@ private:
     CUIProgressBar m_power_progress;
     CUIProgressBar m_luminosity_progress;
     CUIProgressBar m_noise_progress;
+    Fvector2 m_xml_power_pos{};
 
     struct _npc_visibility
     {
@@ -39,6 +40,7 @@ public:
     CUIMotionIcon();
     virtual void Update();
     void Init();
+    void ApplyClusterShift(float dx);
     void ShowState(EState state);
     void SetPower(float Pos);
     void SetNoise(float Pos);

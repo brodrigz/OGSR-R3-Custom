@@ -243,11 +243,40 @@ u32 g_bullet_world_penetration = 0;
 static xr_token bullet_world_penetration_token[] = {
     {"st_bullet_pen_on", 0}, {"st_bullet_pen_reduced", 1}, {"st_bullet_pen_off", 2}, {nullptr, 0}};
 
-// Horizontal heading compass. 0=Stalker 2 strip, 1=classic strip, 2=hidden.
-u32 g_tactical_compass = 0;
+// Horizontal heading compass. 0=Stalker 2 strip, 1=classic strip.
+u32 g_tactical_compass = 1;
+u32 g_tactical_compass_pos = 0; // 0=bottom, 1=top, 2=hidden
+u32 g_minimap_pos = 0; // 0=BL, 1=BR, 2=TL, 3=TR
 static xr_token tactical_compass_token[] = {
-    {"st_compass_stalker2", 0}, {"st_compass_classic", 1}, {"st_compass_off", 2}, {nullptr, 0}};
+    {"st_compass_stalker2", 0}, {"st_compass_classic", 1}, {nullptr, 0}};
+static xr_token tactical_compass_pos_token[] = {
+    {"st_compass_pos_bottom", 0}, {"st_compass_pos_top", 1}, {"st_compass_off", 2}, {nullptr, 0}};
+static xr_token minimap_pos_token[] = {
+    {"st_minimap_pos_bl", 0}, {"st_minimap_pos_br", 1}, {"st_minimap_pos_tl", 2}, {"st_minimap_pos_tr", 3}, {nullptr, 0}};
 float g_tactical_compass_range = 150.f;
+float g_tactical_compass_scale = 1.f;
+float g_tactical_compass_x = 0.f;
+float g_tactical_compass_y = 0.f;
+float g_minimap_scale = 1.f;
+float g_minimap_x = 0.f;
+float g_minimap_y = 0.f;
+
+class CCC_TacticalCompassStyle : public CCC_Token
+{
+public:
+    CCC_TacticalCompassStyle(LPCSTR N, u32* V, const xr_token* T) : CCC_Token(N, V, T) {}
+    void Execute(LPCSTR args) override
+    {
+        // Old saves stored Off on the style cvar.
+        if (args && (!_stricmp(args, "st_compass_off") || !_stricmp(args, "2")))
+        {
+            *value = 1;
+            g_tactical_compass_pos = 2;
+            return;
+        }
+        CCC_Token::Execute(args);
+    }
+};
 
 static xr_vector<xr_token>* pLanguagesToken{};
 static u32 LanguageID{};
@@ -1570,8 +1599,16 @@ void CCC_RegisterCommands()
     CMD3(CCC_Token, "g_rad3_game_diff", &g_rad3_game_diff, rad3_game_difficulty_token);
     CMD3(CCC_Token, "g_rad3_economy_diff", &g_rad3_economy_diff, rad3_economy_difficulty_token);
     CMD3(CCC_Token, "g_bullet_penetration", &g_bullet_world_penetration, bullet_world_penetration_token);
-    CMD3(CCC_Token, "g_tactical_compass", &g_tactical_compass, tactical_compass_token);
+    CMD3(CCC_TacticalCompassStyle, "g_tactical_compass", &g_tactical_compass, tactical_compass_token);
+    CMD3(CCC_Token, "g_tactical_compass_pos", &g_tactical_compass_pos, tactical_compass_pos_token);
+    CMD3(CCC_Token, "g_minimap_pos", &g_minimap_pos, minimap_pos_token);
     CMD4(CCC_Float, "g_tactical_compass_range", &g_tactical_compass_range, 25.f, 500.f);
+    CMD4(CCC_Float, "g_tactical_compass_scale", &g_tactical_compass_scale, 0.5f, 2.f);
+    CMD4(CCC_Float, "g_tactical_compass_x", &g_tactical_compass_x, -400.f, 400.f);
+    CMD4(CCC_Float, "g_tactical_compass_y", &g_tactical_compass_y, -400.f, 400.f);
+    CMD4(CCC_Float, "g_minimap_scale", &g_minimap_scale, 0.5f, 2.f);
+    CMD4(CCC_Float, "g_minimap_x", &g_minimap_x, -400.f, 400.f);
+    CMD4(CCC_Float, "g_minimap_y", &g_minimap_y, -400.f, 400.f);
     CMD4(CCC_Float, "g_hit_pwr_modif", &hit_modifier, 0.5f, 3.f);
     CMD4(CCC_Float, "g_dispersion_base", &g_dispersion_base, 0.f, 5.f);
     CMD4(CCC_Float, "g_dispersion_factor", &g_dispersion_factor, 0.1f, 10.f);

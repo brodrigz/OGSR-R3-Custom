@@ -488,6 +488,12 @@ luabind::object map_minimap_spots()
         row["z"] = pos.z;
         LPCSTR tex = ml->MiniMapTexture();
         row["texture"] = tex ? tex : "";
+        float tx = 0.f, ty = 0.f, tw = 0.f, th = 0.f;
+        ml->MiniMapTextureRect(tx, ty, tw, th);
+        row["tx"] = tx;
+        row["ty"] = ty;
+        row["tw"] = tw;
+        row["th"] = th;
         row["w"] = w;
         row["h"] = h;
         result[idx++] = row;

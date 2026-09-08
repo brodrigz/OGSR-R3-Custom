@@ -17,6 +17,24 @@
 #include "ui/UIMap.h"
 #include "ui/UIXmlInit.h"
 #include "ui/UIInventoryUtilities.h"
+#include "ui_base.h"
+
+extern float g_minimap_scale;
+extern float g_minimap_x;
+extern float g_minimap_y;
+extern u32 g_minimap_pos;
+
+namespace
+{
+void LayoutHudWnd(CUIWindow* w, const Fvector2& orig_pos, const Fvector2& orig_size, const Fvector2& pivot, float s, float ox, float oy)
+{
+    Fvector2 np;
+    np.x = pivot.x + (orig_pos.x - pivot.x) * s + ox;
+    np.y = pivot.y + (orig_pos.y - pivot.y) * s + oy;
+    w->SetWndPos(np);
+    w->SetWndSize(orig_size.x * s, orig_size.y * s);
+}
+} // namespace
 
 CUIZoneMap::CUIZoneMap()
 {
@@ -86,6 +104,15 @@ void CUIZoneMap::Init()
     m_center->SetWndPos(m_clipFrame->GetWidth() / 2, m_clipFrame->GetHeight() / 2);
     // m_center->SetAutoDelete(true);
     m_fScale = 1.f;
+
+    m_xml_bg_pos = m_background->GetWndPos();
+    m_xml_bg_size = m_background->GetWndSize();
+    m_xml_clip_pos = m_clipFrame->GetWndPos();
+    m_xml_clip_size = m_clipFrame->GetWndSize();
+    m_xml_compass_pos = m_compass->GetWndPos();
+    m_xml_compass_size = m_compass->GetWndSize();
+    m_applied_hud_scale = -1.f;
+    UpdateHudLayout();
 }
 
 void CUIZoneMap::Render()
@@ -169,12 +196,8 @@ void CUIZoneMap::SetupCurrentMap()
 
     m_clipFrame->AttachChild(m_center);
 
-    Frect r;
-    m_clipFrame->GetAbsoluteRect(r);
-    m_activeMap->SetClipRect(r);
-    m_activeMap->WorkingArea().set(r);
-
-    ApplyZoom();
+    m_applied_hud_scale = -1.f;
+    UpdateHudLayout();
 }
 
 void CUIZoneMap::ApplyZoom() const
@@ -184,4 +207,69 @@ void CUIZoneMap::ApplyZoom() const
     wnd_size.x = m_activeMap->BoundRect().width() * zoom_factor * m_fScale;
     wnd_size.y = m_activeMap->BoundRect().height() * zoom_factor * m_fScale;
     m_activeMap->SetWndSize(wnd_size);
+}
+
+void CUIZoneMap::UpdateHudLayout()
+{
+    float s = g_minimap_scale;
+    clamp(s, 0.5f, 2.f);
+    float ox = g_minimap_x;
+    float oy = g_minimap_y;
+
+    const float margin_l = m_xml_bg_pos.x;
+    const float margin_b = UI_BASE_HEIGHT - (m_xml_bg_pos.y + m_xml_bg_size.y);
+    const float margin_r = margin_l;
+    const float margin_t = margin_b;
+    // XML bottom margin mirrored to the top lands near mid-screen on Radiophobia's
+    // zone_map. Pull top corners up so they sit in the actual top band.
+    constexpr float kMinimapTopLift = 170.f;
+    constexpr float kMinimapRightInset = 120.f;
+    float top_y = margin_t - kMinimapTopLift;
+    if (top_y < 8.f)
+        top_y = 8.f;
+    const int pos = static_cast<int>(g_minimap_pos);
+
+    switch (pos)
+    {
+    case 1: // bottom-right
+        ox += UI_BASE_WIDTH - margin_r - m_xml_bg_size.x - m_xml_bg_pos.x - kMinimapRightInset;
+        break;
+    case 2: // top-left
+        oy += top_y - m_xml_bg_pos.y;
+        break;
+    case 3: // top-right
+        ox += UI_BASE_WIDTH - margin_r - m_xml_bg_size.x - m_xml_bg_pos.x - kMinimapRightInset;
+        oy += top_y - m_xml_bg_pos.y;
+        break;
+    default: // bottom-left
+        break;
+    }
+
+    const bool changed = !fsimilar(s, m_applied_hud_scale) || !fsimilar(ox, m_applied_hud_x) || !fsimilar(oy, m_applied_hud_y) || pos != m_applied_hud_pos;
+    if (!changed && m_applied_hud_scale > 0.f)
+        return;
+
+    m_applied_hud_scale = s;
+    m_applied_hud_x = ox;
+    m_applied_hud_y = oy;
+    m_applied_hud_pos = pos;
+
+    Fvector2 pivot;
+    pivot.x = m_xml_clip_pos.x + m_xml_clip_size.x * 0.5f;
+    pivot.y = m_xml_clip_pos.y + m_xml_clip_size.y * 0.5f;
+
+    LayoutHudWnd(m_background, m_xml_bg_pos, m_xml_bg_size, pivot, s, ox, oy);
+    LayoutHudWnd(m_clipFrame, m_xml_clip_pos, m_xml_clip_size, pivot, s, ox, oy);
+    LayoutHudWnd(m_compass, m_xml_compass_pos, m_xml_compass_size, pivot, s, ox, oy);
+
+    m_center->SetWndPos(m_clipFrame->GetWidth() / 2.f, m_clipFrame->GetHeight() / 2.f);
+
+    if (m_activeMap)
+    {
+        Frect r;
+        m_clipFrame->GetAbsoluteRect(r);
+        m_activeMap->SetClipRect(r);
+        m_activeMap->WorkingArea().set(r);
+        ApplyZoom();
+    }
 }

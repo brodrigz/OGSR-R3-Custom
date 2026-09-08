@@ -147,12 +147,14 @@ void CUIMainIngameWnd::Init()
 
     AttachChild(&UIStaticHealth);
     xml_init.InitStatic(uiXml, "static_health", 0, &UIStaticHealth);
+    m_xml_health_pos = UIStaticHealth.GetWndPos();
 
     AttachChild(&UIStaticArmor);
     xml_init.InitStatic(uiXml, "static_armor", 0, &UIStaticArmor);
 
     AttachChild(&UIWeaponBack);
     xml_init.InitStatic(uiXml, "static_weapon", 0, &UIWeaponBack);
+    m_xml_weapon_pos = UIWeaponBack.GetWndPos();
 
     UIWeaponBack.AttachChild(&UIWeaponSignAmmo);
     xml_init.InitStatic(uiXml, "static_ammo", 0, &UIWeaponSignAmmo);
@@ -239,6 +241,7 @@ void CUIMainIngameWnd::Init()
     {
         AttachChild(&UIFlashlightIcon);
         xml_init.InitStatic(uiXml, "flashlight_static", 0, &UIFlashlightIcon);
+        m_xml_flashlight_pos = UIFlashlightIcon.GetWndPos();
         UIFlashlightIcon.Show(false);
     }
 
@@ -293,6 +296,36 @@ void CUIMainIngameWnd::Init()
     }
 
     HUD_SOUND::LoadSound("maingame_ui", "snd_new_contact", m_contactSnd, SOUND_TYPE_IDLE);
+}
+
+extern u32 g_minimap_pos;
+
+void CUIMainIngameWnd::UpdateHudClusterLayout()
+{
+    const int pos = static_cast<int>(g_minimap_pos);
+    if (pos == m_applied_hud_cluster_pos)
+        return;
+    m_applied_hud_cluster_pos = pos;
+
+    float dx = 0.f;
+    if (pos != 0)
+    {
+        constexpr float kLeftPad = 12.f;
+        dx = kLeftPad - m_xml_health_pos.x;
+    }
+
+    UIStaticHealth.SetWndPos(m_xml_health_pos.x + dx, m_xml_health_pos.y);
+    UIWeaponBack.SetWndPos(m_xml_weapon_pos.x + dx, m_xml_weapon_pos.y);
+    if (m_bFlashlightIcon)
+    {
+        float fx = m_xml_flashlight_pos.x + dx;
+        float fy = m_xml_flashlight_pos.y;
+        // Left-cluster used to clamp X onto the health bar. Keep it under the bar instead.
+        if (fx < 4.f)
+            fx = m_xml_health_pos.x + dx;
+        UIFlashlightIcon.SetWndPos(fx, fy);
+    }
+    UIMotionIcon.ApplyClusterShift(dx);
 }
 
 float UIStaticDiskIO_start_time = 0.0f;
@@ -454,6 +487,8 @@ void CUIMainIngameWnd::Update()
     UIHealthBar.SetProgressPos(m_pActor->GetfHealth() * 100.0f);
     UIMotionIcon.SetPower(m_pActor->conditions().GetPower() * 100.0f);
 
+    UIZoneMap->UpdateHudLayout();
+    UpdateHudClusterLayout();
     UIZoneMap->UpdateRadar(Device.vCameraPosition);
     float h, p;
     Device.vCameraDirection.getHP(h, p);

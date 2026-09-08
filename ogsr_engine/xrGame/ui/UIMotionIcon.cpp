@@ -31,6 +31,7 @@ void CUIMotionIcon::Init()
 
     AttachChild(&m_power_progress);
     xml_init.InitProgressBar(uiXml, "power_progress", 0, &m_power_progress);
+    m_xml_power_pos = m_power_progress.GetWndPos();
 
     AttachChild(&m_luminosity_progress);
     xml_init.InitProgressBar(uiXml, "luminosity_progress", 0, &m_luminosity_progress);
@@ -63,6 +64,11 @@ void CUIMotionIcon::Init()
     m_states[stSprint].Show(false);
 
     ShowState(stNormal);
+}
+
+void CUIMotionIcon::ApplyClusterShift(float dx)
+{
+    m_power_progress.SetWndPos(m_xml_power_pos.x + dx, m_xml_power_pos.y);
 }
 
 void CUIMotionIcon::ShowState(EState state)

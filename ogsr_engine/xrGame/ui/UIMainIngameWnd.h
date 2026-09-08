@@ -169,6 +169,11 @@ protected:
     Fvector2 m_quick_help_xml_size{};
     u32 m_quick_help_xml_clr{0xffffffff};
 
+    Fvector2 m_xml_health_pos{};
+    Fvector2 m_xml_weapon_pos{};
+    Fvector2 m_xml_flashlight_pos{};
+    int m_applied_hud_cluster_pos{-1};
+
     CUIStatic UIStaticInteractName;
     CUIStatic UIStaticInteractNameSh;
     CUIStatic UIStaticInteractFaction;
@@ -204,6 +209,7 @@ protected:
     void LayoutInteractPrompt(const Fvector2& projected, LPCSTR key, LPCSTR action, LPCSTR name, LPCSTR faction, LPCSTR patch, u8 alpha);
 
     void UpdatePickUpItem();
+    void UpdateHudClusterLayout();
 
 public:
     void SetPickUpItem(CInventoryItem* PickUpItem);

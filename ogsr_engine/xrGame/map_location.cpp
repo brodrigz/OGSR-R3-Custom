@@ -532,7 +532,15 @@ bool CMapLocation::VisibleOnMiniMap()
     return true;
 }
 
-LPCSTR CMapLocation::MiniMapTexture() const { return m_minimap_spot ? m_minimap_spot->GetTextureName() : ""; }
+LPCSTR CMapLocation::MiniMapTexture() const
+{
+    if (!m_minimap_spot)
+        return "";
+    LPCSTR named = m_minimap_spot->NormalTextureName();
+    if (named && named[0])
+        return named;
+    return m_minimap_spot->GetTextureName();
+}
 
 void CMapLocation::MiniMapSpotSize(float& w, float& h) const
 {
@@ -544,6 +552,27 @@ void CMapLocation::MiniMapSpotSize(float& w, float& h) const
     }
 
     w = h = 12.f;
+}
+
+void CMapLocation::MiniMapTextureRect(float& x, float& y, float& w, float& h) const
+{
+    x = y = w = h = 0.f;
+    if (!m_minimap_spot)
+        return;
+    const Frect& r = m_minimap_spot->NormalTextureRect();
+    if (r.width() > 0.f && r.height() > 0.f)
+    {
+        x = r.x1;
+        y = r.y1;
+        w = r.width();
+        h = r.height();
+        return;
+    }
+    const Frect orig = m_minimap_spot->GetOriginalRect();
+    x = orig.x1;
+    y = orig.y1;
+    w = orig.width();
+    h = orig.height();
 }
 
 void CMapLocation::UpdateMiniMap(CUICustomMap* map)

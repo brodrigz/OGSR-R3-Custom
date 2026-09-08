@@ -21,6 +21,17 @@ class CUIZoneMap
     bool m_rounded{};
     u32 m_alpha{};
 
+    Fvector2 m_xml_bg_pos{};
+    Fvector2 m_xml_bg_size{};
+    Fvector2 m_xml_clip_pos{};
+    Fvector2 m_xml_clip_size{};
+    Fvector2 m_xml_compass_pos{};
+    Fvector2 m_xml_compass_size{};
+    float m_applied_hud_scale{-1.f};
+    float m_applied_hud_x{0.f};
+    float m_applied_hud_y{0.f};
+    int m_applied_hud_pos{-1};
+
 public:
     CUIZoneMap();
     virtual ~CUIZoneMap();
@@ -38,6 +49,7 @@ public:
     bool ZoomOut();
 
     void ApplyZoom() const;
+    void UpdateHudLayout();
 
     CUIStatic* Background() const { return m_background; };
     CUIStatic* ClipFrame() const { return m_clipFrame; }; // alpet: для экспорта в скрипты
