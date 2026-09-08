@@ -45,7 +45,49 @@
 	<string id="st_compass_off">
 		<text>Выкл</text>
 	</string>
+	<string id="ui_mm_compass_pos">
+		<text>Поз. компаса</text>
+	</string>
+	<string id="st_compass_pos_bottom">
+		<text>Снизу</text>
+	</string>
+	<string id="st_compass_pos_top">
+		<text>Сверху</text>
+	</string>
+	<string id="ui_mm_minimap_pos">
+		<text>Поз. миникарты</text>
+	</string>
+	<string id="st_minimap_pos_bl">
+		<text>Слева снизу</text>
+	</string>
+	<string id="st_minimap_pos_br">
+		<text>Справа снизу</text>
+	</string>
+	<string id="st_minimap_pos_tl">
+		<text>Слева сверху</text>
+	</string>
+	<string id="st_minimap_pos_tr">
+		<text>Справа сверху</text>
+	</string>
 	<string id="ui_mm_compass_range">
 		<text>Дальность компаса</text>
+	</string>
+	<string id="ui_mm_compass_scale">
+		<text>Масштаб компаса</text>
+	</string>
+	<string id="ui_mm_compass_x">
+		<text>Компас X</text>
+	</string>
+	<string id="ui_mm_compass_y">
+		<text>Компас Y</text>
+	</string>
+	<string id="ui_mm_minimap_scale">
+		<text>Масштаб миникарты</text>
+	</string>
+	<string id="ui_mm_minimap_x">
+		<text>Миникарта X</text>
+	</string>
+	<string id="ui_mm_minimap_y">
+		<text>Миникарта Y</text>
 	</string>
 </string_table>

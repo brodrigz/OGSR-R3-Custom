@@ -45,7 +45,49 @@
 	<string id="st_compass_off">
 		<text>Off</text>
 	</string>
+	<string id="ui_mm_compass_pos">
+		<text>Compass pos</text>
+	</string>
+	<string id="st_compass_pos_bottom">
+		<text>Bottom</text>
+	</string>
+	<string id="st_compass_pos_top">
+		<text>Top</text>
+	</string>
+	<string id="ui_mm_minimap_pos">
+		<text>Minimap pos</text>
+	</string>
+	<string id="st_minimap_pos_bl">
+		<text>Bottom left</text>
+	</string>
+	<string id="st_minimap_pos_br">
+		<text>Bottom right</text>
+	</string>
+	<string id="st_minimap_pos_tl">
+		<text>Top left</text>
+	</string>
+	<string id="st_minimap_pos_tr">
+		<text>Top right</text>
+	</string>
 	<string id="ui_mm_compass_range">
 		<text>Compass range</text>
+	</string>
+	<string id="ui_mm_compass_scale">
+		<text>Compass scale</text>
+	</string>
+	<string id="ui_mm_compass_x">
+		<text>Compass X</text>
+	</string>
+	<string id="ui_mm_compass_y">
+		<text>Compass Y</text>
+	</string>
+	<string id="ui_mm_minimap_scale">
+		<text>Minimap scale</text>
+	</string>
+	<string id="ui_mm_minimap_x">
+		<text>Minimap X</text>
+	</string>
+	<string id="ui_mm_minimap_y">
+		<text>Minimap Y</text>
 	</string>
 </string_table>

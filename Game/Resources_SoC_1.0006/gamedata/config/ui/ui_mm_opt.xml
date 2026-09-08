@@ -821,7 +821,7 @@
 		<cap_compass x="195" y="130" width="80" height="21">
 			<text font="letterica16" r="215" g="195" b="170">ui_mm_tactical_compass</text>
 		</cap_compass>
-		<list_compass x="280" y="125" width="155" height="21" list_length="3" always_show_scroll="0">
+		<list_compass x="280" y="125" width="155" height="21" list_length="2" always_show_scroll="0">
 			<options_item entry="g_tactical_compass" group="mm_opt_gameplay"/>
 			<text_color>
 				<e r="216" g="186" b="140"/>
@@ -830,12 +830,78 @@
 			<list_font r="216" g="186" b="140" font="letterica16"/>
 		</list_compass>
 
-		<cap_compass_range x="195" y="155" width="80" height="21">
+		<cap_compass_pos x="195" y="155" width="80" height="21">
+			<text font="letterica16" r="215" g="195" b="170">ui_mm_compass_pos</text>
+		</cap_compass_pos>
+		<list_compass_pos x="280" y="150" width="175" height="21" list_length="3" always_show_scroll="0">
+			<options_item entry="g_tactical_compass_pos" group="mm_opt_gameplay"/>
+			<text_color>
+				<e r="216" g="186" b="140"/>
+			</text_color>
+			<list_font_s r="240" g="217" b="182"/>
+			<list_font r="216" g="186" b="140" font="letterica16"/>
+		</list_compass_pos>
+
+		<cap_minimap_pos x="195" y="180" width="80" height="21">
+			<text font="letterica16" r="215" g="195" b="170">ui_mm_minimap_pos</text>
+		</cap_minimap_pos>
+		<list_minimap_pos x="280" y="175" width="175" height="21" list_length="4" always_show_scroll="0">
+			<options_item entry="g_minimap_pos" group="mm_opt_gameplay"/>
+			<text_color>
+				<e r="216" g="186" b="140"/>
+			</text_color>
+			<list_font_s r="240" g="217" b="182"/>
+			<list_font r="216" g="186" b="140" font="letterica16"/>
+		</list_minimap_pos>
+
+		<cap_compass_range x="195" y="205" width="80" height="21">
 			<text font="letterica16" r="215" g="195" b="170">ui_mm_compass_range</text>
 		</cap_compass_range>
-		<track_compass_range x="280" y="150" width="175" height="21" invert="0" step="25" min="25" max="500" is_integer="1">
+		<track_compass_range x="280" y="200" width="175" height="21" invert="0" step="25" min="25" max="500" is_integer="1">
 			<options_item entry="g_tactical_compass_range" group="mm_opt_gameplay"/>
 		</track_compass_range>
+
+		<cap_compass_scale x="195" y="230" width="80" height="21">
+			<text font="letterica16" r="215" g="195" b="170">ui_mm_compass_scale</text>
+		</cap_compass_scale>
+		<track_compass_scale x="280" y="225" width="175" height="21" invert="0" step="0.05" min="0.5" max="2">
+			<options_item entry="g_tactical_compass_scale" group="mm_opt_gameplay"/>
+		</track_compass_scale>
+
+		<cap_compass_x x="195" y="255" width="80" height="21">
+			<text font="letterica16" r="215" g="195" b="170">ui_mm_compass_x</text>
+		</cap_compass_x>
+		<track_compass_x x="280" y="250" width="175" height="21" invert="0" step="5" min="-400" max="400" is_integer="1">
+			<options_item entry="g_tactical_compass_x" group="mm_opt_gameplay"/>
+		</track_compass_x>
+
+		<cap_compass_y x="195" y="280" width="80" height="21">
+			<text font="letterica16" r="215" g="195" b="170">ui_mm_compass_y</text>
+		</cap_compass_y>
+		<track_compass_y x="280" y="275" width="175" height="21" invert="0" step="5" min="-400" max="400" is_integer="1">
+			<options_item entry="g_tactical_compass_y" group="mm_opt_gameplay"/>
+		</track_compass_y>
+
+		<cap_minimap_scale x="195" y="305" width="80" height="21">
+			<text font="letterica16" r="215" g="195" b="170">ui_mm_minimap_scale</text>
+		</cap_minimap_scale>
+		<track_minimap_scale x="280" y="300" width="175" height="21" invert="0" step="0.05" min="0.5" max="2">
+			<options_item entry="g_minimap_scale" group="mm_opt_gameplay"/>
+		</track_minimap_scale>
+
+		<cap_minimap_x x="195" y="330" width="80" height="21">
+			<text font="letterica16" r="215" g="195" b="170">ui_mm_minimap_x</text>
+		</cap_minimap_x>
+		<track_minimap_x x="280" y="325" width="175" height="21" invert="0" step="5" min="-400" max="400" is_integer="1">
+			<options_item entry="g_minimap_x" group="mm_opt_gameplay"/>
+		</track_minimap_x>
+
+		<cap_minimap_y x="195" y="355" width="80" height="21">
+			<text font="letterica16" r="215" g="195" b="170">ui_mm_minimap_y</text>
+		</cap_minimap_y>
+		<track_minimap_y x="280" y="350" width="175" height="21" invert="0" step="5" min="-400" max="400" is_integer="1">
+			<options_item entry="g_minimap_y" group="mm_opt_gameplay"/>
+		</track_minimap_y>
 
 	</tab_gameplay>
 	<tab_controls>
