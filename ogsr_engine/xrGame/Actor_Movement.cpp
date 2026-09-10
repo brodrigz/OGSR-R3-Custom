@@ -50,7 +50,9 @@ void CActor::g_cl_ValidateMState(float dt, u32 mstate_wf)
     }
     else if (mstate_wf & mcLookout)
     {
-        // Activate one of lookouts
+        // Apply exactly one side. OR-ing left a leftover opposite bit when
+        // toggle-lean switched Q/E, so both leans stayed active.
+        mstate_real &= ~mcLookout;
         mstate_real |= mstate_wf & mcLookout;
     }
     else
