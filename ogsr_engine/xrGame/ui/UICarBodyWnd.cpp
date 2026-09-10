@@ -845,9 +845,7 @@ bool CUICarBodyWnd::OnItemDrop(CUICellItem* itm)
 
     if (!new_owner)
     {
-        Frect wnd;
-        GetAbsoluteRect(wnd);
-        if (!wnd.in(GetUICursor()->GetCursorPosition()) && old_owner == m_pUIOurBagList)
+        if (old_owner == m_pUIOurBagList)
         {
             SetCurrentItem(itm);
             PIItem item = CurrentIItem();

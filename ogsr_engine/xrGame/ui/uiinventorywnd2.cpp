@@ -403,16 +403,10 @@ bool CUIInventoryWnd::OnItemDrop(CUICellItem* itm)
     auto new_owner = CUIDragDropListEx::m_drag_item ? CUIDragDropListEx::m_drag_item->BackList() : nullptr;
     if (!new_owner)
     {
-        Frect wnd;
-        GetAbsoluteRect(wnd);
-        if (!wnd.in(GetUICursor()->GetCursorPosition()))
-        {
-            SetCurrentItem(itm);
-            if (CurrentIItem() && !CurrentIItem()->IsQuestItem())
-                DropCurrentItem(CurrentItem() && CurrentItem()->ChildsCount() > 0);
-            return true;
-        }
-        return false;
+        SetCurrentItem(itm);
+        if (CurrentIItem() && !CurrentIItem()->IsQuestItem())
+            DropCurrentItem(CurrentItem() && CurrentItem()->ChildsCount() > 0);
+        return true;
     }
     if (old_owner == new_owner || !old_owner)
         return false;
