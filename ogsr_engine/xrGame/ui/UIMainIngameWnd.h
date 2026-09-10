@@ -187,6 +187,13 @@ protected:
     CUIStatic UIInteractKeyC;
     CUIStatic UIInteractKeyR;
     CUIStatic UIInteractKeyBind;
+    CUIStatic UIStaticQuickHelp2;
+    CUIStatic UIStaticQuickHelp2Sh;
+    CUIStatic UIInteractKey2;
+    CUIStatic UIInteractKey2L;
+    CUIStatic UIInteractKey2C;
+    CUIStatic UIInteractKey2R;
+    CUIStatic UIInteractKeyBind2;
 
     enum
     {
@@ -206,7 +213,7 @@ protected:
     void ClearInteractCycle();
     void UpdateNearbyInteractDots(CGameObject* look_at);
     CGameObject* InteractFocusObject(CGameObject* look_at, LPCSTR look_action) const;
-    void LayoutInteractPrompt(const Fvector2& projected, LPCSTR key, LPCSTR action, LPCSTR name, LPCSTR faction, LPCSTR patch, u8 alpha);
+    void LayoutInteractPrompt(const Fvector2& projected, LPCSTR key, LPCSTR action, LPCSTR key2, LPCSTR action2, LPCSTR name, LPCSTR faction, LPCSTR patch, u8 alpha, bool gray_patch);
 
     void UpdatePickUpItem();
     void UpdateHudClusterLayout();

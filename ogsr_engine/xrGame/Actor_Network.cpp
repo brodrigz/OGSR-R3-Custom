@@ -220,6 +220,7 @@ BOOL CActor::net_Spawn(CSE_Abstract* DC)
 
 void CActor::net_Destroy()
 {
+    m_pending_quick_use = u16(-1);
     inherited::net_Destroy();
 
     if (m_holder_id != ALife::_OBJECT_ID(-1))
@@ -269,6 +270,9 @@ void CActor::net_Destroy()
 void CActor::net_Relcase(CObject* O)
 {
     VERIFY(O);
+
+    if (O->ID() == m_pending_quick_use)
+        m_pending_quick_use = u16(-1);
 
     CGameObject* GO = smart_cast<CGameObject*>(O);
     if (GO && m_pObjectWeLookingAt == GO)

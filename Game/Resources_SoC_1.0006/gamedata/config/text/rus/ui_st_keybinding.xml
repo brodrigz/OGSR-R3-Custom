@@ -270,6 +270,9 @@
 	<string id="kb_cycle_interact">
 		<text>Следующий предмет рядом</text>
 	</string>
+	<string id="kb_quick_use">
+		<text>Использовать предмет рядом</text>
+	</string>
 	<string id="ui_mm_unbind_hint">
 		<text>Нажмите Esc, чтобы отвязать</text>
 	</string>

@@ -12,11 +12,23 @@
 	<string id="st_hud_interact_search">
 		<text>Search</text>
 	</string>
+	<string id="st_hud_interact_empty">
+		<text>(Empty)</text>
+	</string>
 	<string id="st_hud_interact_enter">
 		<text>Enter</text>
 	</string>
 	<string id="st_hud_interact_drag">
 		<text>Drag</text>
+	</string>
+	<string id="st_hud_interact_cut">
+		<text>Cut trophy</text>
+	</string>
+	<string id="st_hud_interact_need_knife">
+		<text>Need knife to cut trophy</text>
+	</string>
+	<string id="st_hud_interact_damaged_carcass">
+		<text>Damaged carcass</text>
 	</string>
 	<string id="ui_mm_hud_interact">
 		<text>Interaction HUD</text>

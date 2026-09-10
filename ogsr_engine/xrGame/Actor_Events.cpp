@@ -77,6 +77,8 @@ void CActor::OnEvent(NET_Packet& P, u16 type)
         }
         else
         {
+            if (m_pending_quick_use != u16(-1) && _GO->ID() == m_pending_quick_use)
+                m_pending_quick_use = u16(-1);
             NET_Packet _P;
             u_EventGen(_P, GE_OWNERSHIP_REJECT, ID());
             _P.w_u16(u16(O->ID()));

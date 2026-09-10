@@ -42,8 +42,13 @@
 #include "UIArtefactPanel.h"
 #include "UIMap.h"
 #include "../inventory_item.h"
+#include "../eatable_item.h"
 #include "../InventoryOwner.h"
+#include "../InventoryBox.h"
+#include "../entity_alive.h"
+#include "../UsableScriptObject.h"
 #include "../xr_level_controller.h"
+#include "../Include/xrRender/Kinematics.h"
 
 #ifdef DEBUG
 #include "../attachable_item.h"
@@ -596,17 +601,27 @@ LPCSTR InteractObjectName(CGameObject* obj)
     return nullptr;
 }
 
-LPCSTR InteractFactionCaption(CGameObject* obj)
+bool InteractCommunityId(CGameObject* obj, CHARACTER_COMMUNITY_ID& id)
 {
-    if (!obj || smart_cast<CInventoryItem*>(obj))
-        return nullptr;
+    if (!obj || smart_cast<CInventoryItem*>(obj) || obj->cast_base_monster())
+        return false;
 
     auto* owner = smart_cast<CInventoryOwner*>(obj);
     if (!owner)
-        return nullptr;
+        return false;
 
-    const CHARACTER_COMMUNITY_ID id = owner->CharacterInfo().Community().id();
-    if (!id || !id.size())
+    const CHARACTER_COMMUNITY_INDEX idx = owner->CharacterInfo().Community().index();
+    if (idx < 0)
+        return false;
+
+    id = CHARACTER_COMMUNITY::IndexToId(idx, nullptr, true);
+    return !id.empty();
+}
+
+LPCSTR InteractFactionCaption(CGameObject* obj)
+{
+    CHARACTER_COMMUNITY_ID id;
+    if (!InteractCommunityId(obj, id))
         return nullptr;
 
     const shared_str translated = CStringTable().translate(id);
@@ -617,15 +632,8 @@ LPCSTR InteractFactionCaption(CGameObject* obj)
 
 LPCSTR InteractFactionPatch(CGameObject* obj)
 {
-    if (!obj || smart_cast<CInventoryItem*>(obj))
-        return nullptr;
-
-    auto* owner = smart_cast<CInventoryOwner*>(obj);
-    if (!owner)
-        return nullptr;
-
-    const CHARACTER_COMMUNITY_ID id = owner->CharacterInfo().Community().id();
-    if (!id || !id.size())
+    CHARACTER_COMMUNITY_ID id;
+    if (!InteractCommunityId(obj, id))
         return nullptr;
 
     LPCSTR slug = *id;
@@ -671,15 +679,21 @@ LPCSTR ShortInteractVerb(LPCSTR action_id)
             id = "st_hud_interact_search";
             fallback = "Search";
         }
+        else if (!xr_strcmp(action_id, "dead_monster_use"))
+        {
+            id = "st_hud_interact_cut";
+            fallback = "Cut trophy";
+        }
+        else if (!xr_strcmp(action_id, "dead_monster_used") || !xr_strcmp(action_id, "dead_monster_need_knife") ||
+                 !xr_strcmp(action_id, "game_object_drag"))
+        {
+            id = "st_hud_interact_drag";
+            fallback = "Drag";
+        }
         else if (!xr_strcmp(action_id, "car_character_use"))
         {
             id = "st_hud_interact_enter";
             fallback = "Enter";
-        }
-        else if (!xr_strcmp(action_id, "game_object_drag"))
-        {
-            id = "st_hud_interact_drag";
-            fallback = "Drag";
         }
         else
             return nullptr;
@@ -689,6 +703,62 @@ LPCSTR ShortInteractVerb(LPCSTR action_id)
     if (!translated || !xr_strcmp(*translated, id))
         return fallback;
     return *translated;
+}
+
+LPCSTR InteractHudString(LPCSTR id, LPCSTR fallback)
+{
+    const shared_str translated = CStringTable().translate(id);
+    if (!translated || !translated.size() || !xr_strcmp(*translated, id))
+        return fallback;
+    return *translated;
+}
+
+LPCSTR InteractEmptyCaption() { return InteractHudString("st_hud_interact_empty", "(Empty)"); }
+
+LPCSTR InteractTipId(CGameObject* obj)
+{
+    auto* usable = smart_cast<CUsableScriptObject*>(obj);
+    LPCSTR tip = usable ? usable->tip_text() : nullptr;
+    return (tip && tip[0]) ? tip : nullptr;
+}
+
+LPCSTR CanonicalInteractAction(CGameObject* obj, LPCSTR actor_action)
+{
+    LPCSTR tip = InteractTipId(obj);
+    if (tip && ShortInteractVerb(tip))
+        return tip;
+    if (actor_action && ShortInteractVerb(actor_action))
+        return actor_action;
+    return actor_action;
+}
+
+LPCSTR InteractNameOverride(LPCSTR tip)
+{
+    if (!tip)
+        return nullptr;
+    if (!xr_strcmp(tip, "dead_monster_used"))
+        return InteractHudString("st_hud_interact_damaged_carcass", "Damaged carcass");
+    if (!xr_strcmp(tip, "dead_monster_need_knife"))
+        return InteractHudString("st_hud_interact_need_knife", "Need knife to cut trophy");
+    return nullptr;
+}
+
+bool InteractLootEmpty(CGameObject* obj)
+{
+    if (!obj)
+        return false;
+
+    if (auto* box = smart_cast<IInventoryBox*>(obj))
+        return box->IsEmpty();
+
+    auto* alive = smart_cast<CEntityAlive*>(obj);
+    auto* owner = smart_cast<CInventoryOwner*>(obj);
+    if (!alive || alive->g_Alive() || !owner)
+        return false;
+
+    TIItemContainer items;
+    owner->inventory().AddAvailableItems(items, false);
+    return items.empty();
 }
 
 constexpr float kInteractKeyH = 20.f;
@@ -741,11 +811,117 @@ void PlaceAt(CUIStatic& s, float x, float y)
     s.Show(true);
 }
 
-void PrimaryUseKey(char* buf, u32 sz)
+bool IsDragInteractAction(LPCSTR action_id)
 {
-    GetActionAllBinding("use", buf, sz);
-    if (char* sep = strstr(buf, " , "))
+    return action_id && (!xr_strcmp(action_id, "game_object_drag") || !xr_strcmp(action_id, "dead_monster_used") ||
+                         !xr_strcmp(action_id, "dead_monster_need_knife"));
+}
+
+bool IsUseOrDragAction(LPCSTR action_id)
+{
+    return action_id && (!xr_strcmp(action_id, "dead_character_use_or_drag") || !xr_strcmp(action_id, "inventory_item_use_or_drag") ||
+                         !xr_strcmp(action_id, "dead_monster_use"));
+}
+
+bool IsEatablePickup(CGameObject* obj)
+{
+    auto* item = smart_cast<CInventoryItem*>(obj);
+    auto* eat = item ? item->cast_eatable_item() : nullptr;
+    return eat && eat->Useful();
+}
+
+void InteractPromptWorldPos(CGameObject* obj, Fvector& world_pos)
+{
+    const HudInteractCfg& cfg = GetHudInteractCfg();
+    auto* alive = smart_cast<CEntityAlive*>(obj);
+    if (alive && alive->g_Alive() && !alive->cast_base_monster() && alive->Visual())
+    {
+        if (auto* k = smart_cast<IKinematics*>(alive->Visual()))
+        {
+            u16 bone = k->LL_BoneID("bip01_spine1");
+            if (bone == BI_NONE)
+                bone = k->LL_BoneID("bip01_spine2");
+            if (bone == BI_NONE)
+                bone = k->LL_BoneID("bip01_spine");
+            if (bone != BI_NONE)
+            {
+                k->CalculateBones();
+                Fmatrix matrix;
+                matrix.mul(alive->XFORM(), k->LL_GetBoneInstance(bone).mTransform);
+                world_pos = matrix.c;
+                return;
+            }
+        }
+    }
+
+    obj->Center(world_pos);
+    world_pos.y += cfg.world_y;
+}
+
+void ActionKeyLabel(LPCSTR action, char* buf, u32 sz, bool with_shift)
+{
+    string64 key{};
+    GetActionAllBinding(action, key, sizeof(key));
+    if (char* sep = strstr(key, " , "))
         *sep = 0;
+    if (with_shift)
+        sprintf_s(buf, sz, "Shift+%s", key);
+    else
+        sprintf_s(buf, sz, "%s", key);
+}
+
+void PrimaryUseKey(char* buf, u32 sz, bool with_shift) { ActionKeyLabel("use", buf, sz, with_shift); }
+
+float LayoutKeyCap(CUIStatic& single, CUIStatic& left, CUIStatic& center, CUIStatic& right, CUIStatic& bind, float x, float y, LPCSTR key, u32 key_clr, u32 tex_clr)
+{
+    FitText(bind, key, key_clr);
+    const bool one_char = key && xr_strlen(key) == 1;
+    const float bind_w = bind.GetWidth();
+    const float bind_h = bind.GetHeight();
+    const float key_w = one_char ? kInteractKeySingleW : (kInteractKeySlice + _max(bind_w, 9.f) + kInteractKeySlice);
+
+    single.SetColor(tex_clr);
+    left.SetColor(tex_clr);
+    center.SetColor(tex_clr);
+    right.SetColor(tex_clr);
+
+    if (one_char)
+    {
+        Fvector2 key_size;
+        key_size.set(key_w, kInteractKeyH);
+        single.SetWndSize(key_size);
+        PlaceAt(single, x, y);
+        left.Show(false);
+        center.Show(false);
+        right.Show(false);
+    }
+    else
+    {
+        single.Show(false);
+        const float center_w = key_w - kInteractKeySlice * 2.f;
+        Fvector2 slice_size;
+        slice_size.set(kInteractKeySlice, kInteractKeyH);
+        Fvector2 center_size;
+        center_size.set(center_w, kInteractKeyH);
+        left.SetWndSize(slice_size);
+        center.SetWndSize(center_size);
+        right.SetWndSize(slice_size);
+        PlaceAt(left, x, y);
+        PlaceAt(center, x + kInteractKeySlice, y);
+        PlaceAt(right, x + kInteractKeySlice + center_w, y);
+    }
+
+    PlaceAt(bind, x + (key_w - bind_w) * 0.5f, y + (kInteractKeyH - bind_h) * 0.5f);
+    return key_w;
+}
+
+void HideKeyCap(CUIStatic& single, CUIStatic& left, CUIStatic& center, CUIStatic& right, CUIStatic& bind)
+{
+    single.Show(false);
+    left.Show(false);
+    center.Show(false);
+    right.Show(false);
+    bind.Show(false);
 }
 
 u8 InteractFadeAlpha(float dist, float radius, float keep)
@@ -829,6 +1005,9 @@ void CUIMainIngameWnd::InitInteractOverlay()
     InitTextClone(UIStaticInteractFaction, UIStaticQuickHelp);
     InitTextClone(UIStaticInteractFactionSh, UIStaticQuickHelp);
     InitTextClone(UIInteractKeyBind, UIStaticQuickHelp);
+    InitTextClone(UIStaticQuickHelp2, UIStaticQuickHelp);
+    InitTextClone(UIStaticQuickHelp2Sh, UIStaticQuickHelp);
+    InitTextClone(UIInteractKeyBind2, UIStaticQuickHelp);
     ApplyLetterica(UIStaticInteractName);
     ApplyLetterica(UIStaticInteractNameSh);
     ApplyLetterica(UIStaticInteractFaction);
@@ -836,12 +1015,19 @@ void CUIMainIngameWnd::InitInteractOverlay()
     ApplyLetterica(UIStaticQuickHelp);
     ApplyLetterica(UIStaticQuickHelpSh);
     ApplyLetterica(UIInteractKeyBind);
+    ApplyLetterica(UIStaticQuickHelp2);
+    ApplyLetterica(UIStaticQuickHelp2Sh);
+    ApplyLetterica(UIInteractKeyBind2);
 
     InitHudTex(UIInteractDrop, "ui_dotmarks_main_drop", 80.f, 28.f);
     InitHudTex(UIInteractKey, "ui_catsy_keybind_bg_single_v4", kInteractKeySingleW, kInteractKeyH);
     InitHudTex(UIInteractKeyL, "ui_catsy_keybind_bg_left_v4", kInteractKeySlice, kInteractKeyH);
     InitHudTex(UIInteractKeyC, "ui_catsy_keybind_bg_center_v4", 9.f, kInteractKeyH);
     InitHudTex(UIInteractKeyR, "ui_catsy_keybind_bg_right_v4", kInteractKeySlice, kInteractKeyH);
+    InitHudTex(UIInteractKey2, "ui_catsy_keybind_bg_single_v4", kInteractKeySingleW, kInteractKeyH);
+    InitHudTex(UIInteractKey2L, "ui_catsy_keybind_bg_left_v4", kInteractKeySlice, kInteractKeyH);
+    InitHudTex(UIInteractKey2C, "ui_catsy_keybind_bg_center_v4", 9.f, kInteractKeyH);
+    InitHudTex(UIInteractKey2R, "ui_catsy_keybind_bg_right_v4", kInteractKeySlice, kInteractKeyH);
 
     UIInteractFactionPatch.Init(0.f, 0.f, kInteractPatchW, kInteractPatchH);
     UIInteractFactionPatch.SetAlignment(waNone);
@@ -866,30 +1052,36 @@ void CUIMainIngameWnd::InitInteractOverlay()
     AttachChild(&UIInteractKeyC);
     AttachChild(&UIInteractKeyR);
     AttachChild(&UIInteractKey);
+    AttachChild(&UIInteractKey2L);
+    AttachChild(&UIInteractKey2C);
+    AttachChild(&UIInteractKey2R);
+    AttachChild(&UIInteractKey2);
     AttachChild(&UIStaticQuickHelpSh);
+    AttachChild(&UIStaticQuickHelp2Sh);
     AttachChild(&UIStaticInteractNameSh);
     AttachChild(&UIStaticInteractFactionSh);
     AttachChild(&UIInteractKeyBind);
+    AttachChild(&UIInteractKeyBind2);
     AttachChild(&UIStaticInteractName);
     AttachChild(&UIStaticInteractFaction);
     AttachChild(&UIStaticQuickHelp);
+    AttachChild(&UIStaticQuickHelp2);
 }
 
 void CUIMainIngameWnd::HideInteractPrompt()
 {
     UIStaticQuickHelp.Show(false);
     UIStaticQuickHelpSh.Show(false);
+    UIStaticQuickHelp2.Show(false);
+    UIStaticQuickHelp2Sh.Show(false);
     UIStaticInteractName.Show(false);
     UIStaticInteractNameSh.Show(false);
     UIStaticInteractFaction.Show(false);
     UIStaticInteractFactionSh.Show(false);
     UIInteractFactionPatch.Show(false);
     UIInteractDrop.Show(false);
-    UIInteractKey.Show(false);
-    UIInteractKeyL.Show(false);
-    UIInteractKeyC.Show(false);
-    UIInteractKeyR.Show(false);
-    UIInteractKeyBind.Show(false);
+    HideKeyCap(UIInteractKey, UIInteractKeyL, UIInteractKeyC, UIInteractKeyR, UIInteractKeyBind);
+    HideKeyCap(UIInteractKey2, UIInteractKey2L, UIInteractKey2C, UIInteractKey2R, UIInteractKeyBind2);
 }
 
 void CUIMainIngameWnd::HideInteractDots()
@@ -1103,7 +1295,7 @@ void CUIMainIngameWnd::UpdateNearbyInteractDots(CGameObject* look_at)
         m_interact_dots[used].Show(false);
 }
 
-void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR key, LPCSTR action, LPCSTR name, LPCSTR faction, LPCSTR patch, u8 alpha)
+void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR key, LPCSTR action, LPCSTR key2, LPCSTR action2, LPCSTR name, LPCSTR faction, LPCSTR patch, u8 alpha, bool gray_patch)
 {
     const HudInteractCfg& cfg = GetHudInteractCfg();
     const u32 name_clr = color_rgba(255, 255, 255, alpha);
@@ -1117,14 +1309,40 @@ void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR ke
     ApplyLetterica(UIInteractKeyBind);
     ApplyLetterica(UIStaticQuickHelp);
     ApplyLetterica(UIStaticQuickHelpSh);
+    ApplyLetterica(UIInteractKeyBind2);
+    ApplyLetterica(UIStaticQuickHelp2);
+    ApplyLetterica(UIStaticQuickHelp2Sh);
     ApplyLetterica(UIStaticInteractName);
     ApplyLetterica(UIStaticInteractNameSh);
     ApplyLetterica(UIStaticInteractFaction);
     ApplyLetterica(UIStaticInteractFactionSh);
 
-    FitText(UIInteractKeyBind, key, key_clr);
-    FitText(UIStaticQuickHelp, action, action_clr);
-    FitText(UIStaticQuickHelpSh, action, shadow_clr);
+    const bool has_action = action && action[0] && key && key[0];
+    if (has_action)
+    {
+        FitText(UIStaticQuickHelp, action, action_clr);
+        FitText(UIStaticQuickHelpSh, action, shadow_clr);
+    }
+    else
+    {
+        HideKeyCap(UIInteractKey, UIInteractKeyL, UIInteractKeyC, UIInteractKeyR, UIInteractKeyBind);
+        UIStaticQuickHelp.Show(false);
+        UIStaticQuickHelpSh.Show(false);
+        UIInteractDrop.Show(false);
+    }
+
+    const bool has_second = has_action && key2 && key2[0] && action2 && action2[0];
+    if (has_second)
+    {
+        FitText(UIStaticQuickHelp2, action2, action_clr);
+        FitText(UIStaticQuickHelp2Sh, action2, shadow_clr);
+    }
+    else
+    {
+        HideKeyCap(UIInteractKey2, UIInteractKey2L, UIInteractKey2C, UIInteractKey2R, UIInteractKeyBind2);
+        UIStaticQuickHelp2.Show(false);
+        UIStaticQuickHelp2Sh.Show(false);
+    }
 
     const bool has_name = name && name[0];
     if (has_name)
@@ -1159,7 +1377,7 @@ void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR ke
             UIInteractFactionPatch.TextureOn();
             m_interact_patch_tex = patch;
         }
-        UIInteractFactionPatch.SetColor(tex_clr);
+        UIInteractFactionPatch.SetColor(gray_patch ? color_rgba(145, 145, 145, alpha) : tex_clr);
         Fvector2 patch_size;
         patch_size.set(kInteractPatchW, kInteractPatchH);
         UIInteractFactionPatch.SetWndSize(patch_size);
@@ -1170,20 +1388,35 @@ void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR ke
         m_interact_patch_tex = shared_str();
     }
 
-    const bool one_char = key && xr_strlen(key) == 1;
-    const float bind_w = UIInteractKeyBind.GetWidth();
-    const float bind_h = UIInteractKeyBind.GetHeight();
-    const float action_w = UIStaticQuickHelp.GetWidth();
-    const float action_h = UIStaticQuickHelp.GetHeight();
+    const float action_w = has_action ? UIStaticQuickHelp.GetWidth() : 0.f;
+    const float action_h = has_action ? UIStaticQuickHelp.GetHeight() : 0.f;
+    const float action2_w = has_second ? UIStaticQuickHelp2.GetWidth() : 0.f;
+    const float action2_h = has_second ? UIStaticQuickHelp2.GetHeight() : 0.f;
     const float name_w = has_name ? UIStaticInteractName.GetWidth() : 0.f;
     const float name_h = has_name ? UIStaticInteractName.GetHeight() : 0.f;
     const float faction_w = has_faction ? UIStaticInteractFaction.GetWidth() : 0.f;
     const float faction_h = has_faction ? UIStaticInteractFaction.GetHeight() : 0.f;
 
-    const float key_w = one_char ? kInteractKeySingleW : (kInteractKeySlice + _max(bind_w, 9.f) + kInteractKeySlice);
-    const float row_h = kInteractKeyH;
+    float key_w = 0.f;
+    float key2_w = 0.f;
+    if (has_action)
+    {
+        FitText(UIInteractKeyBind, key, key_clr);
+        key_w = (xr_strlen(key) == 1) ? kInteractKeySingleW : (kInteractKeySlice + _max(UIInteractKeyBind.GetWidth(), 9.f) + kInteractKeySlice);
+        if (has_second)
+        {
+            FitText(UIInteractKeyBind2, key2, key_clr);
+            key2_w = (xr_strlen(key2) == 1) ? kInteractKeySingleW : (kInteractKeySlice + _max(UIInteractKeyBind2.GetWidth(), 9.f) + kInteractKeySlice);
+        }
+    }
+
+    const float row_h = has_action ? kInteractKeyH : 0.f;
     const float name_gap = 3.f;
     const float faction_gap = 1.f;
+    const float pair_gap = 10.f;
+    const float pair1_w = has_action ? (key_w + kInteractKeyGap + action_w) : 0.f;
+    const float pair2_w = has_second ? (key2_w + kInteractKeyGap + action2_w) : 0.f;
+    const float actions_w = has_second ? (pair1_w + pair_gap + pair2_w) : pair1_w;
 
     float text_h = 0.f;
     if (has_name)
@@ -1200,10 +1433,10 @@ void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR ke
     float origin_x = projected.x + cfg.offset_x;
     float origin_y = projected.y + cfg.offset_y + cfg.action_offset_y;
 
-    const float cluster_left = -kInteractDropPadX;
-    const float cluster_top = has_header ? -(header_h + name_gap) + cfg.name_offset_y : -kInteractDropPadY;
-    const float cluster_right = _max(key_w + kInteractKeyGap + action_w + kInteractDropPadX, has_header ? header_w : 0.f);
-    const float cluster_bottom = row_h + kInteractDropPadY;
+    const float cluster_left = has_action ? -kInteractDropPadX : 0.f;
+    const float cluster_top = has_action ? (has_header ? -(header_h + name_gap) + cfg.name_offset_y : -kInteractDropPadY) : 0.f;
+    const float cluster_right = _max(has_action ? actions_w + kInteractDropPadX : 0.f, has_header ? header_w : 0.f);
+    const float cluster_bottom = has_action ? (row_h + kInteractDropPadY) : (has_header ? header_h : 0.f);
 
     if (origin_x + cluster_left < 0.f)
         origin_x = -cluster_left;
@@ -1214,54 +1447,36 @@ void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR ke
     if (origin_y + cluster_bottom > UI_BASE_HEIGHT)
         origin_y = UI_BASE_HEIGHT - cluster_bottom;
 
-    UIInteractDrop.SetColor(drop_clr);
-    Fvector2 drop_size;
-    drop_size.set(key_w + kInteractKeyGap + action_w + kInteractDropPadX * 2.f, row_h + kInteractDropPadY * 2.f);
-    UIInteractDrop.SetWndSize(drop_size);
-    PlaceAt(UIInteractDrop, origin_x - kInteractDropPadX, origin_y - kInteractDropPadY);
-
-    UIInteractKey.SetColor(tex_clr);
-    UIInteractKeyL.SetColor(tex_clr);
-    UIInteractKeyC.SetColor(tex_clr);
-    UIInteractKeyR.SetColor(tex_clr);
-
-    if (one_char)
-    {
-        Fvector2 key_size;
-        key_size.set(key_w, row_h);
-        UIInteractKey.SetWndSize(key_size);
-        PlaceAt(UIInteractKey, origin_x, origin_y);
-        UIInteractKeyL.Show(false);
-        UIInteractKeyC.Show(false);
-        UIInteractKeyR.Show(false);
-    }
-    else
-    {
-        UIInteractKey.Show(false);
-        const float center_w = key_w - kInteractKeySlice * 2.f;
-        Fvector2 slice_size;
-        slice_size.set(kInteractKeySlice, row_h);
-        Fvector2 center_size;
-        center_size.set(center_w, row_h);
-        UIInteractKeyL.SetWndSize(slice_size);
-        UIInteractKeyC.SetWndSize(center_size);
-        UIInteractKeyR.SetWndSize(slice_size);
-        PlaceAt(UIInteractKeyL, origin_x, origin_y);
-        PlaceAt(UIInteractKeyC, origin_x + kInteractKeySlice, origin_y);
-        PlaceAt(UIInteractKeyR, origin_x + kInteractKeySlice + center_w, origin_y);
-    }
-
-    PlaceAt(UIInteractKeyBind, origin_x + (key_w - bind_w) * 0.5f, origin_y + (row_h - bind_h) * 0.5f);
-
-    const float action_x = origin_x + key_w + kInteractKeyGap;
-    const float action_y = origin_y + (row_h - action_h) * 0.5f;
     constexpr float shadow = 2.f;
-    PlaceAt(UIStaticQuickHelpSh, action_x + shadow, action_y + shadow);
-    PlaceAt(UIStaticQuickHelp, action_x, action_y);
+    if (has_action)
+    {
+        UIInteractDrop.SetColor(drop_clr);
+        Fvector2 drop_size;
+        drop_size.set(actions_w + kInteractDropPadX * 2.f, row_h + kInteractDropPadY * 2.f);
+        UIInteractDrop.SetWndSize(drop_size);
+        PlaceAt(UIInteractDrop, origin_x - kInteractDropPadX, origin_y - kInteractDropPadY);
+
+        LayoutKeyCap(UIInteractKey, UIInteractKeyL, UIInteractKeyC, UIInteractKeyR, UIInteractKeyBind, origin_x, origin_y, key, key_clr, tex_clr);
+
+        const float action_x = origin_x + key_w + kInteractKeyGap;
+        const float action_y = origin_y + (row_h - action_h) * 0.5f;
+        PlaceAt(UIStaticQuickHelpSh, action_x + shadow, action_y + shadow);
+        PlaceAt(UIStaticQuickHelp, action_x, action_y);
+
+        if (has_second)
+        {
+            const float x2 = origin_x + pair1_w + pair_gap;
+            LayoutKeyCap(UIInteractKey2, UIInteractKey2L, UIInteractKey2C, UIInteractKey2R, UIInteractKeyBind2, x2, origin_y, key2, key_clr, tex_clr);
+            const float action2_x = x2 + key2_w + kInteractKeyGap;
+            const float action2_y = origin_y + (row_h - action2_h) * 0.5f;
+            PlaceAt(UIStaticQuickHelp2Sh, action2_x + shadow, action2_y + shadow);
+            PlaceAt(UIStaticQuickHelp2, action2_x, action2_y);
+        }
+    }
 
     if (has_header)
     {
-        const float header_top = origin_y - header_h - name_gap + cfg.name_offset_y;
+        const float header_top = has_action ? (origin_y - header_h - name_gap + cfg.name_offset_y) : origin_y;
         const float text_x = origin_x + patch_col;
         float text_y = header_top + (header_h - text_h) * 0.5f;
 
@@ -1313,9 +1528,33 @@ void CUIMainIngameWnd::RenderQuickInfos()
         focus = InteractFocusObject(look_at, actor_action);
         if (focus && focus != look_at)
             prompt_action = "inventory_item_use";
+        else
+            prompt_action = CanonicalInteractAction(focus, actor_action);
     }
 
-    bool show = prompt_action != nullptr;
+    LPCSTR object_name = (interact && cfg.show_item_name) ? InteractObjectName(focus) : nullptr;
+    LPCSTR name_override = interact ? InteractNameOverride(InteractTipId(focus)) : nullptr;
+    if (name_override)
+        object_name = name_override;
+    static string256 empty_name;
+    if (interact && focus && !name_override && InteractLootEmpty(focus))
+    {
+        LPCSTR empty = InteractEmptyCaption();
+        if (object_name && object_name[0])
+            strconcat(sizeof(empty_name), empty_name, object_name, " ", empty);
+        else
+            strconcat(sizeof(empty_name), empty_name, empty);
+        object_name = empty_name;
+    }
+    const bool has_name = object_name && object_name[0];
+    bool has_prompt = prompt_action && prompt_action[0];
+    if (has_prompt && focus && !xr_strcmp(prompt_action, "character_use"))
+    {
+        auto* usable = smart_cast<CUsableScriptObject*>(focus);
+        if (usable && !usable->nonscript_usable() && !usable->tip_text())
+            has_prompt = false;
+    }
+    bool show = has_prompt || (interact && has_name && focus);
     Fvector2 ui_pos{};
     if (show && interact)
     {
@@ -1324,8 +1563,7 @@ void CUIMainIngameWnd::RenderQuickInfos()
         else
         {
             Fvector world_pos;
-            focus->Center(world_pos);
-            world_pos.y += cfg.world_y;
+            InteractPromptWorldPos(focus, world_pos);
             if (!ProjectWorldToUI(world_pos, ui_pos))
                 show = false;
         }
@@ -1347,7 +1585,6 @@ void CUIMainIngameWnd::RenderQuickInfos()
         return;
     }
 
-    LPCSTR object_name = (interact && cfg.show_item_name) ? InteractObjectName(focus) : nullptr;
     const bool object_changed = pObject != focus;
     const float dist = focus ? m_pActor->Position().distance_to(focus->Position()) : 0.f;
     const float fade_radius = m_pActor->inventory().GetTakeDist();
@@ -1359,18 +1596,39 @@ void CUIMainIngameWnd::RenderQuickInfos()
         UIStaticQuickHelp.TextureOff();
 
         string128 key{};
-        PrimaryUseKey(key, sizeof(key));
-        LPCSTR verb = cfg.quiet_action ? ShortInteractVerb(prompt_action) : nullptr;
-        if (!verb || !verb[0])
+        LPCSTR verb = nullptr;
+        if (has_prompt)
         {
-            if (object_changed || _stricmp(prompt_action, UIStaticQuickHelp.GetText()))
-                UIStaticQuickHelp.SetTextST(prompt_action);
-            verb = UIStaticQuickHelp.GetText();
+            PrimaryUseKey(key, sizeof(key), IsDragInteractAction(prompt_action));
+            verb = cfg.quiet_action ? ShortInteractVerb(prompt_action) : nullptr;
+            if (!verb || !verb[0])
+            {
+                if (object_changed || _stricmp(prompt_action, UIStaticQuickHelp.GetText()))
+                    UIStaticQuickHelp.SetTextST(prompt_action);
+                verb = UIStaticQuickHelp.GetText();
+            }
+            if (verb && !verb[0])
+                verb = nullptr;
+        }
+
+        string128 key2{};
+        LPCSTR verb2 = nullptr;
+        if (verb && IsEatablePickup(focus))
+        {
+            ActionKeyLabel("quick_use", key2, sizeof(key2), false);
+            verb2 = ShortInteractVerb(nullptr);
+        }
+        else if (verb && IsUseOrDragAction(prompt_action))
+        {
+            ActionKeyLabel("use", key2, sizeof(key2), true);
+            verb2 = ShortInteractVerb("game_object_drag");
         }
 
         LPCSTR faction = InteractFactionCaption(focus);
         LPCSTR patch = InteractFactionPatch(focus);
-        LayoutInteractPrompt(ui_pos, key, verb, object_name, faction, patch, alpha);
+        auto* alive = smart_cast<CEntityAlive*>(focus);
+        const bool gray_patch = alive && !alive->g_Alive();
+        LayoutInteractPrompt(ui_pos, verb ? key : nullptr, verb, verb2 ? key2 : nullptr, verb2, object_name, faction, patch, alpha, gray_patch);
     }
     else
     {

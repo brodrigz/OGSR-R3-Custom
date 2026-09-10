@@ -12,11 +12,23 @@
 	<string id="st_hud_interact_search">
 		<text>Обыскать</text>
 	</string>
+	<string id="st_hud_interact_empty">
+		<text>(Пусто)</text>
+	</string>
 	<string id="st_hud_interact_enter">
 		<text>Сесть</text>
 	</string>
 	<string id="st_hud_interact_drag">
 		<text>Тащить</text>
+	</string>
+	<string id="st_hud_interact_cut">
+		<text>Вырезать трофей</text>
+	</string>
+	<string id="st_hud_interact_need_knife">
+		<text>Нужен нож, чтобы срезать трофей</text>
+	</string>
+	<string id="st_hud_interact_damaged_carcass">
+		<text>Поврежденная туша</text>
 	</string>
 	<string id="ui_mm_hud_interact">
 		<text>Интерактивный HUD</text>

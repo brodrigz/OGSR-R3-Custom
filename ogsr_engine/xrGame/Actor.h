@@ -281,6 +281,8 @@ protected:
     bool use_Vehicle(CHolderCustom* object);
     bool use_MountedWeapon(CHolderCustom* object);
     void ActorUse();
+    void ActorQuickUse();
+    void TryPendingQuickUse();
 
 private:
     CCar* m_pending_car{};
@@ -433,7 +435,13 @@ protected:
 
     void PickupModeUpdate();
     void PickupModeUpdate_COD();
-    bool TryTakeInventoryItem(CInventoryItem* item);
+    enum class EItemPickupResult
+    {
+        Rejected,
+        ScriptHandled,
+        Requested
+    };
+    EItemPickupResult TryTakeInventoryItem(CInventoryItem* item);
 
 public:
     void PickupModeOn();
@@ -725,6 +733,8 @@ public:
 
 private:
     ALife::_OBJECT_ID m_holder_id;
+    u16 m_pending_quick_use{u16(-1)};
+    u32 m_pending_quick_use_started{};
 
 public:
     virtual bool register_schedule() const { return false; }

@@ -267,6 +267,9 @@
 	<string id="kb_cycle_interact">
 		<text>Cycle nearby item</text>
 	</string>
+	<string id="kb_quick_use">
+		<text>Use nearby item</text>
+	</string>
 	<string id="ui_mm_unbind_hint">
 		<text>Press Esc to unbind</text>
 	</string>

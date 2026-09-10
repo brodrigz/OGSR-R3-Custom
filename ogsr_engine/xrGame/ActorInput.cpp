@@ -34,6 +34,7 @@
 #include "PDA.h"
 #include "ui/UIPDAWnd.h"
 #include "ui/UIMainIngameWnd.h"
+#include "eatable_item.h"
 
 bool g_bAutoClearCrouch = true;
 extern int g_bHudAdjustMode;
@@ -200,6 +201,7 @@ bool CActor::OnActionPress(int cmd)
         return true;
     }
     case kUSE: ActorUse(); return true;
+    case kQUICK_USE: ActorQuickUse(); return true;
     case kDROP:
         b_DropActivated = TRUE;
         f_DropPower = 0;
@@ -592,6 +594,7 @@ void CActor::ActorUse()
         CInventoryItem* item = nullptr;
         if (HUD().GetUI() && HUD().GetUI()->UIMainIngameWnd)
             item = HUD().GetUI()->UIMainIngameWnd->InteractPickupItem();
+        m_pending_quick_use = u16(-1);
         TryTakeInventoryItem(item);
         PickupModeOff();
         return;
@@ -603,6 +606,58 @@ void CActor::ActorUse()
         PickupModeUpdate();*/
 
     PickupModeUpdate_COD();
+}
+
+void CActor::ActorQuickUse()
+{
+    if (g_bDisableAllInput || HUD().GetUI()->MainInputReceiver())
+        return;
+    if (m_holder || character_physics_support()->movement()->PHCapture())
+        return;
+    if (!HudInteractEnabled())
+        return;
+    if (m_pending_quick_use != u16(-1))
+        return;
+
+    CInventoryItem* item = nullptr;
+    if (HUD().GetUI() && HUD().GetUI()->UIMainIngameWnd)
+        item = HUD().GetUI()->UIMainIngameWnd->InteractPickupItem();
+
+    CEatableItem* eatable = item ? item->cast_eatable_item() : nullptr;
+    if (!eatable || !eatable->Useful())
+        return;
+    if (!inventory().CanTakeItem(item))
+        return;
+
+    m_pending_quick_use = item->object().ID();
+    m_pending_quick_use_started = Device.dwTimeGlobal;
+    if (TryTakeInventoryItem(item) == EItemPickupResult::Rejected)
+        m_pending_quick_use = u16(-1);
+}
+
+void CActor::TryPendingQuickUse()
+{
+    if (m_pending_quick_use == u16(-1))
+        return;
+
+    // Script-handled pickups can be delayed or vetoed. Do not retain a stale
+    // use request indefinitely if the callback never transfers the item.
+    CObject* object = Level().Objects.net_Find(m_pending_quick_use);
+    if (!g_Alive() || Device.dwTimeGlobal - m_pending_quick_use_started >= 5000 || !object || object->getDestroy() ||
+        (object->H_Parent() && object->H_Parent() != this))
+    {
+        m_pending_quick_use = u16(-1);
+        return;
+    }
+
+    PIItem itm = inventory().get_object_by_id(m_pending_quick_use);
+    if (!itm)
+        return;
+
+    m_pending_quick_use = u16(-1);
+    CEatableItem* eatable = itm->cast_eatable_item();
+    if (eatable && eatable->Useful())
+        inventory().Eat(itm);
 }
 
 BOOL CActor::HUDview() const { return IsFocused() && (cam_active == eacFirstEye) && ((!m_holder) || (m_holder && m_holder->allowWeapon() && m_holder->HUDView())); }

@@ -812,6 +812,7 @@ void CActor::UpdateCL()
         PickupModeUpdate();
 
     PickupModeUpdate_COD();
+    TryPendingQuickUse();
 
     if (Level().CurrentEntity() && this->ID() == Level().CurrentEntity()->ID())
     {

@@ -66,14 +66,14 @@ void CActor::PickupModeOff() { m_bPickupMode = false; }
 
 #include "script_game_object.h"
 
-bool CActor::TryTakeInventoryItem(CInventoryItem* item)
+CActor::EItemPickupResult CActor::TryTakeInventoryItem(CInventoryItem* item)
 {
     if (!item || !item->Useful() || !item->CanTake() || item->object().H_Parent() || item->object().getDestroy() || !item->object().getVisible())
-        return false;
+        return EItemPickupResult::Rejected;
 
     CGameObject* go = &item->object();
     if (Level().m_feel_deny.is_object_denied(go))
-        return false;
+        return EItemPickupResult::Rejected;
 
     bool allow_pickup = true;
     if (pSettings->line_exist("engine_callbacks", "actor_on_item_before_pickup"))
@@ -85,10 +85,11 @@ bool CActor::TryTakeInventoryItem(CInventoryItem* item)
     }
 
     if (!allow_pickup)
-        return false;
+        // The callback may transfer the item itself, including after an animation.
+        return EItemPickupResult::ScriptHandled;
 
     Game().SendPickUpEvent(ID(), go->ID());
-    return true;
+    return EItemPickupResult::Requested;
 }
 
 ICF static BOOL info_trace_callback(collide::rq_result& result, LPVOID params)
