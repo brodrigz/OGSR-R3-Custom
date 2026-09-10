@@ -176,7 +176,9 @@ void CSoundRender_Source::PrefillCache()
 {
     ZoneScopedN("SoundPrefill");
     if (pname.c_str())
+    {
         ZoneText(pname.c_str(), xr_strlen(pname.c_str()));
+    }
 
     m_prefill_queued = false;
     if (m_startup_prefilled)

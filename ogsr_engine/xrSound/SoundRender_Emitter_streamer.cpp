@@ -55,7 +55,9 @@ void CSoundRender_Emitter::fill_data(u8* _dest, u32 offset, u32 size)
         {
             ZoneScopedN("SoundStreamMiss");
             if (source()->pname.c_str())
+            {
                 ZoneText(source()->pname.c_str(), xr_strlen(source()->pname.c_str()));
+            }
             OggVorbis_File* ovf = target->get_data();
             {
                 ZoneScopedN("SoundStreamMiss/VorbisDecode");
