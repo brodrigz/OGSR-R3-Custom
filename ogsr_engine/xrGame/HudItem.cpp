@@ -438,6 +438,19 @@ void CHudItem::StopCurrentAnimWithoutCallback()
     m_dwStateTime = 0;
 }
 
+void CHudItem::ResetHudAfterScriptAnim()
+{
+    StopCurrentAnimWithoutCallback();
+    SprintType = false;
+    if (GetState() == eSprintStart || GetState() == eSprintEnd || GetState() == eShowing)
+    {
+        SetState(eIdle);
+        SetNextState(eIdle);
+    }
+    if (GetState() == eIdle)
+        PlayAnimIdle();
+}
+
 BOOL CHudItem::GetHUDmode()
 {
     if (object().H_Parent())

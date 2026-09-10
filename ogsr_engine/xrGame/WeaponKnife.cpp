@@ -257,7 +257,9 @@ void CWeaponKnife::switch2_Hidden()
 void CWeaponKnife::switch2_Showing()
 {
     VERIFY(GetState() == eShowing);
-    PlayHUDMotion({"anim_draw", "anm_show"}, false, GetState());
+    const u32 anim_time = PlayHUDMotion({"anim_draw", "anm_show"}, false, GetState());
+    if (anim_time == 0)
+        SwitchState(eIdle);
 }
 
 void CWeaponKnife::FireStart()

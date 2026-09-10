@@ -1913,7 +1913,13 @@ void player_hud::script_anim_stop()
     if (part != 2 && !m_attached_items[part])
         re_sync_anim(part + 1);
     else
-        OnMovementChanged((ACTOR_DEFS::EMoveCommand)0);
+    {
+        if (m_attached_items[0] && m_attached_items[0]->m_parent_hud_item)
+            m_attached_items[0]->m_parent_hud_item->ResetHudAfterScriptAnim();
+        if (m_attached_items[1] && m_attached_items[1]->m_parent_hud_item)
+            m_attached_items[1]->m_parent_hud_item->ResetHudAfterScriptAnim();
+        updateMovementLayerState();
+    }
 }
 
 u32 player_hud::motion_length_script(LPCSTR hud_section, LPCSTR anm_name, float speed)

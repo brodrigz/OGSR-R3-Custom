@@ -141,6 +141,7 @@ public:
 
     virtual void PlayAnimIdle();
     bool TryPlayAnimIdle();
+    void ResetHudAfterScriptAnim();
     virtual bool IsZoomed() const { return false; }
     // virtual void	PlayAnimBore		();
     virtual void PlayAnimIdleMoving();
