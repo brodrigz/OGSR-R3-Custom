@@ -45,6 +45,7 @@
 		<command id="kb_weapon8"					exe="wpn_8"/>
 		<command id="kb_inventory"				  exe="inventory"/>
 		<command id="kb_active_jobs"			  exe="active_jobs"/>
+		<command id="kb_scores"					  exe="scores"/>
 		<command id="kb_map"						    exe="map"/>
 		<command id="kb_torch_rad"			  exe="torch_rad"/>
 		<command id="kb_night_vision_rad"			  exe="night_vision_rad"/>

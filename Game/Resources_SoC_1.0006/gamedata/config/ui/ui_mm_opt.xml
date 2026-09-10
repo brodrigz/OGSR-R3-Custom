@@ -845,7 +845,7 @@
 		<cap_minimap_pos x="195" y="180" width="80" height="21">
 			<text font="letterica16" r="215" g="195" b="170">ui_mm_minimap_pos</text>
 		</cap_minimap_pos>
-		<list_minimap_pos x="280" y="175" width="175" height="21" list_length="4" always_show_scroll="0">
+		<list_minimap_pos x="280" y="175" width="175" height="21" list_length="5" always_show_scroll="0">
 			<options_item entry="g_minimap_pos" group="mm_opt_gameplay"/>
 			<text_color>
 				<e r="216" g="186" b="140"/>

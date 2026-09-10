@@ -695,6 +695,11 @@ LPCSTR ShortInteractVerb(LPCSTR action_id)
             id = "st_hud_interact_enter";
             fallback = "Enter";
         }
+        else if (!xr_strcmp(action_id, "unload_weapon"))
+        {
+            id = "st_hud_interact_unload";
+            fallback = "Unload";
+        }
         else
             return nullptr;
     }
@@ -828,6 +833,14 @@ bool IsEatablePickup(CGameObject* obj)
     auto* item = smart_cast<CInventoryItem*>(obj);
     auto* eat = item ? item->cast_eatable_item() : nullptr;
     return eat && eat->Useful();
+}
+
+bool WorldWeaponHasUnloadableAmmo(CGameObject* obj)
+{
+    auto* mag = smart_cast<CWeaponMagazined*>(obj);
+    if (!mag || mag->unlimited_ammo())
+        return false;
+    return mag->GetAmmoElapsed() > 0 || mag->GetAmmoElapsed2() > 0;
 }
 
 void InteractPromptWorldPos(CGameObject* obj, Fvector& world_pos)
@@ -1410,13 +1423,13 @@ void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR ke
         }
     }
 
-    const float row_h = has_action ? kInteractKeyH : 0.f;
     const float name_gap = 3.f;
     const float faction_gap = 1.f;
-    const float pair_gap = 10.f;
+    const float row_gap = 4.f;
     const float pair1_w = has_action ? (key_w + kInteractKeyGap + action_w) : 0.f;
     const float pair2_w = has_second ? (key2_w + kInteractKeyGap + action2_w) : 0.f;
-    const float actions_w = has_second ? (pair1_w + pair_gap + pair2_w) : pair1_w;
+    const float actions_w = has_second ? _max(pair1_w, pair2_w) : pair1_w;
+    const float rows_h = has_action ? (has_second ? (kInteractKeyH * 2.f + row_gap) : kInteractKeyH) : 0.f;
 
     float text_h = 0.f;
     if (has_name)
@@ -1436,7 +1449,7 @@ void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR ke
     const float cluster_left = has_action ? -kInteractDropPadX : 0.f;
     const float cluster_top = has_action ? (has_header ? -(header_h + name_gap) + cfg.name_offset_y : -kInteractDropPadY) : 0.f;
     const float cluster_right = _max(has_action ? actions_w + kInteractDropPadX : 0.f, has_header ? header_w : 0.f);
-    const float cluster_bottom = has_action ? (row_h + kInteractDropPadY) : (has_header ? header_h : 0.f);
+    const float cluster_bottom = has_action ? (rows_h + kInteractDropPadY) : (has_header ? header_h : 0.f);
 
     if (origin_x + cluster_left < 0.f)
         origin_x = -cluster_left;
@@ -1452,23 +1465,23 @@ void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR ke
     {
         UIInteractDrop.SetColor(drop_clr);
         Fvector2 drop_size;
-        drop_size.set(actions_w + kInteractDropPadX * 2.f, row_h + kInteractDropPadY * 2.f);
+        drop_size.set(actions_w + kInteractDropPadX * 2.f, rows_h + kInteractDropPadY * 2.f);
         UIInteractDrop.SetWndSize(drop_size);
         PlaceAt(UIInteractDrop, origin_x - kInteractDropPadX, origin_y - kInteractDropPadY);
 
         LayoutKeyCap(UIInteractKey, UIInteractKeyL, UIInteractKeyC, UIInteractKeyR, UIInteractKeyBind, origin_x, origin_y, key, key_clr, tex_clr);
 
         const float action_x = origin_x + key_w + kInteractKeyGap;
-        const float action_y = origin_y + (row_h - action_h) * 0.5f;
+        const float action_y = origin_y + (kInteractKeyH - action_h) * 0.5f;
         PlaceAt(UIStaticQuickHelpSh, action_x + shadow, action_y + shadow);
         PlaceAt(UIStaticQuickHelp, action_x, action_y);
 
         if (has_second)
         {
-            const float x2 = origin_x + pair1_w + pair_gap;
-            LayoutKeyCap(UIInteractKey2, UIInteractKey2L, UIInteractKey2C, UIInteractKey2R, UIInteractKeyBind2, x2, origin_y, key2, key_clr, tex_clr);
-            const float action2_x = x2 + key2_w + kInteractKeyGap;
-            const float action2_y = origin_y + (row_h - action2_h) * 0.5f;
+            const float y2 = origin_y + kInteractKeyH + row_gap;
+            LayoutKeyCap(UIInteractKey2, UIInteractKey2L, UIInteractKey2C, UIInteractKey2R, UIInteractKeyBind2, origin_x, y2, key2, key_clr, tex_clr);
+            const float action2_x = origin_x + key2_w + kInteractKeyGap;
+            const float action2_y = y2 + (kInteractKeyH - action2_h) * 0.5f;
             PlaceAt(UIStaticQuickHelp2Sh, action2_x + shadow, action2_y + shadow);
             PlaceAt(UIStaticQuickHelp2, action2_x, action2_y);
         }
@@ -1613,7 +1626,12 @@ void CUIMainIngameWnd::RenderQuickInfos()
 
         string128 key2{};
         LPCSTR verb2 = nullptr;
-        if (verb && IsEatablePickup(focus))
+        if (verb && WorldWeaponHasUnloadableAmmo(focus))
+        {
+            ActionKeyLabel("quick_use", key2, sizeof(key2), false);
+            verb2 = ShortInteractVerb("unload_weapon");
+        }
+        else if (verb && IsEatablePickup(focus))
         {
             ActionKeyLabel("quick_use", key2, sizeof(key2), false);
             verb2 = ShortInteractVerb(nullptr);

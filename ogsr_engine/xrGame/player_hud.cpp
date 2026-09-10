@@ -1735,9 +1735,7 @@ u32 player_hud::script_anim_play(u8 hand, LPCSTR hud_section, LPCSTR anm_name, b
     if (!pSettings->section_exist(hud_section))
     {
         Msg("! script motion section [%s] does not exist", hud_section);
-        m_bStopAtEndAnimIsRunning = true;
-        script_anim_end = Device.dwTimeGlobal;
-
+        script_anim_stop();
         return 0;
     }
 
@@ -1788,9 +1786,7 @@ u32 player_hud::script_anim_play(u8 hand, LPCSTR hud_section, LPCSTR anm_name, b
     if (!phm)
     {
         Msg("! script motion [%s] not found in section [%s]", anm_name, hud_section);
-        m_bStopAtEndAnimIsRunning = true;
-        script_anim_end = Device.dwTimeGlobal;
-
+        script_anim_stop();
         return 0;
     }
 
@@ -1889,13 +1885,14 @@ u32 player_hud::script_anim_play(u8 hand, LPCSTR hud_section, LPCSTR anm_name, b
 
         m_bStopAtEndAnimIsRunning = true;
         script_anim_end = Device.dwTimeGlobal + length;
+        updateMovementLayerState();
+        return length;
     }
-    else
-        m_bStopAtEndAnimIsRunning = false;
 
-    updateMovementLayerState();
-
-    return length;
+    // PlayCycle already ran with script_anim_part set. Leaving that
+    // without a stop timer keeps both-hand overlays (backpack idle) stuck.
+    script_anim_stop();
+    return 0;
 }
 
 void player_hud::script_anim_stop()

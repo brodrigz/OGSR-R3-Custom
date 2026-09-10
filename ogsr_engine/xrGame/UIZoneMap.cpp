@@ -117,6 +117,9 @@ void CUIZoneMap::Init()
 
 void CUIZoneMap::Render()
 {
+    if (static_cast<int>(g_minimap_pos) == 4)
+        return;
+
     m_clipFrame->Draw();
     m_background->Draw();
     m_compass->Draw();

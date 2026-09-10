@@ -246,13 +246,14 @@ static xr_token bullet_world_penetration_token[] = {
 // Horizontal heading compass. 0=Stalker 2 strip, 1=classic strip.
 u32 g_tactical_compass = 1;
 u32 g_tactical_compass_pos = 0; // 0=bottom, 1=top, 2=hidden
-u32 g_minimap_pos = 0; // 0=BL, 1=BR, 2=TL, 3=TR
+u32 g_minimap_pos = 0; // 0=BL, 1=BR, 2=TL, 3=TR, 4=hidden
 static xr_token tactical_compass_token[] = {
     {"st_compass_stalker2", 0}, {"st_compass_classic", 1}, {nullptr, 0}};
 static xr_token tactical_compass_pos_token[] = {
     {"st_compass_pos_bottom", 0}, {"st_compass_pos_top", 1}, {"st_compass_off", 2}, {nullptr, 0}};
 static xr_token minimap_pos_token[] = {
-    {"st_minimap_pos_bl", 0}, {"st_minimap_pos_br", 1}, {"st_minimap_pos_tl", 2}, {"st_minimap_pos_tr", 3}, {nullptr, 0}};
+    {"st_minimap_pos_bl", 0}, {"st_minimap_pos_br", 1}, {"st_minimap_pos_tl", 2}, {"st_minimap_pos_tr", 3},
+    {"st_minimap_pos_off", 4}, {nullptr, 0}};
 float g_tactical_compass_range = 150.f;
 float g_tactical_compass_scale = 1.f;
 float g_tactical_compass_x = 0.f;

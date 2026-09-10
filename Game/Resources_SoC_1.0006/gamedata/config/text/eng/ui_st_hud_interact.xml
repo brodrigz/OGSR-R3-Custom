@@ -30,6 +30,9 @@
 	<string id="st_hud_interact_damaged_carcass">
 		<text>Damaged carcass</text>
 	</string>
+	<string id="st_hud_interact_unload">
+		<text>Unload</text>
+	</string>
 	<string id="ui_mm_hud_interact">
 		<text>Interaction HUD</text>
 	</string>
@@ -81,6 +84,9 @@
 	<string id="st_minimap_pos_tr">
 		<text>Top right</text>
 	</string>
+	<string id="st_minimap_pos_off">
+		<text>Off</text>
+	</string>
 	<string id="ui_mm_compass_range">
 		<text>Compass range</text>
 	</string>
@@ -101,5 +107,233 @@
 	</string>
 	<string id="ui_mm_minimap_y">
 		<text>Minimap Y</text>
+	</string>
+	<string id="ui_mm_tab_game">
+		<text>Game</text>
+	</string>
+	<string id="ui_mm_tab_hud">
+		<text>HUD</text>
+	</string>
+	<string id="ui_mm_sec_difficulty">
+		<text>Difficulty</text>
+	</string>
+	<string id="ui_mm_sec_combat">
+		<text>Combat</text>
+	</string>
+	<string id="ui_mm_sec_world">
+		<text>World</text>
+	</string>
+	<string id="ui_mm_sec_immersion">
+		<text>Immersion</text>
+	</string>
+	<string id="ui_mm_sec_display">
+		<text>Display</text>
+	</string>
+	<string id="ui_mm_sec_compass">
+		<text>Compass</text>
+	</string>
+	<string id="ui_mm_sec_minimap">
+		<text>Minimap</text>
+	</string>
+	<string id="st_cap_list_difficulty">
+		<text>Difficulty</text>
+	</string>
+	<string id="st_cap_list_economy">
+		<text>Economy</text>
+	</string>
+	<string id="ui_mm_language">
+		<text>Language</text>
+	</string>
+	<string id="ui_mm_subtitles">
+		<text>Subtitles</text>
+	</string>
+	<string id="ui_mm_alternative">
+		<text>Alternative</text>
+	</string>
+	<string id="ui_mm_aim_toggle">
+		<text>Toggle aiming</text>
+	</string>
+	<string id="ui_mm_auto_aim_zoom">
+		<text>Aim on zoom</text>
+	</string>
+	<string id="ui_mm_autounload_wpn">
+		<text>Auto-unload weapons</text>
+	</string>
+	<string id="ui_mm_crosshair_hard">
+		<text>Realistic crosshair</text>
+	</string>
+	<string id="ui_mm_lean_toggle">
+		<text>Toggle lean</text>
+	</string>
+	<string id="ui_mm_late_reload">
+		<text>Late reload</text>
+	</string>
+	<string id="ui_mm_use_anims">
+		<text>Use animations</text>
+	</string>
+	<string id="ui_mm_pickup_anim">
+		<text>Pickup animation</text>
+	</string>
+	<string id="ui_mm_harvest_anim">
+		<text>Harvest animation</text>
+	</string>
+	<string id="ui_mm_ledge_grab">
+		<text>Ledge grab</text>
+	</string>
+	<string id="ui_mm_legs">
+		<text>Show legs</text>
+	</string>
+	<string id="ui_mm_dialog_ui">
+		<text>Dialog UI</text>
+	</string>
+	<string id="ui_mm_dynamic_news">
+		<text>Dynamic news</text>
+	</string>
+	<string id="ui_mm_task_autosave">
+		<text>Autosave on task</text>
+	</string>
+	<string id="ui_mm_mutants_after_blowout">
+		<text>Mutants after blowout</text>
+	</string>
+	<string id="ui_mm_hit_snd">
+		<text>Hit sounds</text>
+	</string>
+	<string id="ui_mm_gasmask_breath_snd">
+		<text>Gasmask breath</text>
+	</string>
+	<string id="ui_mm_fakelens">
+		<text>Fake lens</text>
+	</string>
+	<string id="ui_mm_soft_particles">
+		<text>Soft particles</text>
+	</string>
+	<string id="ui_mm_msaa_alphatest">
+		<text>MSAA alpha test</text>
+	</string>
+	<string id="ui_mm_hint_default">
+		<text>Select an option to see a description.</text>
+	</string>
+	<string id="ui_mm_hint_page_game">
+		<text>Gameplay, combat, world, and immersion settings.</text>
+	</string>
+	<string id="ui_mm_hint_page_hud">
+		<text>HUD, compass, and minimap settings.</text>
+	</string>
+	<string id="ui_mm_hint_difficulty">
+		<text>Overall game difficulty.</text>
+	</string>
+	<string id="ui_mm_hint_economy">
+		<text>Trader prices and loot economy.</text>
+	</string>
+	<string id="ui_mm_hint_bullet_pen">
+		<text>How bullets pass through cover.</text>
+	</string>
+	<string id="ui_mm_hint_aim_toggle">
+		<text>Click to aim instead of holding the aim button.</text>
+	</string>
+	<string id="ui_mm_hint_auto_aim_zoom">
+		<text>Automatically zoom when aiming.</text>
+	</string>
+	<string id="ui_mm_hint_autounload_wpn">
+		<text>Unload weapons when switching them.</text>
+	</string>
+	<string id="ui_mm_hint_crosshair">
+		<text>Show the on-screen crosshair.</text>
+	</string>
+	<string id="ui_mm_hint_crosshair_hard">
+		<text>Fire from the barrel instead of the camera.</text>
+	</string>
+	<string id="ui_mm_hint_dist">
+		<text>Show distance on the crosshair.</text>
+	</string>
+	<string id="ui_mm_hint_lean_toggle">
+		<text>Tap to lean instead of holding.</text>
+	</string>
+	<string id="ui_mm_hint_late_reload">
+		<text>Allow reload cancel until the magazine seats.</text>
+	</string>
+	<string id="ui_mm_hint_switch_slot">
+		<text>Quick slot switching behaviour.</text>
+	</string>
+	<string id="ui_mm_hint_use_anims">
+		<text>Play item use animations.</text>
+	</string>
+	<string id="ui_mm_hint_pickup_anim">
+		<text>Play pickup animations.</text>
+	</string>
+	<string id="ui_mm_hint_harvest_anim">
+		<text>Play mutant harvest animations.</text>
+	</string>
+	<string id="ui_mm_hint_ledge_grab">
+		<text>Allow climbing ledges.</text>
+	</string>
+	<string id="ui_mm_hint_legs">
+		<text>Show the player legs in first person.</text>
+	</string>
+	<string id="ui_mm_hint_dialog_ui">
+		<text>NPC dialog interface style.</text>
+	</string>
+	<string id="ui_mm_hint_dynamic_news">
+		<text>Show dynamic world news.</text>
+	</string>
+	<string id="ui_mm_hint_task_autosave">
+		<text>Save when accepting a task.</text>
+	</string>
+	<string id="ui_mm_hint_mutants_after_blowout">
+		<text>Spawn extra mutants after a blowout.</text>
+	</string>
+	<string id="ui_mm_hint_3d_pda">
+		<text>Use the 3D PDA model.</text>
+	</string>
+	<string id="ui_mm_hint_ambient">
+		<text>Play ambient music.</text>
+	</string>
+	<string id="ui_mm_hint_tips">
+		<text>Show loading and gameplay tips.</text>
+	</string>
+	<string id="ui_mm_hint_autopause">
+		<text>Pause when the window loses focus.</text>
+	</string>
+	<string id="ui_mm_hint_hit_snd">
+		<text>Play hit confirmation sounds.</text>
+	</string>
+	<string id="ui_mm_hint_gasmask_breath_snd">
+		<text>Play gasmask breathing.</text>
+	</string>
+	<string id="ui_mm_hint_fakelens">
+		<text>Show a fake lens overlay while aiming.</text>
+	</string>
+	<string id="ui_mm_hint_hud_interact">
+		<text>Show the floating interaction prompt.</text>
+	</string>
+	<string id="ui_mm_hint_compass">
+		<text>Compass style.</text>
+	</string>
+	<string id="ui_mm_hint_compass_pos">
+		<text>Compass screen position.</text>
+	</string>
+	<string id="ui_mm_hint_compass_range">
+		<text>How far the compass shows markers.</text>
+	</string>
+	<string id="ui_mm_hint_compass_scale">
+		<text>Compass size.</text>
+	</string>
+	<string id="ui_mm_hint_compass_x">
+		<text>Compass horizontal offset.</text>
+	</string>
+	<string id="ui_mm_hint_compass_y">
+		<text>Compass vertical offset.</text>
+	</string>
+	<string id="ui_mm_hint_minimap_pos">
+		<text>Minimap screen corner, or off.</text>
+	</string>
+	<string id="ui_mm_hint_minimap_scale">
+		<text>Minimap size.</text>
+	</string>
+	<string id="ui_mm_hint_minimap_x">
+		<text>Minimap horizontal offset.</text>
+	</string>
+	<string id="ui_mm_hint_minimap_y">
+		<text>Minimap vertical offset.</text>
 	</string>
 </string_table>

@@ -35,6 +35,7 @@
 #include "ui/UIPDAWnd.h"
 #include "ui/UIMainIngameWnd.h"
 #include "eatable_item.h"
+#include "WeaponMagazinedWGrenade.h"
 
 bool g_bAutoClearCrouch = true;
 extern int g_bHudAdjustMode;
@@ -608,6 +609,48 @@ void CActor::ActorUse()
     PickupModeUpdate_COD();
 }
 
+namespace
+{
+void GiveMagazineAmmoToActor(CWeaponMagazined* mag, CActor* actor)
+{
+    xr_map<shared_str, u16> ammo;
+    for (const auto& cart : mag->m_magazine)
+    {
+        auto it = ammo.find(cart.m_ammoSect);
+        if (it == ammo.end())
+            ammo[cart.m_ammoSect] = 1;
+        else
+            ++it->second;
+    }
+
+    mag->UnloadMagazine(false);
+
+    for (const auto& it : ammo)
+        mag->SpawnAmmo(it.second, *it.first, actor->ID());
+}
+
+bool TryUnloadWorldWeapon(CInventoryItem* item, CActor* actor)
+{
+    auto* mag = smart_cast<CWeaponMagazined*>(item);
+    if (!mag || mag->unlimited_ammo())
+        return false;
+    if (mag->GetAmmoElapsed() <= 0 && mag->GetAmmoElapsed2() <= 0)
+        return false;
+
+    GiveMagazineAmmoToActor(mag, actor);
+    if (auto* gl = smart_cast<CWeaponMagazinedWGrenade*>(mag))
+    {
+        if (gl->IsGrenadeLauncherAttached() && mag->GetAmmoElapsed2() > 0)
+        {
+            gl->PerformSwitchGL();
+            GiveMagazineAmmoToActor(mag, actor);
+            gl->PerformSwitchGL();
+        }
+    }
+    return true;
+}
+} // namespace
+
 void CActor::ActorQuickUse()
 {
     if (g_bDisableAllInput || HUD().GetUI()->MainInputReceiver())
@@ -622,6 +665,9 @@ void CActor::ActorQuickUse()
     CInventoryItem* item = nullptr;
     if (HUD().GetUI() && HUD().GetUI()->UIMainIngameWnd)
         item = HUD().GetUI()->UIMainIngameWnd->InteractPickupItem();
+
+    if (TryUnloadWorldWeapon(item, this))
+        return;
 
     CEatableItem* eatable = item ? item->cast_eatable_item() : nullptr;
     if (!eatable || !eatable->Useful())

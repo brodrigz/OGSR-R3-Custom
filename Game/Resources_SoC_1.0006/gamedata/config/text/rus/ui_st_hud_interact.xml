@@ -30,6 +30,9 @@
 	<string id="st_hud_interact_damaged_carcass">
 		<text>Поврежденная туша</text>
 	</string>
+	<string id="st_hud_interact_unload">
+		<text>Разрядить</text>
+	</string>
 	<string id="ui_mm_hud_interact">
 		<text>Интерактивный HUD</text>
 	</string>
@@ -81,6 +84,9 @@
 	<string id="st_minimap_pos_tr">
 		<text>Справа сверху</text>
 	</string>
+	<string id="st_minimap_pos_off">
+		<text>Выкл</text>
+	</string>
 	<string id="ui_mm_compass_range">
 		<text>Дальность компаса</text>
 	</string>
@@ -101,5 +107,233 @@
 	</string>
 	<string id="ui_mm_minimap_y">
 		<text>Миникарта Y</text>
+	</string>
+	<string id="ui_mm_tab_game">
+		<text>Игра</text>
+	</string>
+	<string id="ui_mm_tab_hud">
+		<text>HUD</text>
+	</string>
+	<string id="ui_mm_sec_difficulty">
+		<text>Сложность</text>
+	</string>
+	<string id="ui_mm_sec_combat">
+		<text>Бой</text>
+	</string>
+	<string id="ui_mm_sec_world">
+		<text>Мир</text>
+	</string>
+	<string id="ui_mm_sec_immersion">
+		<text>Иммерсия</text>
+	</string>
+	<string id="ui_mm_sec_display">
+		<text>Экран</text>
+	</string>
+	<string id="ui_mm_sec_compass">
+		<text>Компас</text>
+	</string>
+	<string id="ui_mm_sec_minimap">
+		<text>Миникарта</text>
+	</string>
+	<string id="st_cap_list_difficulty">
+		<text>Сложность</text>
+	</string>
+	<string id="st_cap_list_economy">
+		<text>Экономика</text>
+	</string>
+	<string id="ui_mm_language">
+		<text>Язык</text>
+	</string>
+	<string id="ui_mm_subtitles">
+		<text>Субтитры</text>
+	</string>
+	<string id="ui_mm_alternative">
+		<text>Альтернативный</text>
+	</string>
+	<string id="ui_mm_aim_toggle">
+		<text>Прицел переключением</text>
+	</string>
+	<string id="ui_mm_auto_aim_zoom">
+		<text>Зум при прицеливании</text>
+	</string>
+	<string id="ui_mm_autounload_wpn">
+		<text>Разряжать оружие</text>
+	</string>
+	<string id="ui_mm_crosshair_hard">
+		<text>Реалистичный прицел</text>
+	</string>
+	<string id="ui_mm_lean_toggle">
+		<text>Наклон переключением</text>
+	</string>
+	<string id="ui_mm_late_reload">
+		<text>Поздняя перезарядка</text>
+	</string>
+	<string id="ui_mm_use_anims">
+		<text>Анимации использования</text>
+	</string>
+	<string id="ui_mm_pickup_anim">
+		<text>Анимация подбора</text>
+	</string>
+	<string id="ui_mm_harvest_anim">
+		<text>Анимация добычи</text>
+	</string>
+	<string id="ui_mm_ledge_grab">
+		<text>Зацеп за уступы</text>
+	</string>
+	<string id="ui_mm_legs">
+		<text>Показывать ноги</text>
+	</string>
+	<string id="ui_mm_dialog_ui">
+		<text>Интерфейс диалога</text>
+	</string>
+	<string id="ui_mm_dynamic_news">
+		<text>Динамические новости</text>
+	</string>
+	<string id="ui_mm_task_autosave">
+		<text>Автосохранение заданий</text>
+	</string>
+	<string id="ui_mm_mutants_after_blowout">
+		<text>Мутанты после выброса</text>
+	</string>
+	<string id="ui_mm_hit_snd">
+		<text>Звуки попаданий</text>
+	</string>
+	<string id="ui_mm_gasmask_breath_snd">
+		<text>Дыхание в противогазе</text>
+	</string>
+	<string id="ui_mm_fakelens">
+		<text>Имитация линзы</text>
+	</string>
+	<string id="ui_mm_soft_particles">
+		<text>Мягкие частицы</text>
+	</string>
+	<string id="ui_mm_msaa_alphatest">
+		<text>MSAA alpha test</text>
+	</string>
+	<string id="ui_mm_hint_default">
+		<text>Выберите параметр, чтобы увидеть описание.</text>
+	</string>
+	<string id="ui_mm_hint_page_game">
+		<text>Настройки геймплея, боя, мира и иммерсии.</text>
+	</string>
+	<string id="ui_mm_hint_page_hud">
+		<text>Настройки HUD, компаса и миникарты.</text>
+	</string>
+	<string id="ui_mm_hint_difficulty">
+		<text>Общая сложность игры.</text>
+	</string>
+	<string id="ui_mm_hint_economy">
+		<text>Цены торговцев и экономика лута.</text>
+	</string>
+	<string id="ui_mm_hint_bullet_pen">
+		<text>Пробитие укрытий пулями.</text>
+	</string>
+	<string id="ui_mm_hint_aim_toggle">
+		<text>Прицеливание по нажатию, а не удержанием.</text>
+	</string>
+	<string id="ui_mm_hint_auto_aim_zoom">
+		<text>Автоматический зум при прицеливании.</text>
+	</string>
+	<string id="ui_mm_hint_autounload_wpn">
+		<text>Разряжать оружие при смене.</text>
+	</string>
+	<string id="ui_mm_hint_crosshair">
+		<text>Показывать прицел на экране.</text>
+	</string>
+	<string id="ui_mm_hint_crosshair_hard">
+		<text>Стрельба из ствола, а не из камеры.</text>
+	</string>
+	<string id="ui_mm_hint_dist">
+		<text>Показывать дистанцию на прицеле.</text>
+	</string>
+	<string id="ui_mm_hint_lean_toggle">
+		<text>Наклон по нажатию, а не удержанием.</text>
+	</string>
+	<string id="ui_mm_hint_late_reload">
+		<text>Можно отменить перезарядку до посадки магазина.</text>
+	</string>
+	<string id="ui_mm_hint_switch_slot">
+		<text>Поведение быстрого переключения слотов.</text>
+	</string>
+	<string id="ui_mm_hint_use_anims">
+		<text>Проигрывать анимации использования предметов.</text>
+	</string>
+	<string id="ui_mm_hint_pickup_anim">
+		<text>Проигрывать анимации подбора.</text>
+	</string>
+	<string id="ui_mm_hint_harvest_anim">
+		<text>Проигрывать анимации добычи с мутантов.</text>
+	</string>
+	<string id="ui_mm_hint_ledge_grab">
+		<text>Разрешить залезание на уступы.</text>
+	</string>
+	<string id="ui_mm_hint_legs">
+		<text>Показывать ноги от первого лица.</text>
+	</string>
+	<string id="ui_mm_hint_dialog_ui">
+		<text>Стиль интерфейса диалогов.</text>
+	</string>
+	<string id="ui_mm_hint_dynamic_news">
+		<text>Показывать динамические новости мира.</text>
+	</string>
+	<string id="ui_mm_hint_task_autosave">
+		<text>Сохраняться при взятии задания.</text>
+	</string>
+	<string id="ui_mm_hint_mutants_after_blowout">
+		<text>Спавнить больше мутантов после выброса.</text>
+	</string>
+	<string id="ui_mm_hint_3d_pda">
+		<text>Использовать 3D-модель КПК.</text>
+	</string>
+	<string id="ui_mm_hint_ambient">
+		<text>Играть фоновую музыку.</text>
+	</string>
+	<string id="ui_mm_hint_tips">
+		<text>Показывать подсказки.</text>
+	</string>
+	<string id="ui_mm_hint_autopause">
+		<text>Пауза при потере фокуса окна.</text>
+	</string>
+	<string id="ui_mm_hint_hit_snd">
+		<text>Звуки подтверждения попадания.</text>
+	</string>
+	<string id="ui_mm_hint_gasmask_breath_snd">
+		<text>Дыхание в противогазе.</text>
+	</string>
+	<string id="ui_mm_hint_fakelens">
+		<text>Оверлей линзы при прицеливании.</text>
+	</string>
+	<string id="ui_mm_hint_hud_interact">
+		<text>Плавающая подсказка взаимодействия.</text>
+	</string>
+	<string id="ui_mm_hint_compass">
+		<text>Стиль компаса.</text>
+	</string>
+	<string id="ui_mm_hint_compass_pos">
+		<text>Положение компаса на экране.</text>
+	</string>
+	<string id="ui_mm_hint_compass_range">
+		<text>Дальность меток на компасе.</text>
+	</string>
+	<string id="ui_mm_hint_compass_scale">
+		<text>Размер компаса.</text>
+	</string>
+	<string id="ui_mm_hint_compass_x">
+		<text>Смещение компаса по горизонтали.</text>
+	</string>
+	<string id="ui_mm_hint_compass_y">
+		<text>Смещение компаса по вертикали.</text>
+	</string>
+	<string id="ui_mm_hint_minimap_pos">
+		<text>Угол миникарты на экране.</text>
+	</string>
+	<string id="ui_mm_hint_minimap_scale">
+		<text>Размер миникарты.</text>
+	</string>
+	<string id="ui_mm_hint_minimap_x">
+		<text>Смещение миникарты по горизонтали.</text>
+	</string>
+	<string id="ui_mm_hint_minimap_y">
+		<text>Смещение миникарты по вертикали.</text>
 	</string>
 </string_table>
