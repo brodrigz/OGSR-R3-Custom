@@ -105,6 +105,12 @@ void CSoundRender_Core::_initialize(int stage)
 extern xr_vector<u8> g_target_temp_data;
 void CSoundRender_Core::_clear()
 {
+    std::scoped_lock m{m_bLocked};
+    {
+        std::scoped_lock p{m_prefill_lock};
+        s_prefill.clear();
+    }
+
     cache.destroy();
     env_unload();
 

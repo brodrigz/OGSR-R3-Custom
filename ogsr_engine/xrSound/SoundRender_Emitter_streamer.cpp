@@ -53,7 +53,14 @@ void CSoundRender_Emitter::fill_data(u8* _dest, u32 offset, u32 size)
         // cache access
         if (SoundRender->cache.request(source()->CAT, line))
         {
-            source()->decompress(line, target->get_data());
+            ZoneScopedN("SoundStreamMiss");
+            if (source()->pname.c_str())
+                ZoneText(source()->pname.c_str(), xr_strlen(source()->pname.c_str()));
+            OggVorbis_File* ovf = target->get_data();
+            {
+                ZoneScopedN("SoundStreamMiss/VorbisDecode");
+                source()->decompress(line, ovf);
+            }
         }
 
         // fill block

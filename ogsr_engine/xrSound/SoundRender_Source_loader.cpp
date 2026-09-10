@@ -49,18 +49,46 @@ void CSoundRender_Source::decompress(u32 line, OggVorbis_File* ovf)
         i_decompress(ovf, static_cast<char*>(dest), left);
 }
 
+struct SoundSourcePrefill
+{
+    IReader* wave{};
+    OggVorbis_File ovf{};
+};
+
+void CSoundRender_Source::ClosePrefill()
+{
+    if (!m_prefill)
+        return;
+
+    ov_clear(&m_prefill->ovf);
+    if (m_prefill->wave)
+        FS.r_close(m_prefill->wave);
+    xr_delete(m_prefill);
+}
+
+void CSoundRender_Source::EnsureOpenForPrefill()
+{
+    if (m_prefill)
+        return;
+
+    m_prefill = xr_new<SoundSourcePrefill>();
+    constexpr ov_callbacks ovc = {ov_read_func, ov_seek_func, ov_close_func, ov_tell_func};
+    m_prefill->wave = FS.r_open(pname.c_str());
+    R_ASSERT3(m_prefill->wave && m_prefill->wave->length(), "Can't open wave file:", pname.c_str());
+    ov_open_callbacks(m_prefill->wave, &m_prefill->ovf, NULL, 0, ovc);
+}
+
 void CSoundRender_Source::LoadWave(LPCSTR pName)
 {
     pname = pName;
+    ClosePrefill();
 
-    // Load file into memory and parse WAV-format
-    OggVorbis_File ovf;
-    constexpr ov_callbacks ovc = {ov_read_func, ov_seek_func, ov_close_func, ov_tell_func};
-    IReader* wave = FS.r_open(pname.c_str());
-    R_ASSERT3(wave && wave->length(), "Can't open wave file:", pname.c_str());
-    ov_open_callbacks(wave, &ovf, NULL, 0, ovc);
+    // Header parse stays on the caller (usually the game thread) so create()
+    // can return length/format immediately. The file is closed again before
+    // create() returns so level load cannot accumulate mapped OGGs.
+    EnsureOpenForPrefill();
 
-    vorbis_info* ovi = ov_info(&ovf, -1);
+    vorbis_info* ovi = ov_info(&m_prefill->ovf, -1);
     // verify
     R_ASSERT3(ovi, "Invalid source info:", pName);
 
@@ -90,11 +118,11 @@ void CSoundRender_Source::LoadWave(LPCSTR pName)
     m_wformat.nBlockAlign = m_wformat.wBitsPerSample / 8 * m_wformat.nChannels;
     m_wformat.nAvgBytesPerSec = m_wformat.nSamplesPerSec * m_wformat.nBlockAlign;
 
-    s64 pcm_total = ov_pcm_total(&ovf, -1);
+    s64 pcm_total = ov_pcm_total(&m_prefill->ovf, -1);
     dwBytesTotal = u32(pcm_total * m_wformat.nBlockAlign);
     fTimeTotal = s_f_def_source_footer + dwBytesTotal / float(m_wformat.nAvgBytesPerSec);
 
-    vorbis_comment* ovm = ov_comment(&ovf, -1);
+    vorbis_comment* ovm = ov_comment(&m_prefill->ovf, -1);
     if (ovm->comments)
     {
         IReader F(ovm->user_comments[0], ovm->comment_lengths[0]);
@@ -140,8 +168,60 @@ void CSoundRender_Source::LoadWave(LPCSTR pName)
     }
     R_ASSERT3((m_fMaxAIDist >= 0.1f) && (m_fMaxDist >= 0.1f), "Invalid max distance.", pName);
 
-    ov_clear(&ovf);
-    FS.r_close(wave);
+    SoundRender->cache.cat_create(CAT, dwBytesTotal);
+    ClosePrefill();
+}
+
+void CSoundRender_Source::PrefillCache()
+{
+    ZoneScopedN("SoundPrefill");
+    if (pname.c_str())
+        ZoneText(pname.c_str(), xr_strlen(pname.c_str()));
+
+    m_prefill_queued = false;
+    if (m_startup_prefilled)
+        return;
+    m_startup_prefilled = true;
+
+    const u32 line_size = SoundRender->cache.get_linesize();
+    if (!CAT.size || !m_wformat.nAvgBytesPerSec || !line_size)
+    {
+        ClosePrefill();
+        return;
+    }
+
+    {
+        ZoneScopedN("SoundPrefill/Open");
+        EnsureOpenForPrefill();
+    }
+    if (!m_prefill)
+        return;
+
+    // Short one-shots (shots, footsteps, UI) decode fully. Longer clips only
+    // warm the 3 startup OpenAL buffers plus one extra block so the first play
+    // does not hitch on cache misses. The decoder is then closed; later stream
+    // misses reopen via Target::attach().
+    u32 lines = CAT.size;
+    const u32 two_sec = m_wformat.nAvgBytesPerSec * 2;
+    if (dwBytesTotal > two_sec)
+    {
+        const u32 startup_ms = sdef_target_size + sdef_target_block;
+        const u32 startup_bytes = m_wformat.nAvgBytesPerSec / 1000 * startup_ms;
+        lines = (startup_bytes + line_size - 1) / line_size;
+        if (lines > CAT.size)
+            lines = CAT.size;
+    }
+
+    for (u32 line = 0; line < lines; ++line)
+    {
+        if (SoundRender->cache.request(CAT, line))
+        {
+            ZoneScopedN("SoundPrefill/VorbisDecode");
+            decompress(line, &m_prefill->ovf);
+        }
+    }
+
+    ClosePrefill();
 }
 
 void CSoundRender_Source::load(LPCSTR name)
@@ -163,11 +243,13 @@ void CSoundRender_Source::load(LPCSTR name)
         FS.update_path(fn, "$game_sounds$", "$no_sound.ogg");
 
     LoadWave(fn);
-    SoundRender->cache.cat_create(CAT, dwBytesTotal);
 }
 
 void CSoundRender_Source::unload()
 {
+    ClosePrefill();
+    m_startup_prefilled = false;
+    m_prefill_queued = false;
     SoundRender->cache.cat_destroy(CAT);
     fTimeTotal = 0.0f;
     dwBytesTotal = 0;

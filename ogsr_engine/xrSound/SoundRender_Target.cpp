@@ -60,8 +60,11 @@ extern long ov_tell_func(void* datasource);
 
 void CSoundRender_Target::attach()
 {
+    ZoneScopedN("SoundStreamMiss/Open");
     VERIFY(0 == wave);
     VERIFY(m_pEmitter);
+    if (m_pEmitter->source()->pname.c_str())
+        ZoneText(m_pEmitter->source()->pname.c_str(), xr_strlen(m_pEmitter->source()->pname.c_str()));
     constexpr ov_callbacks ovc = {ov_read_func, ov_seek_func, ov_close_func, ov_tell_func};
     wave = FS.r_open(m_pEmitter->source()->pname.c_str());
     R_ASSERT3(wave && wave->length(), "Can't open wave file:", m_pEmitter->source()->pname.c_str());

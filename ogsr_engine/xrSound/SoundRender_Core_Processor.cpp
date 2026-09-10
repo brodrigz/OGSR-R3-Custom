@@ -15,6 +15,7 @@ CSoundRender_Emitter* CSoundRender_Core::i_play(ref_sound* S, BOOL _loop, float 
     S->_p->feedback = E;
     E->start(S, _loop, delay);
     s_emitters.push_back(E);
+    queue_prefill(static_cast<CSoundRender_Source*>(S->_p->handle));
     return E;
 }
 
@@ -28,6 +29,7 @@ void CSoundRender_Core::update(const Fvector& P, const Fvector& D, const Fvector
     std::scoped_lock m{m_bLocked};
 
     bLocked = TRUE;
+    drain_prefill();
     Timer.time_factor(psSoundTimeFactor); //--#SM+#--
     float new_tm = Timer.GetElapsed_sec();
     fTimer_Delta = new_tm - fTimer_Value;

@@ -48,6 +48,8 @@ protected:
 
     // Containers
     xr_vector<CSoundRender_Source*> s_sources;
+    xr_vector<CSoundRender_Source*> s_prefill;
+    std::mutex m_prefill_lock;
     xr_vector<CSoundRender_Emitter*> s_emitters;
     u32 s_emitters_u{}; // emitter update marker
     xr_vector<CSoundRender_Target*> s_targets;
@@ -121,6 +123,8 @@ public:
 public:
     CSoundRender_Source* i_create_source(LPCSTR name);
     void i_destroy_source(CSoundRender_Source* S);
+    void queue_prefill(CSoundRender_Source* S);
+    void drain_prefill();
     CSoundRender_Emitter* i_play(ref_sound* S, BOOL _loop, float delay);
     void i_start(CSoundRender_Emitter* E);
     void i_stop(CSoundRender_Emitter* E);

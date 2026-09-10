@@ -131,6 +131,7 @@ void CSoundRender_Emitter::set_cursor(u32 p)
         {
             SoundRender->i_destroy_source((CSoundRender_Source*)owner_data->handle);
             owner_data->handle = SoundRender->i_create_source(owner_data->fn_attached[0].c_str());
+            SoundRender->queue_prefill(static_cast<CSoundRender_Source*>(owner_data->handle));
             owner_data->fn_attached[0] = owner_data->fn_attached[1];
             owner_data->fn_attached[1] = "";
             m_cur_handle_cursor = get_cursor(true);
