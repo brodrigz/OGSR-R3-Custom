@@ -37,6 +37,8 @@ public:
     u32 dwPrecacheFrame;
     BOOL b_is_Ready;
     BOOL b_is_Active;
+    // Actual WM_ACTIVATE focus. Unlike b_is_Active, this is false on alt-tab even when rsAlwaysActive is set.
+    BOOL b_is_WindowActive;
 
 public:
     // Engine flow-control
@@ -185,6 +187,7 @@ public:
     {
         m_hWnd = nullptr;
         b_is_Active = FALSE;
+        b_is_WindowActive = FALSE;
         b_is_Ready = FALSE;
         Timer.Start();
     };

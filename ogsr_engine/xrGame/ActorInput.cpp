@@ -38,6 +38,53 @@
 bool g_bAutoClearCrouch = true;
 extern int g_bHudAdjustMode;
 
+static bool dik_held_os(int dik)
+{
+    int vk = 0;
+    switch (dik)
+    {
+    case DIK_LMENU: vk = VK_LMENU; break;
+    case DIK_RMENU: vk = VK_RMENU; break;
+    case DIK_LCONTROL: vk = VK_LCONTROL; break;
+    case DIK_RCONTROL: vk = VK_RCONTROL; break;
+    case DIK_LSHIFT: vk = VK_LSHIFT; break;
+    case DIK_RSHIFT: vk = VK_RSHIFT; break;
+    case DIK_LWIN: vk = VK_LWIN; break;
+    case DIK_RWIN: vk = VK_RWIN; break;
+    case DIK_TAB: vk = VK_TAB; break;
+    case DIK_DELETE: vk = VK_DELETE; break;
+    case MOUSE_1: vk = GetSystemMetrics(SM_SWAPBUTTON) ? VK_RBUTTON : VK_LBUTTON; break;
+    case MOUSE_2: vk = GetSystemMetrics(SM_SWAPBUTTON) ? VK_LBUTTON : VK_RBUTTON; break;
+    case MOUSE_3: vk = VK_MBUTTON; break;
+    case MOUSE_4: vk = VK_XBUTTON1; break;
+    case MOUSE_5: vk = VK_XBUTTON2; break;
+    default:
+        if (dik >= CInput::COUNT_KB_BUTTONS)
+            return pInput && pInput->iGetAsyncKeyState(dik);
+        vk = MapVirtualKey(dik, MAPVK_VSC_TO_VK);
+        break;
+    }
+    if (!vk)
+        return pInput && pInput->iGetAsyncKeyState(dik);
+    return (GetAsyncKeyState(vk) & 0x8000) != 0;
+}
+
+bool CActor::IsFreelookBindHeld() const
+{
+    if (!Device.b_is_WindowActive)
+        return false;
+    if (kFREELOOK >= g_key_bindings.size())
+        return false;
+
+    const _binding& bind = g_key_bindings[kFREELOOK];
+    for (int i = 0; i < 2; ++i)
+    {
+        if (bind.m_keyboard[i] && dik_held_os(bind.m_keyboard[i]->dik))
+            return true;
+    }
+    return false;
+}
+
 void CActor::IR_OnKeyboardPress(int cmd) { OnActionPress(cmd); }
 
 bool CActor::OnActionPress(int cmd)
@@ -128,7 +175,7 @@ bool CActor::OnActionPress(int cmd)
     case kCAM_2: cam_Set(eacLookAt); return true;
     case kCAM_3: cam_Set(eacFreeLook); return true;
     case kFREELOOK: {
-        if (cam_freelook == eflDisabled && CanUseFreelook())
+        if (cam_freelook == eflDisabled && CanUseFreelook() && IsFreelookBindHeld())
             cam_SetFreelook();
         return true;
     }
@@ -335,6 +382,12 @@ void CActor::IR_OnKeyboardHold(int cmd)
     case kBACK: mstate_wishful |= mcBack; break;
     case kCROUCH: mstate_wishful |= mcCrouch; break;
     case kFREELOOK:
+        if (!IsFreelookBindHeld())
+        {
+            if (cam_freelook == eflEnabled || cam_freelook == eflEnabling)
+                cam_UnsetFreelook();
+            break;
+        }
         if (cam_freelook == eflDisabled && CanUseFreelook())
             cam_SetFreelook();
         break;

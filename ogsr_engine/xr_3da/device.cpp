@@ -573,6 +573,7 @@ void CRenderDevice::OnWM_Activate(WPARAM wParam, LPARAM lParam)
     const u16 fActive = LOWORD(wParam);
     const BOOL fMinimized = (BOOL)HIWORD(wParam);
     const BOOL bWndActive = (fActive != WA_INACTIVE) && !fMinimized ? TRUE : FALSE;
+    b_is_WindowActive = bWndActive;
 
     const BOOL isGameActive = (!g_loading_events.empty() || (psDeviceFlags.is(rsAlwaysActive)) || bWndActive) ? TRUE : FALSE;
 

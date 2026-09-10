@@ -477,7 +477,7 @@ void CActor::cam_Update(float dt, float fFOV)
 
     if (cam_freelook != eflDisabled && cam_active == eacFirstEye)
     {
-        if (IsTalking() || m_holder || !g_Alive())
+        if (IsTalking() || m_holder || !g_Alive() || !IsFreelookBindHeld())
             cam_UnsetFreelook();
         camUpdateFreelook(dt);
     }

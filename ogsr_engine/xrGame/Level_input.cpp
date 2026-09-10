@@ -475,7 +475,22 @@ void CLevel::IR_OnKeyboardRelease(int key)
         return;
 
     if (Device.Paused())
+    {
+        // Hold-to-look must still see the key-up when deactivate pauses the game first.
+        if (CURRENT_ENTITY())
+        {
+            IInputReceiver* IR = smart_cast<IInputReceiver*>(smart_cast<CGameObject*>(CURRENT_ENTITY()));
+            if (IR)
+            {
+                for (u32 i = 0; i < cmd_count; ++i)
+                {
+                    if (cmds[i] == kFREELOOK && !action_blocked(m_blocked_actions, cmds[i]))
+                        IR->IR_OnKeyboardRelease(cmds[i]);
+                }
+            }
+        }
         return;
+    }
 
     if (game && Game().OnKeyboardRelease(_curr))
         return;

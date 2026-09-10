@@ -361,6 +361,7 @@ public:
     void cam_SetFreelook();
     void cam_UnsetFreelook();
     bool CanUseFreelook();
+    bool IsFreelookBindHeld() const;
 
 protected:
     void cam_Set(EActorCameras style);
