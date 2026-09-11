@@ -617,7 +617,7 @@ bool CHudItem::TryPlayAnimIdle()
 
 bool CHudItem::HasBoreAnim() const
 {
-    auto wpn = smart_cast<CWeapon*>(this);
+    const auto* wpn = smart_cast<const CWeapon*>(this);
     if (wpn && wpn->IsMisfire() && AnimationExist("anm_bore_jammed"))
         return true;
     if (wpn && ((wpn->GetAmmoElapsed() == 0 && !wpn->IsGrenadeMode()) || (wpn->GetAmmoElapsed2() == 0 && wpn->IsGrenadeMode())) && AnimationExist("anm_bore_empty"))

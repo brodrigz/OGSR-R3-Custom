@@ -283,7 +283,6 @@ protected:
     void ActorUse();
     void ActorQuickUse();
     void TryPendingQuickUse();
-    bool UnloadWorldWeapon(CInventoryItem* item);
 
 private:
     CCar* m_pending_car{};
@@ -657,6 +656,7 @@ public:
     void SetWeaponHideState(u32 State, bool bSet, bool now = false);
     void SetWeaponLowered(bool b);
     bool WeaponLowered() const;
+    bool UnloadWorldWeapon(CInventoryItem* item);
     virtual CCustomOutfit* GetOutfit() const;
 
 private:

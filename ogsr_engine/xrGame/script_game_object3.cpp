@@ -704,7 +704,7 @@ bool CScriptGameObject::weapon_lowered() const
 {
     if (auto* actor = smart_cast<const CActor*>(&object()))
         return actor->WeaponLowered();
-    if (auto* wpn = smart_cast<const CWeapon*>(&object()))
+    if (auto* wpn = object().cast_weapon())
         return wpn->IsLowered();
     return false;
 }

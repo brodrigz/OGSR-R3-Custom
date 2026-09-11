@@ -118,7 +118,8 @@ void CActor::SetWeaponLowered(bool b)
 {
     if (b)
     {
-        auto* w = smart_cast<CWeapon*>(inventory().ActiveItem());
+        auto* item = inventory().ActiveItem();
+        auto* w = item ? item->cast_weapon() : nullptr;
         if (!w || !w->CanLowerWeapon())
             return;
         if (w->IsZoomed())
@@ -131,7 +132,8 @@ bool CActor::WeaponLowered() const
 {
     if (!m_bWeaponLowered)
         return false;
-    auto* w = smart_cast<CWeapon*>(inventory().ActiveItem());
+    auto* item = inventory().ActiveItem();
+    auto* w = item ? item->cast_weapon() : nullptr;
     return w && w->CanLowerWeapon() && !w->IsZoomed();
 }
 
