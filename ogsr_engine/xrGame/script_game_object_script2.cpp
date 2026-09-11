@@ -118,6 +118,7 @@ class_<CScriptGameObject> script_register_game_object1(class_<CScriptGameObject>
         .def("object", (CScriptGameObject * (CScriptGameObject::*)(LPCSTR))(&CScriptGameObject::GetObjectByName))
         .def("object", (CScriptGameObject * (CScriptGameObject::*)(int))(&CScriptGameObject::GetObjectByIndex))
         .def("active_item", &CScriptGameObject::GetActiveItem)
+        .def("weapon_lowered", &CScriptGameObject::weapon_lowered)
 
         .def("set_callback", (void(CScriptGameObject::*)(GameObject::ECallbackType, const luabind::functor<void>&))(&CScriptGameObject::SetCallback))
         .def("set_callback", (void(CScriptGameObject::*)(GameObject::ECallbackType, const luabind::functor<void>&, const luabind::object&))(&CScriptGameObject::SetCallback))

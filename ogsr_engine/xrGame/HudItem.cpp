@@ -15,6 +15,10 @@
 #include "../xr_3da/x_ray.h"
 #include "../../xr_3da/igame_persistent.h"
 #include "Pda.h"
+#include "Actor.h"
+#include "xr_level_controller.h"
+#include "level.h"
+#include "entity_alive.h"
 
 ENGINE_API extern float psHUD_FOV_def;
 
@@ -64,27 +68,32 @@ void CHudItem::Load(LPCSTR section)
     m_nearwall_on = READ_IF_EXISTS(pSettings, r_bool, section, "nearwall_on", IS_OGSR_GA ? true : READ_IF_EXISTS(pSettings, r_bool, "features", "default_nearwall_on", true));
     AimAlt = READ_IF_EXISTS(pSettings, r_bool, section, "use_alt_aim_hud", false);
 
+    // Координаты офсетов для сдвига худа нашел в интернетах :)
+    static std::array<std::tuple<float, float, Fvector, Fvector, float, float>, _CollisionWeaponTypesCount_> CollisionParamsBase{{
+        // Min, Max dist, offset, rotate, HudFov, HudFov Aim
+        {0.25f, 0.95f, {-0.0615f, -0.4380f, 0.1235f}, {-0.9219f, -0.0972f, 0.2525f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // Общие для всех оружий
+        {0.25f, 0.70f, {-0.1000f, -0.5537f, 0.0350f}, {-1.0630f, 0.1751f, -0.0600f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.20f : 0.10f}, // Пистолеты
+        {0.30f, 1.30f, {-0.0615f, -0.4380f, 0.1235f}, {-0.9219f, -0.0972f, 0.2525f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // СВД и прочие длинные снайперки
+        {0.35f, 1.85f, {-0.0399f, 0.0929f, -0.0589f}, {0.3908f, 0.0488f, -0.0193f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // РПГ
+        {0.25f, 0.80f, {0.0015f, -0.5655f, 0.1240f}, {-1.0319f, 0.0678f, 0.0700f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // РГ-6
+        {0.25f, 0.80f, {-0.0406f, -0.4191f, 0.1718f}, {-0.8981f, -0.1101f, 0.4420f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // Гроза
+        {0.25f, 0.80f, {-0.0335f, -0.4618f, 0.1098f}, {-0.9119f, -0.0973f, 0.4143f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // ФН2000
+        {0.25f, 0.60f, {-0.0650f, -0.5170f, 0.0465f}, {-1.0405f, 0.1051f, -0.0350f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // БМ-16
+        {0.30f, 0.50f, {-0.0025f, -0.4045f, -0.1415f}, {-0.7900f, 0.0100f, 0.f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // Болт
+        {0.25f, 0.65f, {0.0120f, -0.4780f, -0.1150f}, {-0.6250f, -0.0725f, -0.1950f}, 0.5f, 1.f}, //Детектор
+        {0.30f, 0.50f, {-0.0025f, -0.4045f, -0.1415f}, {-0.7900f, 0.0100f, 0.f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // Нож, гранаты и прочее
+        {0.25f, 0.70f, {0.f, 0.f, 0.f}, {0.f, 0.f, 0.f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.40f : 0.30f}, // Бинокль
+    }};
+    const size_t type = GetWeaponTypeForCollision();
+    const auto& CollisionParams = CollisionParamsBase.at(type);
+
+    m_nearwall_hud_offset_speed = 0.1f;
+    m_lowered_hud_offset = std::get<2>(CollisionParams);
+    m_lowered_hud_rotate = std::get<3>(CollisionParams);
+    m_lowered_hud_rotate.x = -m_lowered_hud_rotate.x;
+
     if (m_nearwall_on)
     {
-        // Координаты офсетов для сдвига худа нашел в интернетах :)
-        static std::array<std::tuple<float, float, Fvector, Fvector, float, float>, _CollisionWeaponTypesCount_> CollisionParamsBase{{
-            // Min, Max dist, offset, rotate, HudFov, HudFov Aim
-            {0.25f, 0.95f, {-0.0615f, -0.4380f, 0.1235f}, {-0.9219f, -0.0972f, 0.2525f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // Общие для всех оружий
-            {0.25f, 0.70f, {-0.1000f, -0.5537f, 0.0350f}, {-1.0630f, 0.1751f, -0.0600f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.20f : 0.10f}, // Пистолеты
-            {0.30f, 1.30f, {-0.0615f, -0.4380f, 0.1235f}, {-0.9219f, -0.0972f, 0.2525f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // СВД и прочие длинные снайперки
-            {0.35f, 1.85f, {-0.0399f, 0.0929f, -0.0589f}, {0.3908f, 0.0488f, -0.0193f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // РПГ
-            {0.25f, 0.80f, {0.0015f, -0.5655f, 0.1240f}, {-1.0319f, 0.0678f, 0.0700f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // РГ-6
-            {0.25f, 0.80f, {-0.0406f, -0.4191f, 0.1718f}, {-0.8981f, -0.1101f, 0.4420f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // Гроза
-            {0.25f, 0.80f, {-0.0335f, -0.4618f, 0.1098f}, {-0.9119f, -0.0973f, 0.4143f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // ФН2000
-            {0.25f, 0.60f, {-0.0650f, -0.5170f, 0.0465f}, {-1.0405f, 0.1051f, -0.0350f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // БМ-16
-            {0.30f, 0.50f, {-0.0025f, -0.4045f, -0.1415f}, {-0.7900f, 0.0100f, 0.f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // Болт
-            {0.25f, 0.65f, {0.0120f, -0.4780f, -0.1150f}, {-0.6250f, -0.0725f, -0.1950f}, 0.5f, 1.f}, //Детектор
-            {0.30f, 0.50f, {-0.0025f, -0.4045f, -0.1415f}, {-0.7900f, 0.0100f, 0.f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.25f : 0.15f}, // Нож, гранаты и прочее
-            {0.25f, 0.70f, {0.f, 0.f, 0.f}, {0.f, 0.f, 0.f}, IS_OGSR_GA ? 0.5f : 0.25f, IS_OGSR_GA ? 0.40f : 0.30f}, // Бинокль
-        }};
-        const size_t type = GetWeaponTypeForCollision();
-        const auto& CollisionParams = CollisionParamsBase.at(type);
-
         // Параметры изменения коллизии когда игрок стоит вплотную к стене
         m_nearwall_hud_offset_speed = READ_IF_EXISTS(pSettings, r_float, section, "nearwall_hud_offset_speed", 0.1f); // Скорость поднятия\опускания ствола
         m_nearwall_dist_min = READ_IF_EXISTS(pSettings, r_float, section, "nearwall_dist_min", std::get<0>(CollisionParams)); //Максимальное расстояние, на которое камера ГГ может упереться к стене
@@ -94,6 +103,9 @@ void CHudItem::Load(LPCSTR section)
         m_nearwall_target_hud_fov = READ_IF_EXISTS(pSettings, r_float, section, "nearwall_target_hud_fov", std::get<4>(CollisionParams));
         m_nearwall_target_aim_hud_fov = READ_IF_EXISTS(pSettings, r_float, section, "nearwall_target_aim_hud_fov", std::get<5>(CollisionParams));
         m_nearwall_speed_mod = READ_IF_EXISTS(pSettings, r_float, section, "nearwall_speed_mod", 10.f);
+        m_lowered_hud_offset = m_nearwall_target_hud_offset;
+        m_lowered_hud_rotate = m_nearwall_target_hud_rotate;
+        m_lowered_hud_rotate.x = -m_lowered_hud_rotate.x;
     }
 
     //if (pSettings->line_exist(hud_sect, "hud_fov"))
@@ -208,7 +220,37 @@ void CHudItem::renderable_Render(u32 context_id, IRenderable* root)
     }
 }
 
-bool CHudItem::Action(s32 cmd, u32 flags) { return false; }
+bool CHudItem::Action(s32 cmd, u32 flags)
+{
+    if (cmd != kWPN_LOWER)
+        return false;
+    if (!(flags & CMD_START))
+        return false;
+
+    auto* actor = smart_cast<CActor*>(object().H_Parent());
+    if (!actor)
+        return false;
+
+    if (actor->WeaponLowered())
+        actor->SetWeaponLowered(false);
+    else if (CanLowerWeapon())
+        actor->SetWeaponLowered(true);
+    return true;
+}
+
+bool CHudItem::IsLowered() const
+{
+    auto* actor = smart_cast<const CActor*>(object().H_Parent());
+    return actor && actor->WeaponLowered();
+}
+
+bool CHudItem::WantLoweredHud() const
+{
+    if (!IsLowered() || IsZoomed())
+        return false;
+    auto* actor = smart_cast<const CActor*>(object().H_Parent());
+    return actor && !(actor->get_state() & mcSprint);
+}
 
 void CHudItem::SwitchState(u32 S)
 {
@@ -253,6 +295,11 @@ void CHudItem::OnStateSwitch(u32 S, u32 oldState)
         PlayAnimSprintStart();
     else if (S == eSprintEnd)
         PlayAnimSprintEnd();
+    else if (S == eBore)
+    {
+        SetPending(TRUE);
+        PlayAnimBore();
+    }
     else if (S != eIdle)
         SprintType = false;
 
@@ -568,10 +615,24 @@ bool CHudItem::TryPlayAnimIdle()
     return false;
 }
 
-/*void CHudItem::PlayAnimBore()
+bool CHudItem::HasBoreAnim() const
 {
-    PlayHUDMotion({ "anim_idle", "anm_bore" }, true, GetState());
-}*/
+    auto wpn = smart_cast<CWeapon*>(this);
+    if (wpn && wpn->IsMisfire() && AnimationExist("anm_bore_jammed"))
+        return true;
+    if (wpn && ((wpn->GetAmmoElapsed() == 0 && !wpn->IsGrenadeMode()) || (wpn->GetAmmoElapsed2() == 0 && wpn->IsGrenadeMode())) && AnimationExist("anm_bore_empty"))
+        return true;
+    return AnimationExist("anm_bore");
+}
+
+void CHudItem::PlayAnimBore()
+{
+    auto wpn = smart_cast<CWeapon*>(this);
+    PlayHUDMotion({(wpn && wpn->IsMisfire()) ? "anm_bore_jammed" : "nullptr",
+                   (wpn && ((wpn->GetAmmoElapsed() == 0 && !wpn->IsGrenadeMode()) || (wpn->GetAmmoElapsed2() == 0 && wpn->IsGrenadeMode()))) ? "anm_bore_empty" : "nullptr",
+                   "anm_bore"},
+                  true, GetState());
+}
 
 bool CHudItem::AnimationExist(const char* anim_name) const
 {
@@ -713,61 +774,67 @@ bool CHudItem::CollisionAllowed() const
 
 void CHudItem::UpdateCollision(Fmatrix& trans)
 {
-    if (!CollisionAllowed())
+    const bool lowered = WantLoweredHud();
+    if (!CollisionAllowed() && !lowered)
         return;
 
     skip_updated_frame = Device.dwFrame;
 
-    collide::rq_result RQ{nullptr, m_nearwall_dist_max * 1.1f, -1};
-    const collide::ray_defs RD{GetPositionForCollision(), GetDirectionForCollision(), RQ.range, CDB::OPT_CULL, collide::rqtBoth};
-    collide::rq_results RQR;
+    float dist_coef{};
+    if (CollisionAllowed() && !lowered)
+    {
+        collide::rq_result RQ{nullptr, m_nearwall_dist_max * 1.1f, -1};
+        const collide::ray_defs RD{GetPositionForCollision(), GetDirectionForCollision(), RQ.range, CDB::OPT_CULL, collide::rqtBoth};
+        collide::rq_results RQR;
 
-    Level().ObjectSpace.RayQuery(
-        RQR, RD,
-        [](collide::rq_result& result, LPVOID params) {
-            //Копипаст из  CHUDTarget
-            auto RQ = reinterpret_cast<collide::rq_result*>(params);
+        Level().ObjectSpace.RayQuery(
+            RQR, RD,
+            [](collide::rq_result& result, LPVOID params) {
+                //Копипаст из  CHUDTarget
+                auto RQ = reinterpret_cast<collide::rq_result*>(params);
 
-            if (result.O)
-            {
-                if (auto* e = smart_cast<CEntityAlive*>(result.O); e && e->g_Alive())
+                if (result.O)
+                {
+                    if (auto* e = smart_cast<CEntityAlive*>(result.O); e && e->g_Alive())
+                        return TRUE;
+
+                    *RQ = result;
+                    return FALSE;
+                }
+
+                CDB::TRI* T = Level().ObjectSpace.GetStaticTris() + result.element;
+                SGameMtl* mtl = GMLib.GetMaterialByIdx(T->material);
+                if (mtl->Flags.is(SGameMtl::flPassable))
                     return TRUE;
-
-                //if (smart_cast<CCustomShell*>(result.O))
-                //    return TRUE;
 
                 *RQ = result;
                 return FALSE;
-            }
+            },
+            &RQ, nullptr, Level().CurrentEntity());
 
-            CDB::TRI* T = Level().ObjectSpace.GetStaticTris() + result.element;
-            SGameMtl* mtl = GMLib.GetMaterialByIdx(T->material);
-            if (mtl->Flags.is(SGameMtl::flPassable))
-                return TRUE;
+        saved_rq_range = RQ.range;
+        clamp(RQ.range, m_nearwall_dist_min, RQ.range);
 
-            *RQ = result;
-            return FALSE;
-        },
-        &RQ, nullptr, Level().CurrentEntity());
+        if (RQ.range <= m_nearwall_dist_max)
+            dist_coef = 1.f - (RQ.range - m_nearwall_dist_min) / (m_nearwall_dist_max - m_nearwall_dist_min);
+    }
 
-    saved_rq_range = RQ.range;
-    clamp(RQ.range, m_nearwall_dist_min, RQ.range);
+    const float offset_speed = (m_nearwall_hud_offset_speed > EPS) ? m_nearwall_hud_offset_speed : 0.1f;
+    const float fStepPerUpd = Device.fTimeDelta / offset_speed; // Величина изменение фактора смещения коллизии худа
 
-    float dist_coef{};
-    if (RQ.range <= m_nearwall_dist_max)
-        dist_coef = 1.f - (RQ.range - m_nearwall_dist_min) / (m_nearwall_dist_max - m_nearwall_dist_min);
-
-    const float fStepPerUpd = Device.fTimeDelta / m_nearwall_hud_offset_speed; // Величина изменение фактора смещения коллизии худа
-
-    auto curr_offs = Fvector{}.mul(m_nearwall_target_hud_offset, dist_coef), curr_rot = Fvector{}.mul(m_nearwall_target_hud_rotate, dist_coef);
-
-    // Плавный переход между смещением от коллизии и прицеливания
-    curr_offs.mul(!IsZoomed());
-    curr_rot.mul(!IsZoomed());
-
-    //auto wpn = smart_cast<CWeapon*>(this);
-    //curr_offs.mul(wpn && !wpn->LoweredActive);
-    //curr_rot.mul(wpn && !wpn->LoweredActive);
+    Fvector curr_offs, curr_rot;
+    if (lowered)
+    {
+        curr_offs = m_lowered_hud_offset;
+        curr_rot = m_lowered_hud_rotate;
+    }
+    else
+    {
+        curr_offs = Fvector{}.mul(m_nearwall_target_hud_offset, dist_coef);
+        curr_rot = Fvector{}.mul(m_nearwall_target_hud_rotate, dist_coef);
+        curr_offs.mul(!IsZoomed());
+        curr_rot.mul(!IsZoomed());
+    }
 
     if (!curr_offs.similar(m_nearwall_last_pos, EPS))
         m_nearwall_last_pos.lerp(m_nearwall_last_pos, curr_offs, fStepPerUpd);
@@ -1400,6 +1467,10 @@ void CHudItem::OnAnimationEnd(u32 state)
         break;
     case eSprintEnd:
         SprintType = false;
+        SwitchState(eIdle);
+        break;
+    case eBore:
+        SetPending(FALSE);
         SwitchState(eIdle);
         break;
     }

@@ -15,6 +15,9 @@
 	<string id="kb_wpn_bore">
 		<text>Осмотр оружия</text>
 	</string>
+	<string id="kb_wpn_lower">
+		<text>Опустить оружие</text>
+	</string>
 	<string id="kb_wpn_zoom_alter">
 		<text>Режим прицеливания</text>
 	</string>

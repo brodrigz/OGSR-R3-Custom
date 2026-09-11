@@ -46,6 +46,7 @@ xr_vector<_action> actions = {
                                                                                                                     DEF_ACTION("freelook", kFREELOOK)
                                                                                                                         DEF_ACTION("cycle_interact", kCYCLE_INTERACT)
                                                                                                                             DEF_ACTION("quick_use", kQUICK_USE)
+                                                                                                                                DEF_ACTION("wpn_lower", kWPN_LOWER)
 };
 
 xr_vector<_binding> g_key_bindings;

@@ -499,6 +499,12 @@ void CActor::g_SetAnimation(u32 mstate_rl)
                                 default: M_torso = TW->moving[moving_idx]; break;
                                 }
                             }
+
+                            if (!K && WeaponLowered() && W->GetState() == CWeapon::eIdle && !W->IsZoomed())
+                            {
+                                if (TW->moving[STorsoWpn::eSprint])
+                                    M_torso = TW->moving[STorsoWpn::eSprint];
+                            }
                         }
                         else if (M)
                         {

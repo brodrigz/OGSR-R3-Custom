@@ -66,6 +66,7 @@ public:
     virtual void FireStart();
 
     virtual bool Action(s32 cmd, u32 flags);
+    bool CanLowerWeapon() const override { return false; }
 
     virtual void GetBriefInfo(xr_string& str_name, xr_string& icon_sect_name, xr_string& str_count);
 

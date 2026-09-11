@@ -320,6 +320,7 @@ public:
     void MarkItemDropped(CScriptGameObject* item);
     bool MarkedDropped(CScriptGameObject* item);
     void UnloadMagazine(bool spawn_ammo = false, bool unload_gl = false);
+    bool UnloadWorldWeapon();
 
     void DropItem(CScriptGameObject* pItem);
     void DropItemAndTeleport(CScriptGameObject* pItem, Fvector position);
@@ -364,6 +365,7 @@ public:
     u32 GetInventoryObjectCount() const;
 
     CScriptGameObject* GetActiveItem();
+    bool weapon_lowered() const;
 
     CScriptGameObject* GetObjectByName(LPCSTR caObjectName) const;
     CScriptGameObject* GetObjectByIndex(int iIndex) const;

@@ -12,6 +12,9 @@
 	<string id="kb_wpn_bore">
 		<text>Inspect weapon</text>
 	</string>
+	<string id="kb_wpn_lower">
+		<text>Lower weapon</text>
+	</string>
 	<string id="kb_wpn_zoom_alter">
 		<text>Sight mode</text>
 	</string>

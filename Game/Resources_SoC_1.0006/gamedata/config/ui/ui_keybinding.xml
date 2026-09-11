@@ -39,6 +39,8 @@
 		<command id="kb_firemode_prev"		  exe="wpn_firemode_prev"/>
 		<command id="kb_laser_on"					exe="laser_on"/>
 		<command id="kb_wpn_zoom_alter"				exe="wpn_zoom_alter"/>
+		<command id="kb_wpn_bore"				        exe="wpn_bore"/>
+		<command id="kb_wpn_lower"				        exe="wpn_lower"/>
 		<!-- <command id="kb_quick_nade"				        exe="quick_nade"/> -->
 	</group>
 	<group name="kb_grp_inventory">

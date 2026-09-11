@@ -36,6 +36,9 @@
 #include "ui/UIMainIngameWnd.h"
 #include "eatable_item.h"
 #include "WeaponMagazinedWGrenade.h"
+#include "ai_space.h"
+#include "script_engine.h"
+#include "script_game_object.h"
 
 bool g_bAutoClearCrouch = true;
 extern int g_bHudAdjustMode;
@@ -629,27 +632,33 @@ void GiveMagazineAmmoToActor(CWeaponMagazined* mag, CActor* actor)
         mag->SpawnAmmo(it.second, *it.first, actor->ID());
 }
 
-bool TryUnloadWorldWeapon(CInventoryItem* item, CActor* actor)
+bool CanUnloadWorldWeapon(CInventoryItem* item)
 {
     auto* mag = smart_cast<CWeaponMagazined*>(item);
     if (!mag || mag->unlimited_ammo())
         return false;
-    if (mag->GetAmmoElapsed() <= 0 && mag->GetAmmoElapsed2() <= 0)
+    return mag->GetAmmoElapsed() > 0 || mag->GetAmmoElapsed2() > 0;
+}
+} // namespace
+
+bool CActor::UnloadWorldWeapon(CInventoryItem* item)
+{
+    if (!CanUnloadWorldWeapon(item))
         return false;
 
-    GiveMagazineAmmoToActor(mag, actor);
+    auto* mag = smart_cast<CWeaponMagazined*>(item);
+    GiveMagazineAmmoToActor(mag, this);
     if (auto* gl = smart_cast<CWeaponMagazinedWGrenade*>(mag))
     {
         if (gl->IsGrenadeLauncherAttached() && mag->GetAmmoElapsed2() > 0)
         {
             gl->PerformSwitchGL();
-            GiveMagazineAmmoToActor(mag, actor);
+            GiveMagazineAmmoToActor(mag, this);
             gl->PerformSwitchGL();
         }
     }
     return true;
 }
-} // namespace
 
 void CActor::ActorQuickUse()
 {
@@ -666,8 +675,16 @@ void CActor::ActorQuickUse()
     if (HUD().GetUI() && HUD().GetUI()->UIMainIngameWnd)
         item = HUD().GetUI()->UIMainIngameWnd->InteractPickupItem();
 
-    if (TryUnloadWorldWeapon(item, this))
+    if (CanUnloadWorldWeapon(item))
+    {
+        bool delayed = false;
+        luabind::functor<bool> func;
+        if (ai().script_engine().functor("ogsr_actor_animation.try_play_pickup_for_unload", func))
+            delayed = func(item->object().lua_game_object());
+        if (!delayed)
+            UnloadWorldWeapon(item);
         return;
+    }
 
     CEatableItem* eatable = item ? item->cast_eatable_item() : nullptr;
     if (!eatable || !eatable->Useful())

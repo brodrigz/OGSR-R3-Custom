@@ -283,6 +283,7 @@ protected:
     void ActorUse();
     void ActorQuickUse();
     void TryPendingQuickUse();
+    bool UnloadWorldWeapon(CInventoryItem* item);
 
 private:
     CCar* m_pending_car{};
@@ -654,6 +655,8 @@ protected:
 
 public:
     void SetWeaponHideState(u32 State, bool bSet, bool now = false);
+    void SetWeaponLowered(bool b);
+    bool WeaponLowered() const;
     virtual CCustomOutfit* GetOutfit() const;
 
 private:
@@ -678,6 +681,7 @@ protected:
     float m_fLastHealth;
     bool m_bWasHitted;
     bool m_bWasBackStabbed;
+    bool m_bWeaponLowered{};
 
 public:
     virtual void SetHitInfo(CObject* who, CObject* weapon, s16 element, Fvector Pos, Fvector Dir);

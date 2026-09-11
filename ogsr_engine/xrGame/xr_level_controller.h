@@ -79,6 +79,7 @@ enum EGameActions
     kFREELOOK,
     kCYCLE_INTERACT,
     kQUICK_USE,
+    kWPN_LOWER,
 
     kLASTACTION = u32(-3),
     kNOTBINDED = u32(-2),

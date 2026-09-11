@@ -334,6 +334,19 @@ void CScriptGameObject::UnloadMagazine(bool spawn_ammo, bool unload_gl)
     }
 }
 
+bool CScriptGameObject::UnloadWorldWeapon()
+{
+    CActor* actor = Actor();
+    if (!actor)
+        return false;
+
+    CInventoryItem* item = smart_cast<CInventoryItem*>(&object());
+    if (!item)
+        return false;
+
+    return actor->UnloadWorldWeapon(item);
+}
+
 void CScriptGameObject::DropItem(CScriptGameObject* pItem)
 {
     CInventoryOwner* owner = smart_cast<CInventoryOwner*>(&object());

@@ -35,6 +35,7 @@ public:
     virtual void load(IReader& input_packet);
 
     virtual bool Action(s32 cmd, u32 flags);
+    bool CanLowerWeapon() const override { return false; }
     virtual void UpdateCL();
     virtual void OnDrawUI();
     virtual bool use_crosshair() const { return false; }

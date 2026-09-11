@@ -1175,6 +1175,8 @@ bool CWeapon::Action(s32 cmd, u32 flags)
             {
                 if (IsPending())
                     return false;
+                if (ParentIsActor() && Actor())
+                    Actor()->SetWeaponLowered(false);
                 FireStart();
             }
             else
@@ -1219,6 +1221,8 @@ bool CWeapon::Action(s32 cmd, u32 flags)
         {
             if (flags & CMD_START)
             {
+                if (ParentIsActor() && Actor())
+                    Actor()->SetWeaponLowered(false);
                 if (psActorFlags.is(AF_WPN_AIM_TOGGLE) && IsZoomed())
                 {
                     OnZoomOut();
@@ -1264,6 +1268,17 @@ bool CWeapon::Action(s32 cmd, u32 flags)
         if ((flags & CMD_START) && !IsPending() && SwitchSightMode())
             return true;
         return false;
+    }
+
+    case kWPN_BORE: {
+        if (!(flags & CMD_START))
+            return false;
+        if (IsPending() || GetState() != eIdle || IsZoomed())
+            return false;
+        if (!HasBoreAnim())
+            return false;
+        SwitchState(eBore);
+        return true;
     }
     }
     return false;
@@ -1763,6 +1778,9 @@ bool CWeapon::AllowAutoAimZoom()
 
 void CWeapon::OnZoomIn()
 {
+    if (ParentIsActor() && Actor())
+        Actor()->SetWeaponLowered(false);
+
     m_bZoomMode = true;
 
     // если в режиме ПГ или резервного прицела - не будем давать включать динамический зум
@@ -1814,6 +1832,9 @@ bool CWeapon::UseScopeTexture()
 
 void CWeapon::SwitchState(u32 S)
 {
+    if (ParentIsActor() && Actor() && (S == eFire || S == eFire2 || S == eReload || S == eHiding || S == eBore || S == eSwitch))
+        Actor()->SetWeaponLowered(false);
+
     SetNextState(S); // Very-very important line of code!!! :)
     if (CHudItem::object().Local() && !CHudItem::object().getDestroy() /* && (S!=NEXT_STATE)*/
         && m_pCurrentInventory)
@@ -1962,7 +1983,12 @@ const CInventoryItem* CWeapon::can_kill(const xr_vector<const CGameObject*>& ite
     return (0);
 }
 
-bool CWeapon::ready_to_kill() const { return (!IsMisfire() && ((GetState() == eIdle) || (GetState() == eFire) || (GetState() == eFire2)) && GetAmmoElapsed()); }
+bool CWeapon::ready_to_kill() const
+{
+    if (ParentIsActor() && Actor() && Actor()->WeaponLowered())
+        return false;
+    return (!IsMisfire() && ((GetState() == eIdle) || (GetState() == eFire) || (GetState() == eFire2)) && GetAmmoElapsed());
+}
 
 // Получить индекс текущих координат худа
 u8 CWeapon::GetCurrentHudOffsetIdx() const
@@ -2009,6 +2035,14 @@ u8 CWeapon::GetCurrentHudOffsetIdx() const
     //    return hud_item_measures::m_hands_offset_type_lowered;
 
     return hud_item_measures::m_hands_offset_type_normal;
+}
+
+bool CWeapon::CanLowerWeapon() const
+{
+    if (!ParentIsActor())
+        return false;
+    const u32 st = GetState();
+    return st == eIdle || st == eSprintStart || st == eSprintEnd;
 }
 
 void CWeapon::SetAmmoElapsed(int ammo_count)

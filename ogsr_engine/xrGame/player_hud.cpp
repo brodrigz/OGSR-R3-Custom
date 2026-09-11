@@ -1879,19 +1879,19 @@ u32 player_hud::script_anim_play(u8 hand, LPCSTR hud_section, LPCSTR anm_name, b
     const CMotionDef* md;
     u32 length = motion_length(phm->params, M, md, m_model, speed);
 
+    script_override_item = bOverride_item;
+    updateMovementLayerState();
+
     if (length > 0)
     {
-        script_override_item = bOverride_item;
-
         m_bStopAtEndAnimIsRunning = true;
         script_anim_end = Device.dwTimeGlobal + length;
-        updateMovementLayerState();
         return length;
     }
 
-    // PlayCycle already ran with script_anim_part set. Leaving that
-    // without a stop timer keeps both-hand overlays (backpack idle) stuck.
-    script_anim_stop();
+    // Looping cycles (no esmStopAtEnd) report length 0. Keep script_anim_part
+    // and drop any previous clip's stop timer so backpack idle can loop.
+    m_bStopAtEndAnimIsRunning = false;
     return 0;
 }
 

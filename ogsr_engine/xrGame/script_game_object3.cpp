@@ -700,6 +700,15 @@ CScriptGameObject* CScriptGameObject::GetActiveItem()
     }
 }
 
+bool CScriptGameObject::weapon_lowered() const
+{
+    if (auto* actor = smart_cast<const CActor*>(&object()))
+        return actor->WeaponLowered();
+    if (auto* wpn = smart_cast<const CWeapon*>(&object()))
+        return wpn->IsLowered();
+    return false;
+}
+
 CScriptGameObject* CScriptGameObject::GetObjectByName(LPCSTR caObjectName) const
 {
     CInventoryOwner* l_tpInventoryOwner = smart_cast<CInventoryOwner*>(&object());

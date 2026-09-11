@@ -114,6 +114,27 @@ void CActor::SetWeaponHideState(u32 State, bool bSet, bool now)
         this->inventory().SetSlotsBlocked(State, bSet, now);
 }
 
+void CActor::SetWeaponLowered(bool b)
+{
+    if (b)
+    {
+        auto* w = smart_cast<CWeapon*>(inventory().ActiveItem());
+        if (!w || !w->CanLowerWeapon())
+            return;
+        if (w->IsZoomed())
+            w->OnZoomOut();
+    }
+    m_bWeaponLowered = b;
+}
+
+bool CActor::WeaponLowered() const
+{
+    if (!m_bWeaponLowered)
+        return false;
+    auto* w = smart_cast<CWeapon*>(inventory().ActiveItem());
+    return w && w->CanLowerWeapon() && !w->IsZoomed();
+}
+
 #define ENEMY_HIT_SPOT "mp_hit_sector_location"
 BOOL g_bShowHitSectors = TRUE;
 

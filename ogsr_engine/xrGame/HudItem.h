@@ -109,6 +109,8 @@ public:
 
     //для предачи команд владельцем
     virtual bool Action(s32 cmd, u32 flags);
+    virtual bool CanLowerWeapon() const { return false; }
+    bool IsLowered() const;
 
     virtual void OnDrawUI(){};
 
@@ -143,7 +145,8 @@ public:
     bool TryPlayAnimIdle();
     void ResetHudAfterScriptAnim();
     virtual bool IsZoomed() const { return false; }
-    // virtual void	PlayAnimBore		();
+    virtual void PlayAnimBore();
+    bool HasBoreAnim() const;
     virtual void PlayAnimIdleMoving();
     virtual void PlayAnimIdleMovingSlow();
     virtual void PlayAnimIdleSprint();
@@ -304,12 +307,14 @@ private:
     float hud_recalc_koef{};
     void UpdateCollision(Fmatrix& trans);
     bool CollisionAllowed() const;
+    bool WantLoweredHud() const;
     bool m_nearwall_on{};
     float m_nearwall_target_hud_fov{}, m_nearwall_target_aim_hud_fov{};
     float m_nearwall_dist_max{}, m_nearwall_dist_min{};
     float m_nearwall_last_hud_fov{};
     float m_nearwall_speed_mod{}, m_nearwall_hud_offset_speed{};
     Fvector m_nearwall_target_hud_offset{}, m_nearwall_target_hud_rotate{};
+    Fvector m_lowered_hud_offset{}, m_lowered_hud_rotate{};
     float saved_rq_range{};
     Fvector m_nearwall_last_pos{}, m_nearwall_last_rot{};
 
