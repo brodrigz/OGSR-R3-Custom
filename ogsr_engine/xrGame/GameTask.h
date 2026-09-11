@@ -60,7 +60,9 @@ public:
     shared_str map_hint;
     shared_str map_location;
     u16 object_id;
+    ALife::_STORY_ID object_story_id;
     CMapLocation* LinkedMapLocation();
+    bool TryBindStoryObject();
     ETaskState TaskState() { return task_state; };
     ETaskState UpdateState();
 

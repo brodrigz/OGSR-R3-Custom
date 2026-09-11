@@ -18,6 +18,31 @@
 shared_str g_active_task_id;
 u16 g_active_task_objective_id = u16(-1);
 
+namespace
+{
+CMapLocation* ensure_objective_map_location(SGameTaskObjective& obj)
+{
+    if (obj.TaskState() != eTaskStateInProgress)
+        return nullptr;
+    if (obj.map_location.size() == 0)
+        return nullptr;
+
+    obj.TryBindStoryObject();
+    if (obj.object_id == u16(-1))
+        return nullptr;
+
+    CMapLocation* ml = obj.LinkedMapLocation();
+    if (!ml)
+    {
+        ml = Level().MapManager().AddMapLocation(obj.map_location, obj.object_id);
+        if (obj.map_hint.size())
+            ml->SetHint(obj.map_hint);
+        ml->DisablePointer();
+        ml->SetSerializable(true);
+    }
+    return ml;
+}
+} // namespace
 
 CGameTaskManager::CGameTaskManager()
 {
@@ -82,14 +107,8 @@ CGameTask* CGameTaskManager::GiveGameTaskToActor(CGameTask* t, u32 timeToComplet
             }
         }
 
-        if (obj->object_id != u16(-1) && obj->map_location.size() && obj->def_location_enabled)
-        {
-            CMapLocation* ml = Level().MapManager().AddMapLocation(obj->map_location, obj->object_id);
-            if (obj->map_hint.size())
-                ml->SetHint(obj->map_hint);
-            ml->DisablePointer();
-            ml->SetSerializable(true);
-        }
+        if (obj->def_location_enabled)
+            ensure_objective_map_location(*obj);
     }
     CGameTask* _at = ActiveTask();
     if (!_at || (_at->m_priority > t->m_priority))
@@ -157,21 +176,16 @@ void CGameTaskManager::SetTaskState(CGameTask* t, u16 objective_num, ETaskState 
             if (t->Objective(i).TaskState() == eTaskStateInProgress)
                 SetTaskState(t, i, state);
     }
-    else if (state == eTaskStateCompleted && objective_num < (t->m_Objectives.size() - 1))
+    else if (state == eTaskStateCompleted && !isRoot)
     {
-        // enable hidden locations for next objective
-        SGameTaskObjective& obj = t->Objective(objective_num + 1);
-
-        if (!obj.def_location_enabled && obj.TaskState() == eTaskStateInProgress)
+        for (u16 i = u16(objective_num + 1); i < t->m_Objectives.size(); ++i)
         {
-            if (obj.object_id != u16(-1) && *obj.map_location)
-            {
-                CMapLocation* ml = Level().MapManager().AddMapLocation(obj.map_location, obj.object_id);
-                if (obj.map_hint.size())
-                    ml->SetHint(obj.map_hint);
-                ml->DisablePointer();
-                ml->SetSerializable(true);
-            }
+            SGameTaskObjective& obj = t->Objective(i);
+            if (obj.TaskState() != eTaskStateInProgress)
+                continue;
+            if (!obj.def_location_enabled)
+                ensure_objective_map_location(obj);
+            break;
         }
     }
 
@@ -233,6 +247,11 @@ void CGameTaskManager::UpdateTasks()
                     continue;
             }
 
+            const bool was_unbound = obj.object_id == u16(-1);
+            obj.TryBindStoryObject();
+            if (was_unbound && obj.object_id != u16(-1) && obj.def_location_enabled)
+                ensure_objective_map_location(obj);
+
             ETaskState state = obj.UpdateState();
             if (state == eTaskStateFail || state == eTaskStateCompleted || state == eTaskStateSkiped)
             {
@@ -291,7 +310,7 @@ void CGameTaskManager::UpdateTasks()
     if (obj)
     {
         Level().MapManager().DisableAllPointers();
-        CMapLocation* ml = obj->LinkedMapLocation();
+        CMapLocation* ml = ensure_objective_map_location(*obj);
         if (ml && !ml->PointerEnabled())
             ml->EnablePointer();
     }
@@ -341,7 +360,7 @@ void CGameTaskManager::SetActiveTask(const TASK_ID& id, u16 idx, const bool safe
 
     if (o)
     {
-        CMapLocation* ml = o->LinkedMapLocation();
+        CMapLocation* ml = ensure_objective_map_location(*o);
         if (ml)
             ml->EnablePointer();
     }

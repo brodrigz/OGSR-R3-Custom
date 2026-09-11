@@ -141,7 +141,7 @@ void CGameTask::Load(const TASK_ID& id)
         //.
         objective.map_location = g_gameTaskXml->Read(l_root, "map_location_type", 0, NULL);
 
-        LPCSTR object_story_id = g_gameTaskXml->Read(l_root, "object_story_id", 0, NULL);
+        LPCSTR object_story_id_str = g_gameTaskXml->Read(l_root, "object_story_id", 0, NULL);
 
         //*
         LPCSTR ddd;
@@ -151,19 +151,20 @@ void CGameTask::Load(const TASK_ID& id)
 
         bool b1, b2;
         b1 = (0 == objective.map_location.size());
-        b2 = (NULL == object_story_id);
+        b2 = (NULL == object_story_id_str);
         VERIFY3(b1 == b2, "check [map_location_type] and [object_story_id] fields in objective definition for: ", *objective.description);
 
         //.
         objective.object_id = u16(-1);
+        objective.object_story_id = INVALID_STORY_ID;
 
         //.
         objective.map_hint = g_gameTaskXml->ReadAttrib(l_root, "map_location_type", 0, "hint", NULL);
 
-        if (object_story_id)
+        if (object_story_id_str)
         {
-            ALife::_STORY_ID _sid = story_id(object_story_id);
-            objective.object_id = storyId2GameId(_sid);
+            objective.object_story_id = story_id(object_story_id_str);
+            objective.object_id = storyId2GameId(objective.object_story_id);
         }
 
         //------infoportion_complete
@@ -295,11 +296,13 @@ bool CGameTask::HasInProgressObjective()
 }
 
 SGameTaskObjective::SGameTaskObjective(CGameTask* parent, int _idx)
-    : description(NULL), article_id(NULL), map_location(NULL), object_id(u16(-1)), task_state(eTaskStateInProgress), def_location_enabled(true), parent(parent), idx(_idx)
+    : description(NULL), article_id(NULL), map_location(NULL), object_id(u16(-1)), object_story_id(INVALID_STORY_ID), task_state(eTaskStateInProgress),
+      def_location_enabled(true), parent(parent), idx(_idx)
 {}
 
 SGameTaskObjective::SGameTaskObjective()
-    : description(NULL), article_id(NULL), map_location(NULL), object_id(u16(-1)), task_state(eTaskStateInProgress), def_location_enabled(true), parent(NULL), idx(0)
+    : description(NULL), article_id(NULL), map_location(NULL), object_id(u16(-1)), object_story_id(INVALID_STORY_ID), task_state(eTaskStateInProgress),
+      def_location_enabled(true), parent(NULL), idx(0)
 {}
 
 CMapLocation* SGameTaskObjective::LinkedMapLocation()
@@ -307,6 +310,17 @@ CMapLocation* SGameTaskObjective::LinkedMapLocation()
     if (map_location.size() == 0)
         return NULL;
     return Level().MapManager().GetMapLocation(map_location, object_id);
+}
+
+bool SGameTaskObjective::TryBindStoryObject()
+{
+    if (object_id != u16(-1))
+        return true;
+    if (object_story_id == INVALID_STORY_ID)
+        return false;
+
+    object_id = storyId2GameId(object_story_id);
+    return object_id != u16(-1);
 }
 
 void SGameTaskObjective::SetTaskState(ETaskState new_state)

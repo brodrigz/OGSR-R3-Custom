@@ -231,6 +231,26 @@ void initialize_bindings()
         }
     }
 
+    auto has_named_action = [](LPCSTR name) {
+        for (const auto& a : actions)
+        {
+            if (a.action_name && !_stricmp(a.action_name, name))
+                return true;
+        }
+        return false;
+    };
+
+    // Radiophobia registers this in [custom_keyboard_action]. Guarantee it
+    // exists so the keybinding UI and ogsr_actor_animation can find it.
+    if (!has_named_action("use_swipe"))
+    {
+        _action n;
+        n.id = static_cast<EGameActions>(actions.size());
+        n.action_name = "use_swipe";
+        n.export_name = "kSWIPE_MASK";
+        actions.push_back(n);
+    }
+
     // last action
     _action nL;
     nL.id = kLASTACTION;
