@@ -6,6 +6,7 @@
 
 #include "detailformat.h"
 #include "detailmodel.h"
+#include "DetailLighting.h"
 
 const int dm_max_decompress = 7;
 const int dm_cache1_count = 4; //
@@ -112,6 +113,11 @@ private:
     DetailHeader dtH;
     DetailSlot* dtSlots; // note: pointer into VFS
     DetailSlot DS_empty;
+
+    // Built once per level: 12 bytes per collision vertex, no GPU allocation.
+    xr_vector<detail_lighting::Normal> terrain_normals;
+    void BuildTerrainNormals();
+    float SampleHemi(float x, float y, float z, float fallback);
 
     xr_vector<CDetail> objects;
     xr_vector<vis_list_inner> m_visibles; // per object store vector of pointer to draw items

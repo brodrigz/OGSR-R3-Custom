@@ -62,6 +62,63 @@ bool det_render_debug = false;
 
 #include "../../xr_3da/gamemtllib.h"
 
+void CDetailManager::BuildTerrainNormals()
+{
+    ZoneScoped;
+    const auto* model = g_pGameLevel->ObjectSpace.GetStaticModel();
+    const auto* vertices = model->get_verts();
+    const auto* triangles = model->get_tris();
+    terrain_normals.assign(model->get_verts_count(), {});
+    for (size_t i = 0; i < model->get_tris_count(); ++i)
+    {
+        const auto& t = triangles[i];
+        if (GMLib.GetMaterialByIdx(t.material)->Flags.test(SGameMtl::flPassable))
+            continue;
+        Fvector area_normal;
+        area_normal.mknormal_non_normalized(vertices[t.verts[0]], vertices[t.verts[1]], vertices[t.verts[2]]);
+        const float length2 = area_normal.square_magnitude();
+        // Area-weighted shared-vertex normals, excluding walls, steep slopes,
+        // degenerate faces and undersides. No new collision queries are needed.
+        if (!(length2 > 1e-12f) || area_normal.y <= 0.f || area_normal.y * area_normal.y < 0.25f * length2)
+            continue;
+        for (unsigned j = 0; j < 3; ++j)
+        {
+            auto& n = terrain_normals[t.verts[j]];
+            n.x += area_normal.x;
+            n.y += area_normal.y;
+            n.z += area_normal.z;
+        }
+    }
+    for (auto& n : terrain_normals)
+        n = detail_lighting::normalize(n);
+}
+
+float CDetailManager::SampleHemi(float x, float y, float z, float fallback)
+{
+    // Baked samples describe cell centres, not corners. World coordinates also
+    // keep jittered instances continuous across cache-slot boundaries.
+    const float gx = x / dm_slot_size - 0.5f;
+    const float gz = z / dm_slot_size - 0.5f;
+    const int sx = iFloor(gx), sz = iFloor(gz);
+    std::array<detail_lighting::HemiSample, 4> samples{};
+    for (int i = 0; i < 4; ++i)
+    {
+        auto& cell = QueryDB(sx + (i & 1), sz + (i >> 1));
+        // Some maps leave zero-filled slots with object id 0: the palette must
+        // contain density as well. Do not read lighting from QueryDB's sentinel.
+        bool populated = false;
+        for (unsigned j = 0; j < dm_obj_in_slot; ++j)
+        {
+            const auto& p = cell.palette[j];
+            if (cell.r_id(j) != DetailSlot::ID_Empty && (p.a0 || p.a1 || p.a2 || p.a3))
+                populated = true;
+        }
+        if (populated)
+            samples[i] = {cell.r_qclr(cell.c_hemi, 15), cell.r_ybase(), cell.r_ybase() + cell.r_yheight(), true};
+    }
+    return detail_lighting::sample_hemi(samples, gx - sx, gz - sz, y, fallback);
+}
+
 extern float ps_current_detail_scale;
 void CDetailManager::cache_Decompress(Slot* S)
 {
@@ -150,6 +207,8 @@ void CDetailManager::cache_Decompress(Slot* S)
             float y = D.vis.box.min.y - 5;
             constexpr Fvector dir{0.f, -1.f, 0.f};
             Fvector3 terrain_normal{};
+            const CDB::TRI* hit_triangle = nullptr;
+            float hit_u = 0.f, hit_v = 0.f;
 
             float r_u, r_v, r_range;
             for (u32 tid = 0; tid < triCount; tid++)
@@ -166,20 +225,32 @@ void CDetailManager::cache_Decompress(Slot* S)
                     {
                         float y_test = Item_P.y - r_range;
                         if (y_test > y)
+                        {
                             y = y_test;
-                        terrain_normal.mknormal(Tv[0], Tv[1], Tv[2]);
+                            terrain_normal.mknormal(Tv[0], Tv[1], Tv[2]);
+                            hit_triangle = &T;
+                            hit_u = r_u;
+                            hit_v = r_v;
+                        }
                     }
                 }
             }
 
-            // Slope Limit
+            if (!hit_triangle || y < D.vis.box.min.y)
+                continue;
+
+            // Slope rejection uses the actual collision face, not its smoothed
+            // shading normal. Keep authored placement restrictions intact.
             const float DotP = terrain_normal.dotproduct(dir);
             if (DotP > -(1.0f - Random.randF(ps_ssfx_terrain_grass_slope * 0.8f, ps_ssfx_terrain_grass_slope)))
                 continue;
 
-            if (y < D.vis.box.min.y)
-                continue;
             Item_P.y = y;
+
+            const auto& t = *hit_triangle;
+            const auto normal = detail_lighting::smooth_normal({terrain_normal.x, terrain_normal.y, terrain_normal.z},
+                {terrain_normals[t.verts[0]], terrain_normals[t.verts[1]], terrain_normals[t.verts[2]]}, hit_u, hit_v);
+            terrain_normal.set(normal.x, normal.y, normal.z);
 
             auto& Item = D.G[index].items.emplace_back();
 
@@ -220,7 +291,7 @@ void CDetailManager::cache_Decompress(Slot* S)
 
             // clamp для hemi перенесен сюда из вершинного шейдера:
             // Some spots are bugged ( Full black ), better if we limit the value till a better solution.
-            float c_hemi = std::clamp(DS.r_qclr(DS.c_hemi, 15), 0.05f, 1.0f);
+            const float c_hemi = SampleHemi(Item_P.x, Item_P.y, Item_P.z, DS.r_qclr(DS.c_hemi, 15));
 
             // init xform and terrain normal
             const Fmatrix& M = Item.xform;

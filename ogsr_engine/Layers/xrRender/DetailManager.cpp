@@ -128,6 +128,7 @@ void CDetailManager::Load()
     // Initialize 'vis' and 'cache'
     m_visibles.resize(objects.size());
 
+    BuildTerrainNormals();
     cache_Initialize();
 
     // Make dither matrix
@@ -150,6 +151,7 @@ void CDetailManager::Unload()
     for (auto& object : objects)
         object.Unload();
     objects.clear();
+    decltype(terrain_normals){}.swap(terrain_normals);
 
     for (auto& vec : m_visibles)
         vec.clear();
