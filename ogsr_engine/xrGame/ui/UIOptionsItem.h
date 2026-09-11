@@ -53,6 +53,7 @@ protected:
     // legitimately be unavailable. UI controls can use this probe to disable
     // themselves without hiding configuration mistakes behind GetOptToken().
     const xr_token* TryGetOptToken();
+    bool IsOptTokenEnabled(int id);
     void SaveOptTokenValue(const char* val);
 
     xr_string m_entry;
