@@ -1,360 +1,387 @@
 <?xml version="1.0" encoding="windows-1251" ?>
 <string_table>
 	<string id="st_hud_interact_use">
-		<text>Использовать</text>
+		<text></text>
 	</string>
 	<string id="st_hud_interact_take">
-		<text>Взять</text>
+		<text></text>
 	</string>
 	<string id="st_hud_interact_talk">
-		<text>Говорить</text>
+		<text></text>
 	</string>
 	<string id="st_hud_interact_search">
-		<text>Обыскать</text>
+		<text></text>
 	</string>
 	<string id="st_hud_interact_empty">
-		<text>(Пусто)</text>
+		<text>()</text>
 	</string>
 	<string id="st_hud_interact_enter">
-		<text>Сесть</text>
+		<text></text>
 	</string>
 	<string id="st_hud_interact_drag">
-		<text>Тащить</text>
+		<text></text>
 	</string>
 	<string id="st_hud_interact_cut">
-		<text>Вырезать трофей</text>
+		<text> </text>
 	</string>
 	<string id="st_hud_interact_need_knife">
-		<text>Нужен нож, чтобы срезать трофей</text>
+		<text> ,   </text>
 	</string>
 	<string id="st_hud_interact_damaged_carcass">
-		<text>Поврежденная туша</text>
+		<text> </text>
 	</string>
 	<string id="st_hud_interact_unload">
-		<text>Разрядить</text>
+		<text></text>
 	</string>
 	<string id="ui_mm_hud_interact">
-		<text>Интерактивный HUD</text>
+		<text> HUD</text>
 	</string>
 	<string id="ui_mm_bullet_penetration">
-		<text>Пробитие стен</text>
+		<text> </text>
 	</string>
 	<string id="st_bullet_pen_on">
-		<text>Вкл</text>
+		<text></text>
 	</string>
 	<string id="st_bullet_pen_reduced">
-		<text>Ослаблено</text>
+		<text></text>
 	</string>
 	<string id="st_bullet_pen_off">
-		<text>Выкл</text>
+		<text></text>
 	</string>
 	<string id="ui_mm_tactical_compass">
-		<text>Компас</text>
+		<text></text>
 	</string>
 	<string id="st_compass_stalker2">
 		<text>Stalker 2</text>
 	</string>
 	<string id="st_compass_classic">
-		<text>Классика</text>
+		<text></text>
 	</string>
 	<string id="st_compass_off">
-		<text>Выкл</text>
+		<text></text>
 	</string>
 	<string id="ui_mm_compass_pos">
-		<text>Поз. компаса</text>
+		<text>. </text>
 	</string>
 	<string id="st_compass_pos_bottom">
-		<text>Снизу</text>
+		<text></text>
 	</string>
 	<string id="st_compass_pos_top">
-		<text>Сверху</text>
+		<text></text>
 	</string>
 	<string id="ui_mm_minimap_pos">
-		<text>Поз. миникарты</text>
+		<text>. </text>
 	</string>
 	<string id="st_minimap_pos_bl">
-		<text>Слева снизу</text>
+		<text> </text>
 	</string>
 	<string id="st_minimap_pos_br">
-		<text>Справа снизу</text>
+		<text> </text>
 	</string>
 	<string id="st_minimap_pos_tl">
-		<text>Слева сверху</text>
+		<text> </text>
 	</string>
 	<string id="st_minimap_pos_tr">
-		<text>Справа сверху</text>
+		<text> </text>
 	</string>
 	<string id="st_minimap_pos_off">
-		<text>Выкл</text>
+		<text></text>
 	</string>
 	<string id="ui_mm_compass_range">
-		<text>Дальность компаса</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_compass_scale">
-		<text>Масштаб компаса</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_compass_x">
-		<text>Компас X</text>
+		<text> X</text>
 	</string>
 	<string id="ui_mm_compass_y">
-		<text>Компас Y</text>
+		<text> Y</text>
 	</string>
 	<string id="ui_mm_minimap_scale">
-		<text>Масштаб миникарты</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_minimap_x">
-		<text>Миникарта X</text>
+		<text> X</text>
 	</string>
 	<string id="ui_mm_minimap_y">
-		<text>Миникарта Y</text>
+		<text> Y</text>
 	</string>
 	<string id="ui_mm_tab_game">
-		<text>Игра</text>
+		<text></text>
 	</string>
 	<string id="ui_mm_tab_hud">
 		<text>HUD</text>
 	</string>
 	<string id="ui_mm_sec_difficulty">
-		<text>Сложность</text>
+		<text></text>
 	</string>
 	<string id="ui_mm_sec_combat">
-		<text>Бой</text>
+		<text></text>
 	</string>
 	<string id="ui_mm_sec_world">
-		<text>Мир</text>
+		<text></text>
 	</string>
 	<string id="ui_mm_sec_immersion">
-		<text>Иммерсия</text>
+		<text></text>
 	</string>
 	<string id="ui_mm_sec_display">
-		<text>Экран</text>
+		<text></text>
 	</string>
 	<string id="ui_mm_sec_compass">
-		<text>Компас</text>
+		<text></text>
 	</string>
 	<string id="ui_mm_sec_minimap">
-		<text>Миникарта</text>
+		<text></text>
 	</string>
 	<string id="st_cap_list_difficulty">
-		<text>Сложность</text>
+		<text></text>
 	</string>
 	<string id="st_cap_list_economy">
-		<text>Экономика</text>
+		<text></text>
 	</string>
 	<string id="ui_mm_language">
-		<text>Язык</text>
+		<text></text>
 	</string>
 	<string id="ui_mm_subtitles">
-		<text>Субтитры</text>
+		<text></text>
 	</string>
 	<string id="ui_mm_alternative">
-		<text>Альтернативный</text>
+		<text></text>
 	</string>
 	<string id="ui_mm_aim_toggle">
-		<text>Прицел переключением</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_auto_aim_zoom">
-		<text>Зум при прицеливании</text>
+		<text>  </text>
 	</string>
 	<string id="ui_mm_autounload_wpn">
-		<text>Разряжать оружие</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_crosshair_hard">
-		<text>Реалистичный прицел</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_lean_toggle">
-		<text>Наклон переключением</text>
+		<text> </text>
+	</string>
+	<string id="ui_mm_sprint_lower_weapon">
+		<text>&#x0421;&#x043F;&#x0440;&#x0438;&#x043D;&#x0442; &#x0441; &#x043E;&#x043F;&#x0443;&#x0449;&#x0435;&#x043D;&#x043D;&#x044B;&#x043C; &#x043E;&#x0440;&#x0443;&#x0436;&#x0438;&#x0435;&#x043C;</text>
+	</string>
+	<string id="ui_mm_sprint_hold">
+		<text>&#x0423;&#x0434;&#x0435;&#x0440;&#x0436;&#x0438;&#x0432;&#x0430;&#x0442;&#x044C; &#x0441;&#x043F;&#x0440;&#x0438;&#x043D;&#x0442;</text>
+	</string>
+	<string id="ui_mm_sticky_aim">
+		<text>&#x041B;&#x0438;&#x043F;&#x043A;&#x0438;&#x0439; &#x043F;&#x0440;&#x0438;&#x0446;&#x0435;&#x043B;</text>
+	</string>
+	<string id="ui_mm_alt_aim_remember">
+		<text>&#x0417;&#x0430;&#x043F;&#x043E;&#x043C;&#x0438;&#x043D;&#x0430;&#x0442;&#x044C; &#x0434;&#x043E;&#x043F;. &#x043F;&#x0440;&#x0438;&#x0446;&#x0435;&#x043B;</text>
+	</string>
+	<string id="ui_st_take_all_hint">
+		<text>E &#x2014; &#x0432;&#x0437;&#x044F;&#x0442;&#x044C; &#x0432;&#x0441;&#x0451;. R &#x2014; &#x0432;&#x0441;&#x0451; &#x043A;&#x0440;&#x043E;&#x043C;&#x0435; &#x043E;&#x0440;&#x0443;&#x0436;&#x0438;&#x044F; &#x0438; &#x0431;&#x0440;&#x043E;&#x043D;&#x0438;.</text>
 	</string>
 	<string id="ui_mm_late_reload">
-		<text>Поздняя перезарядка</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_use_anims">
-		<text>Анимации использования</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_pickup_anim">
-		<text>Анимация подбора</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_harvest_anim">
-		<text>Анимация добычи</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_ledge_grab">
-		<text>Зацеп за уступы</text>
+		<text>  </text>
 	</string>
 	<string id="ui_mm_legs">
-		<text>Показывать ноги</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_dialog_ui">
-		<text>Интерфейс диалога</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_dynamic_news">
-		<text>Динамические новости</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_task_autosave">
-		<text>Автосохранение заданий</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_mutants_after_blowout">
-		<text>Мутанты после выброса</text>
+		<text>  </text>
 	</string>
 	<string id="ui_mm_hit_snd">
-		<text>Звуки попаданий</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_gasmask_breath_snd">
-		<text>Дыхание в противогазе</text>
+		<text>  </text>
 	</string>
 	<string id="ui_mm_fakelens">
-		<text>Имитация линзы</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_soft_particles">
-		<text>Мягкие частицы</text>
+		<text> </text>
 	</string>
 	<string id="ui_mm_msaa_alphatest">
 		<text>MSAA alpha test</text>
 	</string>
 	<string id="ui_mm_hint_default">
-		<text>Выберите параметр, чтобы увидеть описание.</text>
+		<text> ,   .</text>
 	</string>
 	<string id="ui_mm_hint_page_game">
-		<text>Настройки геймплея, боя, мира и иммерсии.</text>
+		<text> , ,   .</text>
 	</string>
 	<string id="ui_mm_hint_page_hud">
-		<text>Настройки HUD, компаса и миникарты.</text>
+		<text> HUD,   .</text>
 	</string>
 	<string id="ui_mm_hint_difficulty">
-		<text>Общая сложность игры.</text>
+		<text>  .</text>
 	</string>
 	<string id="ui_mm_hint_economy">
-		<text>Цены торговцев и экономика лута.</text>
+		<text>    .</text>
 	</string>
 	<string id="ui_mm_hint_bullet_pen">
-		<text>Пробитие укрытий пулями.</text>
+		<text>  .</text>
 	</string>
 	<string id="ui_mm_hint_aim_toggle">
-		<text>Прицеливание по нажатию, а не удержанием.</text>
+		<text>  ,   .</text>
 	</string>
 	<string id="ui_mm_hint_auto_aim_zoom">
-		<text>Автоматический зум при прицеливании.</text>
+		<text>   .</text>
 	</string>
 	<string id="ui_mm_hint_autounload_wpn">
-		<text>Разряжать оружие при смене.</text>
+		<text>   .</text>
 	</string>
 	<string id="ui_mm_hint_crosshair">
-		<text>Показывать прицел на экране.</text>
+		<text>   .</text>
 	</string>
 	<string id="ui_mm_hint_crosshair_hard">
-		<text>Стрельба из ствола, а не из камеры.</text>
+		<text>  ,    .</text>
 	</string>
 	<string id="ui_mm_hint_dist">
-		<text>Показывать дистанцию на прицеле.</text>
+		<text>   .</text>
 	</string>
 	<string id="ui_mm_hint_lean_toggle">
-		<text>Наклон по нажатию, а не удержанием.</text>
+		<text>  ,   .</text>
+	</string>
+	<string id="ui_mm_hint_sprint_lower_weapon">
+		<text>&#x0417;&#x0430;&#x043C;&#x0435;&#x043D;&#x044F;&#x0435;&#x0442; &#x0430;&#x043D;&#x0438;&#x043C;&#x0430;&#x0446;&#x0438;&#x0438; &#x0441;&#x043F;&#x0440;&#x0438;&#x043D;&#x0442;&#x0430; &#x0442;&#x043E;&#x0439; &#x0436;&#x0435; &#x043F;&#x043E;&#x0437;&#x043E;&#x0439;, &#x0447;&#x0442;&#x043E; &#x0438; &#x00AB;&#x041E;&#x043F;&#x0443;&#x0441;&#x0442;&#x0438;&#x0442;&#x044C; &#x043E;&#x0440;&#x0443;&#x0436;&#x0438;&#x0435;&#x00BB;.</text>
+	</string>
+	<string id="ui_mm_hint_sprint_hold">
+		<text>&#x0421;&#x043F;&#x0440;&#x0438;&#x043D;&#x0442; &#x0442;&#x043E;&#x043B;&#x044C;&#x043A;&#x043E; &#x043F;&#x043E;&#x043A;&#x0430; &#x043A;&#x043B;&#x0430;&#x0432;&#x0438;&#x0448;&#x0430; &#x0443;&#x0434;&#x0435;&#x0440;&#x0436;&#x0438;&#x0432;&#x0430;&#x0435;&#x0442;&#x0441;&#x044F;.</text>
+	</string>
+	<string id="ui_mm_hint_sticky_aim">
+		<text>&#x0421;&#x043E;&#x0445;&#x0440;&#x0430;&#x043D;&#x044F;&#x0442;&#x044C; &#x043F;&#x0440;&#x0438;&#x0446;&#x0435;&#x043B;&#x0438;&#x0432;&#x0430;&#x043D;&#x0438;&#x0435; &#x043F;&#x043E;&#x0441;&#x043B;&#x0435; &#x043F;&#x0435;&#x0440;&#x0435;&#x0437;&#x0430;&#x0440;&#x044F;&#x0434;&#x043A;&#x0438; &#x0438; &#x043A;&#x043B;&#x0438;&#x043D;&#x0430;.</text>
+	</string>
+	<string id="ui_mm_hint_alt_aim_remember">
+		<text>&#x0421;&#x043E;&#x0445;&#x0440;&#x0430;&#x043D;&#x044F;&#x0442;&#x044C; &#x0434;&#x043E;&#x043F;&#x043E;&#x043B;&#x043D;&#x0438;&#x0442;&#x0435;&#x043B;&#x044C;&#x043D;&#x044B;&#x0439; &#x043F;&#x0440;&#x0438;&#x0446;&#x0435;&#x043B; &#x0432; &#x0441;&#x043E;&#x0445;&#x0440;&#x0430;&#x043D;&#x0435;&#x043D;&#x0438;&#x0438;.</text>
 	</string>
 	<string id="ui_mm_hint_late_reload">
-		<text>Можно отменить перезарядку до посадки магазина.</text>
+		<text>     .</text>
 	</string>
 	<string id="ui_mm_hint_switch_slot">
-		<text>Поведение быстрого переключения слотов.</text>
+		<text>   .</text>
 	</string>
 	<string id="ui_mm_hint_use_anims">
-		<text>Проигрывать анимации использования предметов.</text>
+		<text>   .</text>
 	</string>
 	<string id="ui_mm_hint_pickup_anim">
-		<text>Проигрывать анимации подбора.</text>
+		<text>  .</text>
 	</string>
 	<string id="ui_mm_hint_harvest_anim">
-		<text>Проигрывать анимации добычи с мутантов.</text>
+		<text>    .</text>
 	</string>
 	<string id="ui_mm_hint_ledge_grab">
-		<text>Разрешить залезание на уступы.</text>
+		<text>   .</text>
 	</string>
 	<string id="ui_mm_hint_legs">
-		<text>Показывать ноги от первого лица.</text>
+		<text>    .</text>
 	</string>
 	<string id="ui_mm_hint_dialog_ui">
-		<text>Стиль интерфейса диалогов.</text>
+		<text>  .</text>
 	</string>
 	<string id="ui_mm_hint_dynamic_news">
-		<text>Показывать динамические новости мира.</text>
+		<text>   .</text>
 	</string>
 	<string id="ui_mm_hint_task_autosave">
-		<text>Сохраняться при взятии задания.</text>
+		<text>   .</text>
 	</string>
 	<string id="ui_mm_hint_mutants_after_blowout">
-		<text>Спавнить больше мутантов после выброса.</text>
+		<text>    .</text>
 	</string>
 	<string id="ui_mm_hint_3d_pda">
-		<text>Использовать 3D-модель КПК.</text>
+		<text> 3D- .</text>
 	</string>
 	<string id="ui_mm_hint_ambient">
-		<text>Играть фоновую музыку.</text>
+		<text>  .</text>
 	</string>
 	<string id="ui_mm_hint_tips">
-		<text>Показывать подсказки.</text>
+		<text> .</text>
 	</string>
 	<string id="ui_mm_hint_autopause">
-		<text>Пауза при потере фокуса окна.</text>
+		<text>    .</text>
 	</string>
 	<string id="ui_mm_hint_hit_snd">
-		<text>Звуки подтверждения попадания.</text>
+		<text>  .</text>
 	</string>
 	<string id="ui_mm_hint_gasmask_breath_snd">
-		<text>Дыхание в противогазе.</text>
+		<text>  .</text>
 	</string>
 	<string id="ui_mm_hint_fakelens">
-		<text>Оверлей линзы при прицеливании.</text>
+		<text>   .</text>
 	</string>
 	<string id="ui_mm_hint_hud_interact">
-		<text>Плавающая подсказка взаимодействия.</text>
+		<text>  .</text>
 	</string>
 	<string id="ui_mm_hint_compass">
-		<text>Стиль компаса.</text>
+		<text> .</text>
 	</string>
 	<string id="ui_mm_hint_compass_pos">
-		<text>Положение компаса на экране.</text>
+		<text>   .</text>
 	</string>
 	<string id="ui_mm_hint_compass_range">
-		<text>Дальность меток на компасе.</text>
+		<text>   .</text>
 	</string>
 	<string id="ui_mm_hint_compass_scale">
-		<text>Размер компаса.</text>
+		<text> .</text>
 	</string>
 	<string id="ui_mm_hint_compass_x">
-		<text>Смещение компаса по горизонтали.</text>
+		<text>   .</text>
 	</string>
 	<string id="ui_mm_hint_compass_y">
-		<text>Смещение компаса по вертикали.</text>
+		<text>   .</text>
 	</string>
 	<string id="ui_mm_hint_minimap_pos">
-		<text>Угол миникарты на экране.</text>
+		<text>   .</text>
 	</string>
 	<string id="ui_mm_hint_minimap_scale">
-		<text>Размер миникарты.</text>
+		<text> .</text>
 	</string>
 	<string id="ui_mm_hint_minimap_x">
-		<text>Смещение миникарты по горизонтали.</text>
+		<text>   .</text>
 	</string>
 	<string id="ui_mm_hint_minimap_y">
-		<text>Смещение миникарты по вертикали.</text>
+		<text>   .</text>
 	</string>
 	<string id="st_add_to_wheel">
-		<text>Добавить на колесо</text>
+		<text>  </text>
 	</string>
 	<string id="st_remove_from_wheel">
-		<text>Убрать с колеса</text>
+		<text>  </text>
 	</string>
 	<string id="st_item_wheel_pins">
-		<text>Закреплённые</text>
+		<text></text>
 	</string>
 	<string id="st_item_wheel_meds">
-		<text>Медикаменты</text>
+		<text></text>
 	</string>
 	<string id="st_item_wheel_food">
-		<text>Еда</text>
+		<text></text>
 	</string>
 	<string id="st_item_wheel_grenades">
-		<text>Гранаты</text>
+		<text></text>
 	</string>
 	<string id="st_item_wheel_empty">
-		<text>Пусто</text>
+		<text></text>
 	</string>
 </string_table>

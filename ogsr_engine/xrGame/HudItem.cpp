@@ -16,6 +16,7 @@
 #include "../../xr_3da/igame_persistent.h"
 #include "Pda.h"
 #include "Actor.h"
+#include "Actor_Flags.h"
 #include "xr_level_controller.h"
 #include "level.h"
 #include "entity_alive.h"
@@ -88,9 +89,6 @@ void CHudItem::Load(LPCSTR section)
     const auto& CollisionParams = CollisionParamsBase.at(type);
 
     m_nearwall_hud_offset_speed = 0.1f;
-    m_lowered_hud_offset = std::get<2>(CollisionParams);
-    m_lowered_hud_rotate = std::get<3>(CollisionParams);
-    m_lowered_hud_rotate.x = -m_lowered_hud_rotate.x;
 
     if (m_nearwall_on)
     {
@@ -103,9 +101,6 @@ void CHudItem::Load(LPCSTR section)
         m_nearwall_target_hud_fov = READ_IF_EXISTS(pSettings, r_float, section, "nearwall_target_hud_fov", std::get<4>(CollisionParams));
         m_nearwall_target_aim_hud_fov = READ_IF_EXISTS(pSettings, r_float, section, "nearwall_target_aim_hud_fov", std::get<5>(CollisionParams));
         m_nearwall_speed_mod = READ_IF_EXISTS(pSettings, r_float, section, "nearwall_speed_mod", 10.f);
-        m_lowered_hud_offset = m_nearwall_target_hud_offset;
-        m_lowered_hud_rotate = m_nearwall_target_hud_rotate;
-        m_lowered_hud_rotate.x = -m_lowered_hud_rotate.x;
     }
 
     //if (pSettings->line_exist(hud_sect, "hud_fov"))
@@ -241,15 +236,15 @@ bool CHudItem::Action(s32 cmd, u32 flags)
 bool CHudItem::IsLowered() const
 {
     auto* actor = smart_cast<const CActor*>(object().H_Parent());
-    return actor && actor->WeaponLowered();
-}
-
-bool CHudItem::WantLoweredHud() const
-{
-    if (!IsLowered() || IsZoomed())
+    if (!actor)
         return false;
-    auto* actor = smart_cast<const CActor*>(object().H_Parent());
-    return actor && !(actor->get_state() & mcSprint);
+    if (actor->WeaponLowered())
+        return true;
+    if (!psActorFlags.test(AF_SPRINT_LOWER_WEAPON))
+        return false;
+    if (!(actor->get_state() & mcSprint) || IsZoomed())
+        return false;
+    return CanLowerWeapon();
 }
 
 void CHudItem::SwitchState(u32 S)
@@ -576,6 +571,11 @@ bool CHudItem::TryPlayAnimIdle()
             const u32 State = pActor->get_state();
             if (State & mcSprint)
             {
+                if (IsLowered())
+                {
+                    SprintType = false;
+                    return false;
+                }
                 if (!SprintType)
                 {
                     SwitchState(eSprintStart);
@@ -774,7 +774,7 @@ bool CHudItem::CollisionAllowed() const
 
 void CHudItem::UpdateCollision(Fmatrix& trans)
 {
-    const bool lowered = WantLoweredHud();
+    const bool lowered = IsLowered();
     if (!CollisionAllowed() && !lowered)
         return;
 
@@ -825,8 +825,8 @@ void CHudItem::UpdateCollision(Fmatrix& trans)
     Fvector curr_offs, curr_rot;
     if (lowered)
     {
-        curr_offs = m_lowered_hud_offset;
-        curr_rot = m_lowered_hud_rotate;
+        curr_offs = {};
+        curr_rot = {};
     }
     else
     {
@@ -886,7 +886,7 @@ void CHudItem::UpdateInertion(Fmatrix& trans)
 
         // tend to forward
         float _tendto_speed, _origin_offset;
-        if (GetCurrentHudOffsetIdx() > 0)
+        if (IsZoomed())
         { // Худ в режиме "Прицеливание"
             float factor = GetInertionFactor();
             _tendto_speed = inertion_data.m_tendto_speed_aim - (inertion_data.m_tendto_speed_aim - inertion_data.m_tendto_speed) * factor;
@@ -935,7 +935,7 @@ void CHudItem::UpdateHudAdditional(Fmatrix& trans, const bool need_update_collis
 
     attachable_hud_item* hi = HudItemData();
     u8 idx = GetCurrentHudOffsetIdx();
-    const bool b_aiming = idx != hud_item_measures::m_hands_offset_type_normal;
+    const bool b_aiming = idx != hud_item_measures::m_hands_offset_type_normal && idx != hud_item_measures::m_hands_offset_type_lowered;
     Fvector zr_offs = hi->m_measures.m_hands_offset[hud_item_measures::m_hands_offset_pos][idx];
     Fvector zr_rot = hi->m_measures.m_hands_offset[hud_item_measures::m_hands_offset_rot][idx];
 

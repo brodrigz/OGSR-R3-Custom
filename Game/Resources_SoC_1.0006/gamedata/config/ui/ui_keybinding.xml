@@ -14,6 +14,8 @@
 		<command id="kb_jump"						    exe="jump"/>
 		<command id="kb_crouch"						  exe="crouch"/>
 		<command id="kb_crouch_toggle"		  exe="crouch_toggle"/>
+		<command id="kb_walk_toggle"			  exe="walk_toggle"/>
+		<command id="kb_crouch_low_toggle"	  exe="crouch_low_toggle"/>
 		<command id="kb_always_run"				  exe="accel"/>
 		<command id="kb_sprint"						  exe="sprint_toggle"/>		
 		<command id="kb_left_lookout"			  exe="llookout"/>
@@ -44,7 +46,7 @@
 		<!-- <command id="kb_quick_nade"				        exe="quick_nade"/> -->
 	</group>
 	<group name="kb_grp_inventory">
-		<command id="kb_weapon8"					exe="wpn_8"/>
+		<command id="kb_na_use_detector"			exe="wpn_8"/>
 		<command id="kb_inventory"				  exe="inventory"/>
 		<command id="kb_active_jobs"			  exe="active_jobs"/>
 		<command id="kb_scores"					  exe="scores"/>

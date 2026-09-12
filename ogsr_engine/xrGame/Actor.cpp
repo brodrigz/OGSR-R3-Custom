@@ -79,6 +79,21 @@ static float ICoincidenced = 0;
 Flags32 psActorFlags{AF_KEYPRESS_ON_START | AF_CAM_COLLISION | AF_CAM_COLLISION_COP | /*AF_AI_VOLUMETRIC_LIGHTS | AF_DOF_ZOOM | AF_DOF_RELOAD |*/ AF_3D_PDA | AF_ALWAYSRUN |
                      AF_FIRST_PERSON_DEATH | AF_MUSIC_TRACKS | AF_WEAPON_BOBBING};
 
+u32 g_actor_spawn_time{};
+
+void CActor::ApplyMovementToggles()
+{
+    const bool crouched = (mstate_wishful & mcCrouch) || (mstate_real & mcCrouch);
+    if (!crouched || (mstate_real & (mcClimb | mcJump | mcFall | mcLanding | mcLanding2)))
+        m_bLowCrouchToggled = false;
+    if (mstate_real & (mcSprint | mcClimb))
+        m_bWalkToggled = false;
+    if (m_bWalkToggled && !crouched)
+        mstate_wishful |= mcAccel;
+    if (m_bLowCrouchToggled && crouched)
+        mstate_wishful |= mcAccel;
+}
+
 static bool updated;
 
 CActor::CActor() : CEntityAlive(), current_ik_cam_shift(0)
@@ -1066,6 +1081,7 @@ void CActor::shedule_Update(u32 DT)
             extern bool g_bAutoClearCrouch;
             if (g_bAutoClearCrouch)
                 mstate_wishful &= ~mcCrouch;
+            ApplyMovementToggles();
             //-----------------------------------------------------
         }
     }

@@ -471,6 +471,13 @@ void hud_item_measures::load(const shared_str& sect_name, IKinematics* K)
     else
         m_hands_offset[m_hands_offset_pos][m_hands_offset_type_aim] = READ_IF_EXISTS(pSettings, r_fvector3, sect_name, val_name, Fvector{});
 
+    if (UI()->is_16x10() && strstr(sect_name.c_str(), "pda"))
+    {
+        Fvector& aim_pos = m_hands_offset[m_hands_offset_pos][m_hands_offset_type_aim];
+        if (aim_pos.z < 0.f)
+            aim_pos.z += 0.03f;
+    }
+
     strconcat(sizeof(val_name), val_name, "aim_hud_offset_rot", _prefix);
     if (is_16x9 && !pSettings->line_exist(sect_name, val_name))
         xr_strcpy(val_name, "aim_hud_offset_rot");
@@ -594,6 +601,20 @@ void hud_item_measures::load(const shared_str& sect_name, IKinematics* K)
     if (pSettings->line_exist(sect_name, val_name) && pSettings->line_exist(sect_name, val_name2))
         m_hands_offset[m_hands_offset_rot][m_hands_offset_type_gl_normal_scope] = Fvector{pSettings->r_float(sect_name, val_name), pSettings->r_float(sect_name, val_name2)};
     //
+
+    strconcat(sizeof(val_name), val_name, "lowered_hud_offset_pos", _prefix);
+    if (is_16x9 && !pSettings->line_exist(sect_name, val_name))
+        xr_strcpy(val_name, "lowered_hud_offset_pos");
+    static const Fvector kLoweredHudOffset{0.1f, -0.03f, 0.f};
+    m_hands_offset[m_hands_offset_pos][m_hands_offset_type_lowered] =
+        READ_IF_EXISTS(pSettings, r_fvector3, sect_name, val_name, kLoweredHudOffset);
+
+    strconcat(sizeof(val_name), val_name, "lowered_hud_offset_rot", _prefix);
+    if (is_16x9 && !pSettings->line_exist(sect_name, val_name))
+        xr_strcpy(val_name, "lowered_hud_offset_rot");
+    static const Fvector kLoweredHudRotate{0.1f, -0.8f, 0.1f};
+    m_hands_offset[m_hands_offset_rot][m_hands_offset_type_lowered] =
+        READ_IF_EXISTS(pSettings, r_fvector3, sect_name, val_name, kLoweredHudRotate);
 
     if (useCopFirePoint) // cop configs
     {

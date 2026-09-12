@@ -27,6 +27,8 @@
 #include "script_game_object.h"
 #include "ai_space.h"
 #include "script_engine.h"
+#include "WeaponKnife.h"
+#include "../xr_3da/xr_input.h"
 
 #include "GamePersistent.h"
 #include "../xr_3da/x_ray.h"
@@ -765,6 +767,8 @@ void CWeapon::save(NET_Packet& output_packet)
     save_data(m_flagsAddOnState, output_packet);
     save_data(m_ammoType, output_packet);
     save_data(m_bZoomMode, output_packet);
+    if (psActorFlags.test(AF_ALT_AIM_REMEMBER))
+        output_packet.w_u8(AimAlt ? 1 : 0);
 }
 
 void CWeapon::load(IReader& input_packet)
@@ -775,6 +779,9 @@ void CWeapon::load(IReader& input_packet)
     UpdateAddonsVisibility();
     load_data(m_ammoType, input_packet);
     load_data(m_bZoomMode, input_packet);
+
+    if (psActorFlags.test(AF_ALT_AIM_REMEMBER) && input_packet.elapsed() >= 1)
+        AimAlt = !!input_packet.r_u8();
 
     if (m_bZoomMode)
         OnZoomIn();
@@ -893,7 +900,11 @@ u8 CWeapon::idle_state()
     {
         u32 st = actor->get_state();
         if (st & mcSprint)
+        {
+            if (IsLowered())
+                return eIdle;
             return eSubstateIdleSprint;
+        }
         else if (st & mcAnyAction && !(st & mcJump) && !(st & mcFall))
             return eSubstateIdleMoving;
     }
@@ -1176,8 +1187,11 @@ bool CWeapon::Action(s32 cmd, u32 flags)
             {
                 if (IsPending())
                     return false;
-                if (ParentIsActor() && Actor())
+                if (ParentIsActor() && Actor() && Actor()->WeaponLowered())
+                {
                     Actor()->SetWeaponLowered(false);
+                    return true;
+                }
                 FireStart();
             }
             else
@@ -1218,6 +1232,15 @@ bool CWeapon::Action(s32 cmd, u32 flags)
     case kWPN_ZOOM: {
         const u32 state = GetState();
         const bool bPending = IsPending();
+        if (!(flags & CMD_START) && !psActorFlags.is(AF_WPN_AIM_TOGGLE))
+            m_bStickyAimPending = false;
+        if (IsZoomEnabled() && StickyAimAllowed() && (flags & CMD_START) && (state == eReload || bPending))
+        {
+            m_bStickyAimPending = true;
+            if (ParentIsActor() && Actor())
+                Actor()->SetWeaponLowered(false);
+            return true;
+        }
         if (IsZoomEnabled() && (state == eFire || state == eFire2 || state == eMagEmpty || state == eIdle || !bPending))
         {
             if (flags & CMD_START)
@@ -1461,7 +1484,11 @@ BOOL CWeapon::CheckForMisfire()
         return FALSE;
 }
 
-void CWeapon::Reload() { OnZoomOut(); }
+void CWeapon::Reload()
+{
+    CaptureStickyAim();
+    OnZoomOut();
+}
 
 void CWeapon::DeviceSwitch() { OnZoomOut(); }
 
@@ -2032,8 +2059,8 @@ u8 CWeapon::GetCurrentHudOffsetIdx() const
         }
     }
 
-    //if (LoweredActive && !(g_actor->get_state() & mcSprint))
-    //    return hud_item_measures::m_hands_offset_type_lowered;
+    if (IsLowered())
+        return hud_item_measures::m_hands_offset_type_lowered;
 
     return hud_item_measures::m_hands_offset_type_normal;
 }
@@ -2201,7 +2228,52 @@ void CWeapon::Show(bool now)
 
 bool CWeapon::show_crosshair() { return psActorFlags.test(AF_CROSSHAIR_DBG) || !(IsZoomed() && ZoomHideCrosshair()); }
 
-bool CWeapon::show_indicators() { return !(IsZoomed() && (UseScopeTexture() || !m_bScopeShowIndicators)); }
+bool CWeapon::show_indicators()
+{
+    if (CLS_ID == CLSID_DEVICE_PDA)
+        return true;
+    return !(IsZoomed() && (UseScopeTexture() || !m_bScopeShowIndicators));
+}
+
+bool CWeapon::StickyAimAllowed() const
+{
+    if (!psActorFlags.test(AF_STICKY_AIM) || !ParentIsActor())
+        return false;
+    if (smart_cast<const CWeaponKnife*>(this) || CLS_ID == CLSID_DEVICE_PDA)
+        return false;
+    return IsZoomEnabled();
+}
+
+void CWeapon::CaptureStickyAim()
+{
+    if (StickyAimAllowed() && IsZoomed())
+        m_bStickyAimPending = true;
+}
+
+void CWeapon::TryRestoreStickyAim()
+{
+    if (!m_bStickyAimPending || !StickyAimAllowed())
+    {
+        m_bStickyAimPending = false;
+        return;
+    }
+    if (IsTriStateReload() && iAmmoElapsed < iMagazineSize && !IsMisfire())
+        return;
+    const bool restore = psActorFlags.test(AF_WPN_AIM_TOGGLE) || [&]() {
+        if (!pInput || kWPN_ZOOM >= g_key_bindings.size())
+            return false;
+        const _binding& b = g_key_bindings[kWPN_ZOOM];
+        for (int i = 0; i < 2; ++i)
+        {
+            if (b.m_keyboard[i] && pInput->iGetAsyncKeyState(b.m_keyboard[i]->dik))
+                return true;
+        }
+        return false;
+    }();
+    if (restore && !IsZoomed())
+        OnZoomIn();
+    m_bStickyAimPending = false;
+}
 
 float CWeapon::GetConditionToShow() const
 {

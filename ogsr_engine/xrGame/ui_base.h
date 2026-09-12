@@ -107,6 +107,12 @@ public:
 
     static bool is_widescreen() { return float(Device.dwWidth) / float(Device.dwHeight) > (UI_BASE_WIDTH / UI_BASE_HEIGHT + 0.01f); }
     static bool is_ultra_widescreen() { return float(Device.dwWidth) / float(Device.dwHeight) > 2.f; }
+    static bool is_16x10()
+    {
+        const float a = float(Device.dwWidth) / float(Device.dwHeight);
+        return a > 1.51f && a < 1.70f;
+    }
+    static constexpr float hud_16x10_shift = 15.f;
 };
 
 extern CUICursor* GetUICursor();

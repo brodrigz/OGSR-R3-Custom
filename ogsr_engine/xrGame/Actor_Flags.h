@@ -28,6 +28,10 @@ enum
     AF_THROW_DEBUG = 1 << 23,
     AF_WEAPON_BOBBING = 1 << 24,
     AF_LEAN_TOGGLE = 1 << 25,
+    AF_SPRINT_LOWER_WEAPON = 1 << 26,
+    AF_SPRINT_HOLD = 1 << 27,
+    AF_STICKY_AIM = 1 << 28,
+    AF_ALT_AIM_REMEMBER = 1 << 29,
 };
 
 //enum

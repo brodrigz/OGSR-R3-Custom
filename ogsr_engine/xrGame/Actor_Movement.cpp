@@ -349,10 +349,16 @@ void CActor::g_cl_CheckControls(u32 mstate_wf, Fvector& vControlAccel, float& Ju
         else
             mstate_real &= ~mcSprint;
 
-        if (!(mstate_real & (mcFwd)) || mstate_real & (mcCrouch | mcClimb | mcBack) || !isActorAccelerated(mstate_wf, IsZoomAimingMode()))
+        if (!(mstate_real & (mcFwd)) || (mstate_real & (mcClimb | mcBack)) || !isActorAccelerated(mstate_wf, IsZoomAimingMode()))
         {
             mstate_real &= ~mcSprint;
             mstate_wishful &= ~mcSprint;
+        }
+        else if (mstate_real & mcCrouch)
+        {
+            mstate_real &= ~mcSprint;
+            if (mstate_wf & mcCrouch)
+                mstate_wishful &= ~mcSprint;
         }
 
         // check player move state

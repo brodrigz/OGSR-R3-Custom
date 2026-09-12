@@ -682,6 +682,9 @@ protected:
     bool m_bWasHitted;
     bool m_bWasBackStabbed;
     bool m_bWeaponLowered{};
+    bool m_bWalkToggled{};
+    bool m_bLowCrouchToggled{};
+    void ApplyMovementToggles();
 
 public:
     virtual void SetHitInfo(CObject* who, CObject* weapon, s16 element, Fvector Pos, Fvector Dir);
@@ -780,6 +783,8 @@ public:
 
 extern bool isActorAccelerated(u32 mstate, bool ZoomMode);
 extern float f_Freelook_cam_limit;
+extern u32 g_actor_spawn_time;
+inline bool ActorSpawnQuiet(u32 window_ms = 5000) { return Device.dwTimeGlobal < g_actor_spawn_time + window_ms; }
 
 IC CActorCondition& CActor::conditions() const
 {

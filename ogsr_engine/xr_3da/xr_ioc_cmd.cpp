@@ -405,6 +405,8 @@ public:
         if (!tokens)
             return;
         inherited::Execute(args);
+        if (snd_device_id != u32(-1))
+            psSoundFlags.set(ss_UseDefaultDevice, FALSE);
     }
 
     virtual void Status(TStatus& S)

@@ -165,6 +165,21 @@
 	<string id="ui_mm_lean_toggle">
 		<text>Toggle lean</text>
 	</string>
+	<string id="ui_mm_sprint_lower_weapon">
+		<text>Sprint: lowered weapon</text>
+	</string>
+	<string id="ui_mm_sprint_hold">
+		<text>Hold to sprint</text>
+	</string>
+	<string id="ui_mm_sticky_aim">
+		<text>Sticky aim</text>
+	</string>
+	<string id="ui_mm_alt_aim_remember">
+		<text>Remember alt aim</text>
+	</string>
+	<string id="ui_st_take_all_hint">
+		<text>E - take everything.  R - take everything except weapons and armor.</text>
+	</string>
 	<string id="ui_mm_late_reload">
 		<text>Late reload</text>
 	</string>
@@ -248,6 +263,18 @@
 	</string>
 	<string id="ui_mm_hint_lean_toggle">
 		<text>Tap to lean instead of holding.</text>
+	</string>
+	<string id="ui_mm_hint_sprint_lower_weapon">
+		<text>Replace sprint animations with the lowered-weapon pose.</text>
+	</string>
+	<string id="ui_mm_hint_sprint_hold">
+		<text>Sprint only while the key is held.</text>
+	</string>
+	<string id="ui_mm_hint_sticky_aim">
+		<text>Keep ADS after reload and jam, for hold-aim and toggle-aim.</text>
+	</string>
+	<string id="ui_mm_hint_alt_aim_remember">
+		<text>Save each weapon's alternate sight across loads.</text>
 	</string>
 	<string id="ui_mm_hint_late_reload">
 		<text>Allow reload cancel until the magazine seats.</text>

@@ -48,6 +48,8 @@ xr_vector<_action> actions = {
                                                                                                                             DEF_ACTION("quick_use", kQUICK_USE)
                                                                                                                                 DEF_ACTION("wpn_lower", kWPN_LOWER)
                                                                                                                                     DEF_ACTION("item_wheel", kITEM_WHEEL)
+                                                                                                                                        DEF_ACTION("walk_toggle", kWALK_TOGGLE)
+                                                                                                                                            DEF_ACTION("crouch_low_toggle", kCROUCH_LOW_TOGGLE)
 };
 
 xr_vector<_binding> g_key_bindings;

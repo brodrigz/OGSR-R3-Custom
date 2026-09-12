@@ -7,6 +7,7 @@
 #include "ui/UIXmlInit.h"
 #include "object_broker.h"
 #include "string_table.h"
+#include "ui_base.h"
 
 void Remove_all_statics()
 {
@@ -122,6 +123,15 @@ SDrawStaticStruct* CUIGameCustom::AddCustomStatic(LPCSTR id, bool bSingleInstanc
     sss.m_static = xr_new<CUIStatic>();
     sss.m_name = id;
     xml_init.InitStatic(*m_msgs_xml, id, 0, sss.m_static);
+    if (ui_core::is_16x10())
+    {
+        Fvector2 p = sss.m_static->GetWndPos();
+        if (p.x < 250.f)
+        {
+            p.x += ui_core::hud_16x10_shift;
+            sss.m_static->SetWndPos(p);
+        }
+    }
     float ttl = m_msgs_xml->ReadAttribFlt(id, 0, "ttl", -1);
     if (ttl > 0.0f)
         sss.m_endTime = Device.fTimeGlobal + ttl;

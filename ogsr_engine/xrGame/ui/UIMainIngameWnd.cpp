@@ -308,9 +308,11 @@ extern u32 g_minimap_pos;
 void CUIMainIngameWnd::UpdateHudClusterLayout()
 {
     const int pos = static_cast<int>(g_minimap_pos);
-    if (pos == m_applied_hud_cluster_pos)
+    const bool wide10 = ui_core::is_16x10();
+    if (pos == m_applied_hud_cluster_pos && wide10 == m_applied_hud_16x10)
         return;
     m_applied_hud_cluster_pos = pos;
+    m_applied_hud_16x10 = wide10;
 
     float dx = 0.f;
     if (pos != 0)
@@ -318,6 +320,8 @@ void CUIMainIngameWnd::UpdateHudClusterLayout()
         constexpr float kLeftPad = 12.f;
         dx = kLeftPad - m_xml_health_pos.x;
     }
+    if (ui_core::is_16x10())
+        dx += ui_core::hud_16x10_shift;
 
     UIStaticHealth.SetWndPos(m_xml_health_pos.x + dx, m_xml_health_pos.y);
     UIWeaponBack.SetWndPos(m_xml_weapon_pos.x + dx, m_xml_weapon_pos.y);

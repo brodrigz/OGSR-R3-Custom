@@ -806,6 +806,26 @@
 			<options_item entry="wpn_aim_toggle" group="mm_opt_gameplay"/>
 			<text font="letterica16" r="215" g="195" b="170">ui_mm_aim_toggle</text>
 		</check_aim_toggle>
+
+		<check_sprint_lower_weapon x="20" y="330" width="243" height="21">
+			<options_item entry="g_sprint_lower_weapon" group="mm_opt_gameplay"/>
+			<text font="letterica16" r="215" g="195" b="170">ui_mm_sprint_lower_weapon</text>
+		</check_sprint_lower_weapon>
+
+		<check_sprint_hold x="20" y="355" width="243" height="21">
+			<options_item entry="g_sprint_hold" group="mm_opt_gameplay"/>
+			<text font="letterica16" r="215" g="195" b="170">ui_mm_sprint_hold</text>
+		</check_sprint_hold>
+
+		<check_sticky_aim x="20" y="380" width="243" height="21">
+			<options_item entry="g_sticky_aim" group="mm_opt_gameplay"/>
+			<text font="letterica16" r="215" g="195" b="170">ui_mm_sticky_aim</text>
+		</check_sticky_aim>
+
+		<check_alt_aim_remember x="195" y="380" width="243" height="21">
+			<options_item entry="g_alt_aim_remember" group="mm_opt_gameplay"/>
+			<text font="letterica16" r="215" g="195" b="170">ui_mm_alt_aim_remember</text>
+		</check_alt_aim_remember>
 		
 		<check_switch_slot x="20" y="305" width="243" height="21">
 			<options_item entry="g_mouse_wheel_switch_slot" group="mm_opt_gameplay"/>

@@ -87,6 +87,12 @@
 	<string id="kb_crouch_toggle">
 		<text>Always crouch</text>
 	</string>
+	<string id="kb_walk_toggle">
+		<text>Walk toggle</text>
+	</string>
+	<string id="kb_crouch_low_toggle">
+		<text>Low crouch toggle</text>
+	</string>
 	<string id="kb_down">
 		<text>Down</text>
 	</string>

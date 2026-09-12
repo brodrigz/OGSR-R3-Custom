@@ -275,6 +275,12 @@ void CWeaponMagazined::Load(LPCSTR section)
 
 void CWeaponMagazined::FireStart()
 {
+    if (ParentIsActor() && Actor() && Actor()->WeaponLowered())
+    {
+        Actor()->SetWeaponLowered(false);
+        return;
+    }
+
     if (IsValid() && (!IsMisfire() || IsGrenadeMode()))
     {
         if (!IsWorking() || AllowFireWhileWorking())
@@ -949,6 +955,7 @@ void CWeaponMagazined::OnAnimationEnd(u32 state)
             Msg("[reload-diag] animation-end-complete weapon=%s ammo_after=%d/%d", cNameSect().c_str(), iAmmoElapsed, iMagazineSize);
 #endif
         SwitchState(eIdle);
+        TryRestoreStickyAim();
         break; // End of reload animation
     case eHiding: SwitchState(eHidden); break; // End of Hide
     case eIdle: switch2_Idle(); break; // Keep showing idle
@@ -960,7 +967,11 @@ void CWeaponMagazined::OnAnimationEnd(u32 state)
     case eMisfire:
     case eDeviceSwitch:
     case eFire:
-    case eFire2: SwitchState(eIdle); break;
+    case eFire2:
+        SwitchState(eIdle);
+        if (state == eMisfire)
+            TryRestoreStickyAim();
+        break;
     default: inherited::OnAnimationEnd(state);
     }
 }
@@ -1089,6 +1100,7 @@ void CWeaponMagazined::switch2_Empty(const bool empty_click_anim_play)
         return;
     }
 
+    CaptureStickyAim();
     OnZoomOut();
 
     if (!TryReload())
@@ -1164,7 +1176,8 @@ void CWeaponMagazined::switch2_Hidden()
 }
 void CWeaponMagazined::switch2_Showing()
 {
-    PlaySound(sndShow, get_LastFP());
+    if (!ActorSpawnQuiet(2000))
+        PlaySound(sndShow, get_LastFP());
 
     SetPending(TRUE);
     PlayAnimShow();

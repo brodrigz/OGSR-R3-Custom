@@ -11,6 +11,7 @@
 
 #include "xrUIXmlParser.h"
 #include "UIXmlInit.h"
+#include "../ui_base.h"
 
 #include "uistatic.h"
 #include "UIScrollView.h"
@@ -94,6 +95,12 @@ void CUICharacterInfo::Init(float x, float y, float width, float height, CUIXml*
     {
         pItem = m_icons[eUICommunity] = xr_new<CUIStatic>();
         xml_init.InitStatic(*xml_doc, "community_static", 0, pItem);
+        if (UI()->is_16x10())
+        {
+            Fvector2 p = pItem->GetWndPos();
+            p.x += 12.f;
+            pItem->SetWndPos(p);
+        }
         pItem->SetElipsis(CUIStatic::eepEnd, 1);
         AttachChild(pItem);
         pItem->SetAutoDelete(true);

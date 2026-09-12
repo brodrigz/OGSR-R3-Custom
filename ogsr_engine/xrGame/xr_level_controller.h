@@ -81,6 +81,8 @@ enum EGameActions
     kQUICK_USE,
     kWPN_LOWER,
     kITEM_WHEEL,
+    kWALK_TOGGLE,
+    kCROUCH_LOW_TOGGLE,
 
     kLASTACTION = u32(-3),
     kNOTBINDED = u32(-2),

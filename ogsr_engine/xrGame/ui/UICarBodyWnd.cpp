@@ -26,7 +26,12 @@
 #include "../script_callback_ex.h"
 #include "../script_game_object.h"
 #include "../BottleItem.h"
-#include "../xr_3da/xr_input.h"
+#include "../xr_level_controller.h"
+#include "../string_table.h"
+#include "../CustomOutfit.h"
+#include "../weapon.h"
+#include <dinput.h>
+#include "../../xr_3da/xr_input.h"
 
 #define CAR_BODY_XML "carbody_new.xml"
 #define CARBODY_ITEM_XML "carbody_item.xml"
@@ -137,6 +142,7 @@ void CUICarBodyWnd::Init()
     m_pUITakeAll->SetAutoDelete(true);
     AttachChild(m_pUITakeAll);
     xml_init.Init3tButton(uiXml, "take_all_btn", 0, m_pUITakeAll);
+    m_pUITakeAll->m_hint_text = CStringTable().translate("ui_st_take_all_hint");
 
     BindDragDropListEnents(m_pUIOurBagList);
     BindDragDropListEnents(m_pUIOthersBagList);
@@ -515,6 +521,46 @@ void CUICarBodyWnd::TakeAll()
     }
 }
 
+static bool IsLootGearItem(PIItem itm)
+{
+    if (!itm)
+        return false;
+    if (smart_cast<CCustomOutfit*>(itm))
+        return true;
+    return smart_cast<CWeapon*>(itm) != nullptr;
+}
+
+void CUICarBodyWnd::TakeExceptGear()
+{
+    u32 cnt = m_pUIOthersBagList->ItemsCount();
+    u16 tmp_id = 0;
+    if (m_pInventoryBox)
+        tmp_id = (smart_cast<CGameObject*>(m_pOurObject))->ID();
+
+    xr_vector<PIItem> take;
+    for (u32 i = 0; i < cnt; ++i)
+    {
+        CUICellItem* ci = m_pUIOthersBagList->GetItemIdx(i);
+        for (u32 j = 0; j < ci->ChildsCount(); ++j)
+        {
+            auto _itm = static_cast<PIItem>(ci->Child(j)->m_pData);
+            if (_itm && _itm->p_object() && !IsLootGearItem(_itm))
+                take.push_back(_itm);
+        }
+        auto itm = static_cast<PIItem>(ci->m_pData);
+        if (itm && itm->p_object() && !IsLootGearItem(itm))
+            take.push_back(itm);
+    }
+
+    for (PIItem _itm : take)
+    {
+        if (m_pOthersObject)
+            TransferItem(_itm, m_pOthersObject, m_pOurObject, false);
+        else
+            move_item(m_pInventoryBox->object().ID(), tmp_id, _itm->p_object()->ID());
+    }
+}
+
 void CUICarBodyWnd::MoveItems(CUICellItem* itm)
 {
     u16 tmp_id = 0;
@@ -662,6 +708,12 @@ bool CUICarBodyWnd::OnKeyboard(int dik, EUIMessages keyboard_action)
     {
         if (m_pUIPropertiesBox->GetVisible())
             m_pUIPropertiesBox->OnKeyboard(dik, keyboard_action);
+    }
+
+    if (keyboard_action == WINDOW_KEY_PRESSED && dik == DIK_R)
+    {
+        TakeExceptGear();
+        return true;
     }
 
     if (keyboard_action == WINDOW_KEY_PRESSED && is_binded(kUSE, dik))

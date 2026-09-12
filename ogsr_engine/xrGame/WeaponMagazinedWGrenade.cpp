@@ -738,12 +738,17 @@ void CWeaponMagazinedWGrenade::PlayAnimIdle()
                 const u32 State = pActor->get_state();
                 if (State & mcSprint)
                 {
-                    if (!SprintType)
+                    if (IsLowered())
+                    {
+                        SprintType = false;
+                    }
+                    else if (!SprintType)
                     {
                         SwitchState(eSprintStart);
                         return;
                     }
-                    act_state = AnimStateSprint;
+                    else
+                        act_state = AnimStateSprint;
                 }
                 else if (SprintType)
                 {

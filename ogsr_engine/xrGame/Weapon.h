@@ -136,6 +136,9 @@ public:
     bool IsTriStateReload() const { return m_bTriStateReload; }
     EWeaponSubStates GetReloadState() const { return (EWeaponSubStates)m_sub_state; }
     u8 idle_state();
+    bool StickyAimAllowed() const;
+    void CaptureStickyAim();
+    void TryRestoreStickyAim();
 
 protected:
     bool m_bTriStateReload;
@@ -239,6 +242,7 @@ protected:
     float m_fScopeZoomFactor;
     //когда режим приближения включен
     bool m_bZoomMode;
+    bool m_bStickyAimPending{};
     //прятать перекрестие в режиме прицеливания
     bool m_bHideCrosshairInZoom;
     //разрешить инерцию оружия в режиме прицеливания

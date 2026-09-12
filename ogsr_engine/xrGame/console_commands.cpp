@@ -1626,6 +1626,10 @@ void CCC_RegisterCommands()
 
     CMD3(CCC_Mask, "wpn_aim_toggle", &psActorFlags, AF_WPN_AIM_TOGGLE);
     CMD3(CCC_Mask, "lean_toggle", &psActorFlags, AF_LEAN_TOGGLE);
+    CMD3(CCC_Mask, "g_sprint_lower_weapon", &psActorFlags, AF_SPRINT_LOWER_WEAPON);
+    CMD3(CCC_Mask, "g_sprint_hold", &psActorFlags, AF_SPRINT_HOLD);
+    CMD3(CCC_Mask, "g_sticky_aim", &psActorFlags, AF_STICKY_AIM);
+    CMD3(CCC_Mask, "g_alt_aim_remember", &psActorFlags, AF_ALT_AIM_REMEMBER);
 
     // alife
 #ifdef DEBUG

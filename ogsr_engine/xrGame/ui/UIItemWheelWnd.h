@@ -35,6 +35,7 @@ class CUIItemWheelWnd : public CUIDialogWnd
         shared_str section;
         u16 object_id{u16(-1)};
         bool grenade{};
+        bool detector{};
         float angle{};
     };
 
@@ -43,6 +44,8 @@ class CUIItemWheelWnd : public CUIDialogWnd
     CUIStatic m_title;
     CUIStatic m_category;
     CUIStatic m_tab_icons[eItemWheelTabCount];
+    CUIStatic m_tab_logos[eItemWheelTabCount];
+    CUIStatic m_tab_nums[eItemWheelTabCount];
     CUIStatic m_items_root;
 
     xr_vector<Slice> m_slices;
@@ -54,6 +57,12 @@ class CUIItemWheelWnd : public CUIDialogWnd
     Fvector2 m_hover_sz{};
     Fvector2 m_count_sz{};
     float m_radius{145.f};
+    float m_radius_y{145.f};
+    float m_aspect_kx{1.f};
+
+    void LayoutChrome();
+    void LayoutTabs();
+    float CursorAngle(float dx, float dy) const;
 
     void Rebuild();
     void ClearSlices();

@@ -469,7 +469,7 @@ bool CUIMapWnd::OnMouse(float x, float y, EUIMessages mouse_action)
 
     if (((mouse_action == WINDOW_LBUTTON_DOWN) && (m_flags.is_any(lmZoomIn + lmZoomOut))) || (mouse_action == WINDOW_MOUSE_WHEEL_DOWN) || (mouse_action == WINDOW_MOUSE_WHEEL_UP))
     {
-        bool b_zoom_in = (mouse_action == WINDOW_LBUTTON_DOWN && m_flags.test(lmZoomIn)) || (mouse_action == WINDOW_MOUSE_WHEEL_DOWN);
+        bool b_zoom_in = (mouse_action == WINDOW_LBUTTON_DOWN && m_flags.test(lmZoomIn)) || (mouse_action == WINDOW_MOUSE_WHEEL_UP);
 
         if (mouse_action == WINDOW_MOUSE_WHEEL_UP)
         {

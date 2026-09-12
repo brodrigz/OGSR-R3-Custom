@@ -75,6 +75,9 @@
 	<string id="ui_st_take_all">
 		<text>¬з€ть все</text>
 	</string>
+	<string id="ui_st_take_all_hint">
+		<text>E Ч вз€ть всЄ. R Ч всЄ кроме оружи€ и брони.</text>
+	</string>
 	<string id="ui_st_time_remains">
 		<text>ќсталось</text>
 	</string>

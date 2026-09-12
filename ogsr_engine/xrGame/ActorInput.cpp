@@ -151,10 +151,34 @@ bool CActor::OnActionPress(int cmd)
         g_bAutoClearCrouch = !g_bAutoClearCrouch;
         if (!g_bAutoClearCrouch)
             mstate_wishful |= mcCrouch;
+        else
+            m_bLowCrouchToggled = false;
+        return true;
+    }
+    case kWALK_TOGGLE: {
+        if ((mstate_wishful & mcCrouch) || (mstate_real & mcCrouch))
+            return true;
+        m_bWalkToggled = !m_bWalkToggled;
+        return true;
+    }
+    case kCROUCH_LOW_TOGGLE: {
+        if (!((mstate_wishful & mcCrouch) || (mstate_real & mcCrouch) || !g_bAutoClearCrouch))
+            return true;
+        m_bLowCrouchToggled = !m_bLowCrouchToggled;
         return true;
     }
     case kSPRINT_TOGGLE: {
-        if (mstate_wishful & mcSprint)
+        const bool crouched = (mstate_wishful & mcCrouch) || (mstate_real & mcCrouch) || !g_bAutoClearCrouch;
+        if (crouched)
+        {
+            g_bAutoClearCrouch = true;
+            mstate_wishful &= ~mcCrouch;
+            m_bLowCrouchToggled = false;
+        }
+        m_bWalkToggled = false;
+        if (psActorFlags.test(AF_SPRINT_HOLD))
+            mstate_wishful |= mcSprint;
+        else if (mstate_wishful & mcSprint)
             mstate_wishful &= ~mcSprint;
         else
             mstate_wishful |= mcSprint;
@@ -312,6 +336,10 @@ void CActor::IR_OnKeyboardRelease(int cmd)
                 g_PerformDrop();
             break;
         case kCROUCH: g_bAutoClearCrouch = true; break;
+        case kSPRINT_TOGGLE:
+            if (psActorFlags.test(AF_SPRINT_HOLD))
+                mstate_wishful &= ~mcSprint;
+            break;
         case kFREELOOK:
             if (cam_freelook == eflEnabled || cam_freelook == eflEnabling)
                 cam_UnsetFreelook();

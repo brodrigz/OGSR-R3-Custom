@@ -1,0 +1,22 @@
+-- Gasmask breathing only on indoor levels. Peeled out of Folopes rad_qol_moves.
+-- Drives rad3_gasmask_breath_snd from the game's isIndoor() list.
+
+local breath_snd_level = nil
+
+function attach(sm)
+	sm:subscribe({ signal = "on_update", fun = this.on_update })
+end
+
+function on_update()
+	if not (db.actor and db.actor:alive()) then return end
+	pcall(function()
+		local lname = level.name()
+		if lname ~= breath_snd_level then
+			breath_snd_level = lname
+			local want = isIndoor(lname) and true or false
+			if (ui_data.load("rad3_gasmask_breath_snd") and true or false) ~= want then
+				ui_data.save("rad3_gasmask_breath_snd", want)
+			end
+		end
+	end)
+end

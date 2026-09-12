@@ -9,6 +9,8 @@
 #include "../Medkit.h"
 #include "../Antirad.h"
 #include "../Grenade.h"
+#include "../CustomDetector.h"
+#include "../player_hud.h"
 #include "../hudmanager.h"
 #include "../string_table.h"
 #include "../xr_level_controller.h"
@@ -29,7 +31,7 @@ constexpr float kIconSize = 42.f;
 constexpr float kDeadzoneSq = 24.f * 24.f;
 
 LPCSTR tab_titles[eItemWheelTabCount] = {"st_item_wheel_pins", "st_item_wheel_meds", "st_item_wheel_food", "st_item_wheel_grenades"};
-LPCSTR tab_textures[eItemWheelTabCount] = {nullptr, "ui_qaw_category_meds", "ui_qaw_category_food", "ui_qaw_category_grenades"};
+LPCSTR tab_textures[eItemWheelTabCount] = {"ui_qaw_category_devices", "ui_qaw_category_meds", "ui_qaw_category_food", "ui_qaw_category_grenades"};
 
 xr_vector<shared_str> s_pins;
 
@@ -92,6 +94,8 @@ bool IsFood(CInventoryItem* item) { return smart_cast<CEatableItem*>(item) && !I
 
 bool IsGrenade(CInventoryItem* item) { return smart_cast<CGrenade*>(item); }
 
+bool IsDetector(CInventoryItem* item) { return smart_cast<CCustomDetector*>(item); }
+
 bool ItemVisible(CInventoryItem* item)
 {
     return item && !item->m_flags.test(CInventoryItem::FIHiddenForInventory);
@@ -125,7 +129,7 @@ bool ItemWheel_CanPin(CInventoryItem* item)
 {
     if (!ItemVisible(item))
         return false;
-    return smart_cast<CEatableItem*>(item) || smart_cast<CGrenade*>(item);
+    return smart_cast<CEatableItem*>(item) || smart_cast<CGrenade*>(item) || IsDetector(item);
 }
 
 bool ItemWheel_HasPin(const shared_str& section)
@@ -207,7 +211,6 @@ CUIItemWheelWnd::CUIItemWheelWnd()
     m_count_sz = count_tmp.GetWndSize();
 
     xml_init.InitStatic(uiXml, "tab_icon", 0, &m_tab_icons[0]);
-    const Fvector2 tab_pos = m_tab_icons[0].GetWndPos();
     const Fvector2 tab_sz = m_tab_icons[0].GetWndSize();
     for (u32 i = 0; i < eItemWheelTabCount; ++i)
     {
@@ -218,18 +221,105 @@ CUIItemWheelWnd::CUIItemWheelWnd()
             m_tab_icons[i].SetStretchTexture(true);
             m_tab_icons[i].SetWndSize(tab_sz);
         }
-        m_tab_icons[i].SetWndPos(tab_pos.x + float(i) * (tab_sz.x + 8.f), tab_pos.y);
+
+        m_tab_icons[i].AttachChild(&m_tab_logos[i]);
+        m_tab_logos[i].InitTexture(tab_textures[i]);
+        m_tab_logos[i].SetStretchTexture(true);
+
+        m_tab_icons[i].AttachChild(&m_tab_nums[i]);
+        string16 num{};
+        xr_sprintf(num, "%u", i + 1);
+        m_tab_nums[i].SetFont(UI()->Font()->pFontLetterica16Russian);
+        m_tab_nums[i].SetText(num);
+        m_tab_nums[i].SetTextColor(color_rgba(255, 255, 255, 255));
+        m_tab_nums[i].SetTextAlignment(CGameFont::alCenter);
+    }
+    m_category.Show(false);
+
+    LayoutChrome();
+
+    SetTab(eItemWheelMeds);
+    Hide();
+}
+
+void CUIItemWheelWnd::LayoutChrome()
+{
+    m_aspect_kx = 1.f;
+    if (UI()->is_widescreen())
+    {
+        const float kx = UI()->get_current_kx();
+        if (kx > 0.05f)
+            m_aspect_kx = kx;
     }
 
-    const Fvector2 bp = m_bg.GetWndPos();
-    const Fvector2 bs = m_bg.GetWndSize();
+    Fvector2 bp = m_bg.GetWndPos();
+    Fvector2 bs = m_bg.GetWndSize();
+    if (m_aspect_kx < 0.999f)
+    {
+        const float new_h = bs.y / m_aspect_kx;
+        bp.y += (bs.y - new_h) * 0.5f;
+        bs.y = new_h;
+        m_bg.SetWndPos(bp);
+        m_bg.SetWndSize(bs);
+
+        Fvector2 cs = m_cursor.GetWndSize();
+        m_cursor.SetWndSize(Fvector2().set(cs.x, cs.y / m_aspect_kx));
+    }
+
     m_center.set(bp.x + bs.x * 0.5f, bp.y + bs.y * 0.5f);
+    m_radius_y = m_radius / m_aspect_kx;
 
     m_cursor.SetWndPos(m_center.x - m_cursor.GetWidth() * 0.5f, m_center.y - m_cursor.GetHeight());
     m_cursor.SetHeadingPivot(Fvector2().set(m_cursor.GetWidth() * 0.5f, m_cursor.GetHeight()), Fvector2().set(0.f, 0.f), false);
 
-    SetTab(eItemWheelMeds);
-    Hide();
+    LayoutTabs();
+}
+
+void CUIItemWheelWnd::LayoutTabs()
+{
+    constexpr float kBase = 36.f;
+    constexpr float kSpacingDeg = 11.f;
+    constexpr float kRadius = 237.f;
+    const float start_deg = -((eItemWheelTabCount - 1) * kSpacingDeg) * 0.5f;
+    const float rx = kRadius;
+    const float ry = kRadius / m_aspect_kx;
+
+    for (u32 i = 0; i < eItemWheelTabCount; ++i)
+    {
+        const bool sel = (i == u32(m_tab));
+        const float scale = sel ? 1.45f : 1.f;
+        const float w = kBase * scale;
+        const float h = (kBase * scale) / m_aspect_kx;
+        const float ang = (start_deg + float(i) * kSpacingDeg) * PI / 180.f;
+        const float px = m_center.x + _cos(ang) * rx;
+        const float py = m_center.y + _sin(ang) * ry;
+        m_tab_icons[i].SetWndSize(Fvector2().set(w, h));
+        m_tab_icons[i].SetWndPos(px - w * 0.5f, py - h * 0.5f);
+
+        const float lw = w * 0.65f;
+        const float lh = h * 0.65f;
+        m_tab_logos[i].SetWndSize(Fvector2().set(lw, lh));
+        m_tab_logos[i].SetWndPos((w - lw) * 0.5f, (h - lh) * 0.5f);
+
+        m_tab_nums[i].SetWndSize(Fvector2().set(15.f, 15.f));
+        m_tab_nums[i].SetWndPos(w - 14.f, 0.f);
+
+        if (sel)
+        {
+            m_tab_icons[i].SetColor(color_rgba(255, 255, 255, 255));
+            m_tab_logos[i].SetColor(color_rgba(0, 0, 0, 255));
+        }
+        else
+        {
+            m_tab_icons[i].SetColor(color_rgba(40, 40, 40, 160));
+            m_tab_logos[i].SetColor(color_rgba(255, 255, 255, 150));
+        }
+    }
+}
+
+float CUIItemWheelWnd::CursorAngle(float dx, float dy) const
+{
+    return WrapTwoPi(atan2(dx, -dy * m_aspect_kx));
 }
 
 CUIItemWheelWnd::~CUIItemWheelWnd() { ClearSlices(); }
@@ -261,18 +351,8 @@ void CUIItemWheelWnd::SetTab(EItemWheelTab tab)
         tab = eItemWheelMeds;
     m_tab = tab;
     m_title.SetTextST(tab_titles[m_tab]);
-
-    if (tab_textures[m_tab])
-    {
-        m_category.InitTexture(tab_textures[m_tab]);
-        m_category.SetStretchTexture(true);
-        m_category.Show(true);
-    }
-    else
-        m_category.Show(false);
-
-    for (u32 i = 0; i < eItemWheelTabCount; ++i)
-        m_tab_icons[i].SetColor(i == m_tab ? color_rgba(255, 255, 255, 255) : color_rgba(160, 160, 160, 140));
+    m_category.Show(false);
+    LayoutTabs();
 
     m_inv_frame = u32(-1);
     if (IsShown())
@@ -299,6 +379,7 @@ void CUIItemWheelWnd::Rebuild()
         CInventoryItem* item{};
         u32 count{};
         bool grenade{};
+        bool detector{};
     };
     xr_vector<Group> groups;
 
@@ -316,7 +397,7 @@ void CUIItemWheelWnd::Rebuild()
         }
         if (groups.size() >= kMaxWheelSlices)
             return;
-        groups.push_back({sect, itm, 1, as_grenade});
+        groups.push_back({sect, itm, 1, as_grenade, IsDetector(itm)});
     };
 
     if (m_tab == eItemWheelPins)
@@ -328,6 +409,7 @@ void CUIItemWheelWnd::Rebuild()
             CInventoryItem* found = nullptr;
             u32 count = 0;
             bool grenade = false;
+            bool detector = false;
             for (CInventoryItem* itm : inv.m_all)
             {
                 if (!ItemVisible(itm) || itm->object().cNameSect() != sect)
@@ -338,11 +420,12 @@ void CUIItemWheelWnd::Rebuild()
                 {
                     found = itm;
                     grenade = IsGrenade(itm);
+                    detector = IsDetector(itm);
                 }
                 ++count;
             }
             if (found)
-                groups.push_back({sect, found, count, grenade});
+                groups.push_back({sect, found, count, grenade, detector});
         }
     }
     else
@@ -375,10 +458,11 @@ void CUIItemWheelWnd::Rebuild()
         s.section = groups[i].section;
         s.object_id = groups[i].item->object().ID();
         s.grenade = groups[i].grenade;
+        s.detector = groups[i].detector;
         s.angle = span * float(i);
 
         const float x = m_center.x + _sin(s.angle) * m_radius;
-        const float y = m_center.y - _cos(s.angle) * m_radius;
+        const float y = m_center.y - _cos(s.angle) * m_radius_y;
 
         s.hover = xr_new<CUIStatic>();
         s.hover->SetAutoDelete(true);
@@ -435,7 +519,7 @@ void CUIItemWheelWnd::UpdateHover()
         return;
     }
 
-    const float ang = WrapTwoPi(atan2(dx, -dy));
+    const float ang = CursorAngle(dx, dy);
     const float span = PI_MUL_2 / float(n);
     float best = span * 0.5f + 0.001f;
     for (u32 i = 0; i < n; ++i)
@@ -462,7 +546,7 @@ void CUIItemWheelWnd::UpdateCursor()
         dx = 0.f;
         dy = -1.f;
     }
-    m_cursor.SetHeading(atan2(dx, -dy));
+    m_cursor.SetHeading(-CursorAngle(dx, dy));
 }
 
 bool CUIItemWheelWnd::HoldKeyDown() const
@@ -501,7 +585,32 @@ void CUIItemWheelWnd::ActivateHovered()
         return;
     }
 
-    if (m_slices[m_hovered].grenade || IsGrenade(item))
+    if (m_slices[m_hovered].detector || IsDetector(item))
+    {
+        CInventory& inv = actor->inventory();
+        PIItem equipped = inv.ItemFromSlot(DETECTOR_SLOT);
+        auto* det = smart_cast<CCustomDetector*>(item);
+        const bool fast = g_player_hud && g_player_hud->attached_item(0) != nullptr;
+        if (equipped == item)
+        {
+            if (det)
+                det->ToggleDetector(fast);
+        }
+        else
+        {
+            if (equipped)
+            {
+                if (auto* old_det = smart_cast<CCustomDetector*>(equipped))
+                    old_det->HideDetector(true);
+                inv.Ruck(equipped);
+            }
+            item->SetSlot(u8(DETECTOR_SLOT));
+            inv.Slot(item, true);
+            if (det)
+                det->ShowDetector(fast);
+        }
+    }
+    else if (m_slices[m_hovered].grenade || IsGrenade(item))
     {
         CInventory& inv = actor->inventory();
         PIItem equipped = inv.ItemFromSlot(GRENADE_SLOT);

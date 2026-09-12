@@ -73,6 +73,8 @@ BOOL CActor::net_Spawn(CSE_Abstract* DC)
     if (TRUE == E->s_flags.test(M_SPAWN_OBJECT_LOCAL) && TRUE == E->s_flags.is(M_SPAWN_OBJECT_ASPLAYER))
         g_actor = this;
 
+    g_actor_spawn_time = Device.dwTimeGlobal;
+
     VERIFY(m_pActorEffector == NULL);
     m_pActorEffector = xr_new<CActorCameraManager>();
 

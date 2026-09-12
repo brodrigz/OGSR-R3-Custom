@@ -85,6 +85,7 @@ protected:
 
     // Взять все
     void TakeAll();
+    void TakeExceptGear();
     void MoveItem(CUICellItem* itm);
     void MoveItems(CUICellItem* itm);
     void DropItemsfromCell(bool b_all);

@@ -689,10 +689,14 @@ CScriptGameObject* CScriptGameObject::GetActiveItem()
 {
     CInventoryOwner* l_tpInventoryOwner = smart_cast<CInventoryOwner*>(&object());
     if (l_tpInventoryOwner)
+    {
+        if (auto* actor = smart_cast<CActor*>(&object()); actor && actor->WeaponLowered())
+            return (0);
         if (l_tpInventoryOwner->inventory().ActiveItem())
             return (l_tpInventoryOwner->inventory().ActiveItem()->object().lua_game_object());
         else
             return (0);
+    }
     else
     {
         ai().script_engine().script_log(ScriptStorage::eLuaMessageTypeError, "CScriptGameObject : cannot access class member active_item!");

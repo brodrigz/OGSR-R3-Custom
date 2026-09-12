@@ -391,7 +391,11 @@ void CActor::g_SetAnimation(u32 mstate_rl)
     if (mstate_rl & mcSprint)
     {
         g_SetSprintAnimation(mstate_rl, M_head, M_torso, M_legs);
-        moving_idx = STorsoWpn::eSprint;
+        CWeapon* sprint_wpn = smart_cast<CWeapon*>(inventory().ActiveItem());
+        if (WeaponLowered() || (psActorFlags.test(AF_SPRINT_LOWER_WEAPON) && sprint_wpn && sprint_wpn->CanLowerWeapon() && !sprint_wpn->IsZoomed()))
+            moving_idx = STorsoWpn::eRun;
+        else
+            moving_idx = STorsoWpn::eSprint;
     }
     //---------------------------------------------------------------
     if (this == Level().CurrentViewEntity())
@@ -498,12 +502,6 @@ void CActor::g_SetAnimation(u32 mstate_rl)
                                 case CWeapon::eHiding: M_torso = TW->holster; break;
                                 default: M_torso = TW->moving[moving_idx]; break;
                                 }
-                            }
-
-                            if (!K && WeaponLowered() && W->GetState() == CWeapon::eIdle && !W->IsZoomed())
-                            {
-                                if (TW->moving[STorsoWpn::eSprint])
-                                    M_torso = TW->moving[STorsoWpn::eSprint];
                             }
                         }
                         else if (M)

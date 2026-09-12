@@ -14,6 +14,7 @@
 #include "script_game_object.h"
 #include "ui/UIDialogWnd.h"
 #include "ui/UIInventoryWnd.h"
+#include "actor.h"
 
 /* Декларация о стиле экспорта свойств и методов:
      * Свойства объектов экспортируются по возможности так, как они выглядят в файлах конфигурации (*.ltx), а не так как они названы в исходниках движка
@@ -103,7 +104,12 @@ CScriptGameObject* item_lua_object(PIItem itm)
     return NULL;
 }
 
-CScriptGameObject* inventory_active_item(CInventory* I) { return item_lua_object(I->ActiveItem()); }
+CScriptGameObject* inventory_active_item(CInventory* I)
+{
+    if (auto* actor = smart_cast<CActor*>(I->GetOwner()); actor && actor->WeaponLowered())
+        return NULL;
+    return item_lua_object(I->ActiveItem());
+}
 CScriptGameObject* inventory_selected_item(CInventory* I)
 {
     CUIDialogWnd* IR = HUD().GetUI()->MainInputReceiver();

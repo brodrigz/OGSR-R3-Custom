@@ -8,6 +8,7 @@
 #include "../actor.h"
 #include "../uigamesp.h"
 #include "../hudmanager.h"
+#include "../ui_base.h"
 
 #include "../CustomOutfit.h"
 
@@ -73,6 +74,12 @@ void CUIInventoryWnd::Init()
 
     AttachChild(&UIBagWnd);
     xml_init.InitStatic(uiXml, "bag_static", 0, &UIBagWnd);
+    if (UI()->is_16x10())
+    {
+        Fvector2 p = UIBagWnd.GetWndPos();
+        p.x -= 30.f;
+        UIBagWnd.SetWndPos(p);
+    }
 
     AttachChild(&UIMoneyWnd);
     xml_init.InitStatic(uiXml, "money_static", 0, &UIMoneyWnd);

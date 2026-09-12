@@ -87,6 +87,12 @@
 	<string id="kb_crouch_toggle">
 		<text>Всегда в присяди</text>
 	</string>
+	<string id="kb_walk_toggle">
+		<text>Переключение шага</text>
+	</string>
+	<string id="kb_crouch_low_toggle">
+		<text>Переключение низкого приседа</text>
+	</string>
 	<string id="kb_down">
 		<text>Вниз</text>
 	</string>

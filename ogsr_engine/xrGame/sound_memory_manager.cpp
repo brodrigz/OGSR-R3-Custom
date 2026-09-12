@@ -29,6 +29,8 @@
 #include "clsid_game.h"
 #include "ai_debug.h"
 #endif // MASTER_GOLD
+#include "clsid_game.h"
+#include "actor.h"
 
 #define SILENCE
 //#define SAVE_OWN_SOUNDS
@@ -232,6 +234,13 @@ void CSoundMemoryManager::add(CSoundObject& sound_object, bool check_for_existan
 
 void CSoundMemoryManager::add(const CObject* object, int sound_type, const Fvector& position, float sound_power)
 {
+    if (ActorSpawnQuiet())
+    {
+        const CObject* src = object && object->H_Parent() ? object->H_Parent() : object;
+        if (src && (src->CLS_ID == CLSID_OBJECT_ACTOR || smart_cast<const CActor*>(src)))
+            return;
+    }
+
 #ifndef SAVE_OWN_SOUNDS
     // we do not want to save our own sounds
     if (object && (m_object->ID() == object->ID()))
@@ -473,6 +482,9 @@ void CSoundMemoryManager::load(IReader& packet)
 #endif // USE_FIRST_LEVEL_TIME
         object.m_sound_type = (ESoundTypes)packet.r_u32();
         object.m_power = packet.r_float();
+
+        if (object.m_object && object.m_object->CLS_ID == CLSID_OBJECT_ACTOR)
+            continue;
 
         if (object.m_object)
         {

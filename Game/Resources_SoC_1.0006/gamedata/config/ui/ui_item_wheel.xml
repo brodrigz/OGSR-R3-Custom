@@ -16,15 +16,15 @@
 
 	<tab_category x="448" y="300" width="128" height="128" stretch="1"/>
 
-	<tab_icon x="430" y="560" width="24" height="24" stretch="1">
+	<tab_icon x="430" y="560" width="36" height="36" stretch="1">
 		<texture>ui_qaw_tab_icon</texture>
 	</tab_icon>
 
-	<hover x="0" y="0" width="90" height="90" stretch="1">
+	<hover x="0" y="0" width="100" height="100" stretch="1">
 		<texture>ui_qaw_opt_hover</texture>
 	</hover>
 
-	<selected x="0" y="0" width="90" height="90" stretch="1">
+	<selected x="0" y="0" width="100" height="100" stretch="1">
 		<texture>ui_qaw_opt_selected</texture>
 	</selected>
 

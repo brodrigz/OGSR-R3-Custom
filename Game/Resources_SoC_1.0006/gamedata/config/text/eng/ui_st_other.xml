@@ -75,6 +75,9 @@
 	<string id="ui_st_take_all">
 		<text>Take all</text>
 	</string>
+	<string id="ui_st_take_all_hint">
+		<text>E - take everything.  R - take everything except weapons and armor.</text>
+	</string>
 	<string id="ui_st_time_remains">
 		<text>Remaining</text>
 	</string>
