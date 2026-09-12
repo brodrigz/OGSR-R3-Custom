@@ -9,6 +9,7 @@ class CUITradeWnd;
 class CUIPdaWnd;
 class CUITalkWnd;
 class CUICarBodyWnd;
+class CUIItemWheelWnd;
 class CInventory;
 
 class game_cl_Single;
@@ -46,6 +47,7 @@ public:
     CUIPdaWnd* PdaMenu;
     CUITalkWnd* TalkMenu;
     CUICarBodyWnd* UICarBodyMenu;
+    CUIItemWheelWnd* ItemWheelMenu;
     CChangeLevelWnd* UIChangeLevelWnd;
 
     void ShowHidePda(const bool show);

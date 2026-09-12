@@ -1370,6 +1370,7 @@
     <ClInclude Include="ui_base.h" />
     <ClInclude Include="UIDialogHolder.h" />
     <ClInclude Include="ui\UIInventoryWnd.h" />
+    <ClInclude Include="ui\UIItemWheelWnd.h" />
     <ClInclude Include="ui\UIOutfitSlot.h" />
     <ClInclude Include="ui\UITradeWnd.h" />
     <ClInclude Include="ui\UIPdaAux.h" />
@@ -2310,6 +2311,7 @@
     <ClCompile Include="ui_base.cpp" />
     <ClCompile Include="UIDialogHolder.cpp" />
     <ClCompile Include="ui\UIInventoryWnd.cpp" />
+    <ClCompile Include="ui\UIItemWheelWnd.cpp" />
     <ClCompile Include="ui\uiinventorywnd2.cpp" />
     <ClCompile Include="ui\UIInventoryWnd3.cpp" />
     <ClCompile Include="ui\UIOutfitSlot.cpp" />

@@ -80,6 +80,7 @@ enum EGameActions
     kCYCLE_INTERACT,
     kQUICK_USE,
     kWPN_LOWER,
+    kITEM_WHEEL,
 
     kLASTACTION = u32(-3),
     kNOTBINDED = u32(-2),

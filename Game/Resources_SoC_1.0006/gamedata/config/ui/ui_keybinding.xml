@@ -61,6 +61,7 @@
 		<command id="kb_quick_slot_3"					exe="quick_slot_3"/>
 		<command id="kb_quick_slot_4"				exe="quick_slot_4"/>	
 		<command id="kb_use_radio"				exe="use_radio"/>
+		<command id="kb_item_wheel"				exe="item_wheel"/>
 	</group>
 	<group name="kb_grp_common">
 		<command id="kb_next_slot"				  exe="next_slot"/>

@@ -279,4 +279,7 @@
 	<string id="ui_mm_unbind_hint">
 		<text>Нажмите Esc, чтобы отвязать</text>
 	</string>
+	<string id="kb_item_wheel">
+		<text>Колесо предметов</text>
+	</string>
 </string_table>

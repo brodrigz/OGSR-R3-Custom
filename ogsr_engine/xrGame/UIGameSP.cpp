@@ -20,6 +20,7 @@
 #include "ui/UIPdaWnd.h"
 #include "ui/UITalkWnd.h"
 #include "ui/UICarBodyWnd.h"
+#include "ui/UIItemWheelWnd.h"
 #include "ui/UIMessageBox.h"
 
 #include "inventory.h"
@@ -33,6 +34,7 @@ CUIGameSP::CUIGameSP()
     PdaMenu = xr_new<CUIPdaWnd>();
     TalkMenu = xr_new<CUITalkWnd>();
     UICarBodyMenu = xr_new<CUICarBodyWnd>();
+    ItemWheelMenu = xr_new<CUIItemWheelWnd>();
     UIChangeLevelWnd = xr_new<CChangeLevelWnd>();
 }
 
@@ -42,6 +44,7 @@ CUIGameSP::~CUIGameSP()
     delete_data(PdaMenu);
     delete_data(TalkMenu);
     delete_data(UICarBodyMenu);
+    delete_data(ItemWheelMenu);
     delete_data(UIChangeLevelWnd);
 }
 
@@ -61,7 +64,7 @@ void CUIGameSP::shedule_Update(u32 dt)
 void CUIGameSP::HideShownDialogs()
 {
     CUIDialogWnd* mir = MainInputReceiver();
-    if (mir && (mir == InventoryMenu || mir == PdaMenu || mir == TalkMenu || mir == UICarBodyMenu))
+    if (mir && (mir == InventoryMenu || mir == PdaMenu || mir == TalkMenu || mir == UICarBodyMenu || mir == ItemWheelMenu))
         mir->GetHolder()->StartStopMenu(mir, true);
 }
 
@@ -97,11 +100,21 @@ bool CUIGameSP::IR_OnKeyboardPress(int dik)
     if (attach_adjust_mode_keyb(dik))
         return true;
 
+    auto bind = get_binded_action(dik);
+    if (bind == kITEM_WHEEL)
+    {
+        if (g_item_wheel && !MainInputReceiver())
+        {
+            m_game->StartStopMenu(ItemWheelMenu, false);
+            return true;
+        }
+        return false;
+    }
+
     auto active_hud = smart_cast<CHudItem*>(pActor->inventory().ActiveItem());
     if (active_hud && active_hud->GetState() != CHudItem::eIdle && Core.Features.test(xrCore::Feature::busy_actor_restrictions))
         return false;
 
-    auto bind = get_binded_action(dik);
     switch (bind)
     {
     case kINVENTORY:
@@ -228,6 +241,7 @@ void CUIGameSP::reset_ui()
     PdaMenu->Reset();
     TalkMenu->Reset();
     UICarBodyMenu->Reset();
+    ItemWheelMenu->Reset();
     UIChangeLevelWnd->Reset();
 }
 

@@ -20,6 +20,7 @@
 #include "script_engine.h"
 #include "xrServer_Objects.h"
 #include "ui/UIMainIngameWnd.h"
+#include "ui/UIItemWheelWnd.h"
 #include "PhysicsGamePars.h"
 #include "phworld.h"
 #include "string_table.h"
@@ -254,6 +255,7 @@ static xr_token tactical_compass_pos_token[] = {
 static xr_token minimap_pos_token[] = {
     {"st_minimap_pos_bl", 0}, {"st_minimap_pos_br", 1}, {"st_minimap_pos_tl", 2}, {"st_minimap_pos_tr", 3},
     {"st_minimap_pos_off", 4}, {nullptr, 0}};
+static xr_token item_wheel_token[] = {{"off", 0}, {"on", 1}, {nullptr, 0}};
 float g_tactical_compass_range = 150.f;
 float g_tactical_compass_scale = 1.f;
 float g_tactical_compass_x = 0.f;
@@ -1610,6 +1612,8 @@ void CCC_RegisterCommands()
     CMD4(CCC_Float, "g_minimap_scale", &g_minimap_scale, 0.5f, 2.f);
     CMD4(CCC_Float, "g_minimap_x", &g_minimap_x, -400.f, 400.f);
     CMD4(CCC_Float, "g_minimap_y", &g_minimap_y, -400.f, 400.f);
+    CMD3(CCC_Token, "g_item_wheel", &g_item_wheel, item_wheel_token);
+    CMD3(CCC_String, "g_item_wheel_pins", g_item_wheel_pins, 2048);
     CMD4(CCC_Float, "g_hit_pwr_modif", &hit_modifier, 0.5f, 3.f);
     CMD4(CCC_Float, "g_dispersion_base", &g_dispersion_base, 0.f, 5.f);
     CMD4(CCC_Float, "g_dispersion_factor", &g_dispersion_factor, 0.1f, 10.f);

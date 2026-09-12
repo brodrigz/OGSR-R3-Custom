@@ -15,6 +15,9 @@
 	<string id="kb_wpn_lower">
 		<text>Lower weapon</text>
 	</string>
+	<string id="kb_item_wheel">
+		<text>Item wheel</text>
+	</string>
 	<string id="kb_wpn_zoom_alter">
 		<text>Sight mode</text>
 	</string>

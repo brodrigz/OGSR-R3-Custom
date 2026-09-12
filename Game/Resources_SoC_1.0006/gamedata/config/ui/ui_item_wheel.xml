@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<w>
+	<main x="0" y="0" width="1024" height="768"/>
+
+	<bg x="299" y="171" width="426" height="426" stretch="1">
+		<texture>ui_qaw_wheel_bg</texture>
+	</bg>
+
+	<cursor x="299" y="171" width="426" height="213" stretch="1" heading="1">
+		<texture>ui_qaw_cursor</texture>
+	</cursor>
+
+	<title x="452" y="348" width="120" height="22">
+		<text complex_mode="1" r="240" g="240" b="240" align="c" vert_align="c" font="letterica16"/>
+	</title>
+
+	<tab_category x="448" y="300" width="128" height="128" stretch="1"/>
+
+	<tab_icon x="430" y="560" width="24" height="24" stretch="1">
+		<texture>ui_qaw_tab_icon</texture>
+	</tab_icon>
+
+	<hover x="0" y="0" width="90" height="90" stretch="1">
+		<texture>ui_qaw_opt_hover</texture>
+	</hover>
+
+	<selected x="0" y="0" width="90" height="90" stretch="1">
+		<texture>ui_qaw_opt_selected</texture>
+	</selected>
+
+	<count x="0" y="0" width="36" height="14">
+		<text font="arial_14" r="240" g="240" b="240" align="c" vert_align="c"/>
+	</count>
+</w>

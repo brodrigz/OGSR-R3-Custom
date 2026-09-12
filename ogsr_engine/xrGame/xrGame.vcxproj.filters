@@ -5253,6 +5253,9 @@
     <ClInclude Include="ui\UIInventoryWnd.h">
       <Filter>AI\AScript\ScriptClasses\UI\Common\InventoryWnd</Filter>
     </ClInclude>
+    <ClInclude Include="ui\UIItemWheelWnd.h">
+      <Filter>AI\AScript\ScriptClasses\UI\Common\InventoryWnd</Filter>
+    </ClInclude>
     <ClInclude Include="ui\UIOutfitSlot.h">
       <Filter>AI\AScript\ScriptClasses\UI\Common\InventoryWnd</Filter>
     </ClInclude>
@@ -8354,6 +8357,9 @@
       <Filter>AI\AScript\ScriptClasses\UI</Filter>
     </ClCompile>
     <ClCompile Include="ui\UIInventoryWnd.cpp">
+      <Filter>AI\AScript\ScriptClasses\UI\Common\InventoryWnd</Filter>
+    </ClCompile>
+    <ClCompile Include="ui\UIItemWheelWnd.cpp">
       <Filter>AI\AScript\ScriptClasses\UI\Common\InventoryWnd</Filter>
     </ClCompile>
     <ClCompile Include="ui\uiinventorywnd2.cpp">

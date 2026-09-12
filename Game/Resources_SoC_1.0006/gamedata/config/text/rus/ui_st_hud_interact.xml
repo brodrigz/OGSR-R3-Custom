@@ -336,4 +336,25 @@
 	<string id="ui_mm_hint_minimap_y">
 		<text>Смещение миникарты по вертикали.</text>
 	</string>
+	<string id="st_add_to_wheel">
+		<text>Добавить на колесо</text>
+	</string>
+	<string id="st_remove_from_wheel">
+		<text>Убрать с колеса</text>
+	</string>
+	<string id="st_item_wheel_pins">
+		<text>Закреплённые</text>
+	</string>
+	<string id="st_item_wheel_meds">
+		<text>Медикаменты</text>
+	</string>
+	<string id="st_item_wheel_food">
+		<text>Еда</text>
+	</string>
+	<string id="st_item_wheel_grenades">
+		<text>Гранаты</text>
+	</string>
+	<string id="st_item_wheel_empty">
+		<text>Пусто</text>
+	</string>
 </string_table>

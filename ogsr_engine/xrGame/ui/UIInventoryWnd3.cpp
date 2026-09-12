@@ -17,6 +17,7 @@
 #include "UIListBoxItem.h"
 #include "../CustomOutfit.h"
 #include "../string_table.h"
+#include "UIItemWheelWnd.h"
 #include <regex>
 
 void CUIInventoryWnd::EatItem(PIItem itm)
@@ -180,6 +181,21 @@ void CUIInventoryWnd::ActivatePropertiesBox()
         b_show = true;
     }
 
+    if (ItemWheel_CanPin(CurrentIItem()))
+    {
+        const shared_str sect = CurrentIItem()->object().cNameSect();
+        if (ItemWheel_HasPin(sect))
+        {
+            UIPropertiesBox.AddItem("st_remove_from_wheel", NULL, INVENTORY_REMOVE_FROM_WHEEL);
+            b_show = true;
+        }
+        else if (ItemWheel_PinCount() < 12u)
+        {
+            UIPropertiesBox.AddItem("st_add_to_wheel", NULL, INVENTORY_ADD_TO_WHEEL);
+            b_show = true;
+        }
+    }
+
     bool disallow_drop = (pOutfit && bAlreadyDressed);
     disallow_drop |= !!CurrentIItem()->IsQuestItem();
 
@@ -249,6 +265,14 @@ void CUIInventoryWnd::ProcessPropertiesBoxClicked()
         }
         break;
         case INVENTORY_EAT_ACTION: EatItem(CurrentIItem()); break;
+        case INVENTORY_ADD_TO_WHEEL:
+            if (CurrentIItem())
+                ItemWheel_AddPin(CurrentIItem()->object().cNameSect());
+            break;
+        case INVENTORY_REMOVE_FROM_WHEEL:
+            if (CurrentIItem())
+                ItemWheel_RemovePin(CurrentIItem()->object().cNameSect());
+            break;
         case INVENTORY_ATTACH_ADDON: AttachAddon((PIItem)(UIPropertiesBox.GetClickedItem()->GetData())); break;
         case INVENTORY_DETACH_SCOPE_ADDON: DetachAddon(*(smart_cast<CWeapon*>(CurrentIItem()))->GetScopeName()); break;
         case INVENTORY_DETACH_SILENCER_ADDON: DetachAddon(*(smart_cast<CWeapon*>(CurrentIItem()))->GetSilencerName()); break;

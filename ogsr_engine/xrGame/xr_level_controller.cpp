@@ -47,6 +47,7 @@ xr_vector<_action> actions = {
                                                                                                                         DEF_ACTION("cycle_interact", kCYCLE_INTERACT)
                                                                                                                             DEF_ACTION("quick_use", kQUICK_USE)
                                                                                                                                 DEF_ACTION("wpn_lower", kWPN_LOWER)
+                                                                                                                                    DEF_ACTION("item_wheel", kITEM_WHEEL)
 };
 
 xr_vector<_binding> g_key_bindings;
