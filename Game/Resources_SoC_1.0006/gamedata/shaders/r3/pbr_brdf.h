@@ -206,7 +206,7 @@ float3 Lit_Specular(float nDotL, float nDotH, float nDotV, float vDotH, float3 f
 #endif
 }
 
-float3 Lit_BRDF(float rough, float3 albedo, float3 f0, float3 V, float3 N, float3 L)
+float3 Lit_BRDF(float rough, float3 albedo, float3 f0, float3 V, float3 N, float3 L, out float3 diffuseLighting)
 {
     // SPECULAR ADJUSTMENTS - SSS Update 18
     // Color, intensity and some minor adjustments.
@@ -237,7 +237,14 @@ float3 Lit_BRDF(float rough, float3 albedo, float3 f0, float3 V, float3 N, float
     specular_term *= lerp(1.0f, Ldynamic_color.rgb, ssfx_lightsetup_1.y);
 
     // SSS Update 19 - Smooth Shading ( squared nDotL )
+    diffuseLighting = diffuse_term * nDotL * nDotL * PI;
     return (diffuse_term + specular_term) * nDotL * nDotL * PI;
+}
+
+float3 Lit_BRDF(float rough, float3 albedo, float3 f0, float3 V, float3 N, float3 L)
+{
+    float3 diffuseLighting;
+    return Lit_BRDF(rough, albedo, f0, V, N, L, diffuseLighting);
 }
 
 //=================================================================================================
@@ -270,7 +277,7 @@ float3 Amb_Specular(float3 f0, float rough, float nDotV)
 #endif
 }
 
-float3 Amb_BRDF(float rough, float3 albedo, float3 f0, float3 env_d, float3 env_s, float3 V, float3 N)
+float3 Amb_BRDF(float rough, float3 albedo, float3 f0, float3 env_d, float3 env_s, float3 V, float3 N, out float3 diffuseLighting)
 {
     float DotNV = dot(N, V);
     // float nDotV = 1e-5 + abs(dot(N, V)); //DICE
@@ -278,6 +285,7 @@ float3 Amb_BRDF(float rough, float3 albedo, float3 f0, float3 env_d, float3 env_
 
     float3 diffuse_term = Amb_Diffuse(f0, rough, nDotV);
     diffuse_term *= env_d * albedo;
+    diffuseLighting = diffuse_term;
 
     float3 specular_term = Amb_Specular(f0, rough, nDotV);
     specular_term *= env_s;
@@ -291,4 +299,10 @@ float3 Amb_BRDF(float rough, float3 albedo, float3 f0, float3 env_d, float3 env_
     specular_term *= horizon; // horizon atten
 
     return diffuse_term + specular_term;
+}
+
+float3 Amb_BRDF(float rough, float3 albedo, float3 f0, float3 env_d, float3 env_s, float3 V, float3 N)
+{
+    float3 diffuseLighting;
+    return Amb_BRDF(rough, albedo, f0, env_d, env_s, V, N, diffuseLighting);
 }

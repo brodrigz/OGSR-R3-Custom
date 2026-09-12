@@ -54,6 +54,12 @@ enum : u32
 extern ECORE_API u32 ps_r_ao_mode;
 extern ECORE_API float ps_r_xegtao_radius;
 extern ECORE_API BOOL ps_r_xegtao_bent_normals; // Requires vid_restart.
+extern ECORE_API BOOL ps_r_ssgi; // Requires a game restart (material shaders survive vid_restart).
+extern ECORE_API u32 ps_r_ssgi_quality;
+extern ECORE_API float ps_r_ssgi_radius;
+extern ECORE_API float ps_r_ssgi_thickness;
+extern ECORE_API float ps_r_ssgi_intensity;
+extern ECORE_API int ps_r_ssgi_debug;
 
 enum : u32
 {

@@ -10,11 +10,12 @@
 #include "common.h"
 #include "common_brdf.h"
 #include "pbr_brdf.h"
+#include "ogsr_ssgi_light.h"
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Lighting formulas
 
-float4 compute_lighting(float3 N, float3 V, float3 L, float4 alb_gloss, float mat_id)
+float4 compute_lighting(float3 N, float3 V, float3 L, float4 alb_gloss, float mat_id, out float3 diffuseLighting)
 {
     // [ SSS Test ]. Overwrite terrain material
     bool m_terrain = abs(mat_id - 0.95) <= 0.04f;
@@ -27,7 +28,7 @@ float4 compute_lighting(float3 N, float3 V, float3 L, float4 alb_gloss, float ma
     // calc_rain(albedo, specular, rough, alb_gloss, mat_id, 1);
     calc_foliage(albedo, specular, rough, alb_gloss, mat_id);
 
-    float3 light = Lit_BRDF(rough, albedo, specular, V, N, L);
+    float3 light = Lit_BRDF(rough, albedo, specular, V, N, L, diffuseLighting);
 
     // if(mat_id == MAT_FLORA) //Be aware of precision loss/errors
     if (abs(mat_id - MAT_FLORA) <= MAT_FLORA_ELIPSON) // Be aware of precision loss/errors
@@ -35,24 +36,25 @@ float4 compute_lighting(float3 N, float3 V, float3 L, float4 alb_gloss, float ma
         // Simple subsurface scattering
         float3 subsurface = SSS(N, V, L);
         light.rgb += subsurface * albedo;
+        diffuseLighting += subsurface * albedo;
     }
 
     return float4(light, 0);
 }
 
-float4 plight_infinity(float m, float3 pnt, float3 normal, float4 c_tex, float3 light_direction)
+float4 plight_infinity(float m, float3 pnt, float3 normal, float4 c_tex, float3 light_direction, out float3 diffuseLighting)
 {
     // gsc vanilla stuff
     float3 N = normalize(normal); // normal
     float3 V = normalize(-pnt); // vector2eye
     float3 L = normalize(-light_direction); // vector2light
 
-    float4 light = compute_lighting(N, V, L, c_tex, m);
+    float4 light = compute_lighting(N, V, L, c_tex, m, diffuseLighting);
 
     return light; // output (albedo.gloss)
 }
 
-float4 plight_local(float m, float3 pnt, float3 normal, float4 c_tex, float3 light_position, float light_range_rsq, out float rsqr)
+float4 plight_local(float m, float3 pnt, float3 normal, float4 c_tex, float3 light_position, float light_range_rsq, out float rsqr, out float3 diffuseLighting)
 {
     float atteps = 0.1;
 
@@ -77,9 +79,29 @@ float4 plight_local(float m, float3 pnt, float3 normal, float4 c_tex, float3 lig
     float3 V = normalize(-pnt); // vector2eye
     float3 L = normalize(-L2P); // vector2light
 
-    float4 light = compute_lighting(N, V, L, c_tex, m);
+    float4 light = compute_lighting(N, V, L, c_tex, m, diffuseLighting);
+    diffuseLighting *= att;
 
     return att * light; // output (albedo.gloss)
+}
+
+// Preserve all forward/material callers. The unused diffuse output is optimized away.
+float4 compute_lighting(float3 N, float3 V, float3 L, float4 alb_gloss, float mat_id)
+{
+    float3 diffuseLighting;
+    return compute_lighting(N, V, L, alb_gloss, mat_id, diffuseLighting);
+}
+
+float4 plight_infinity(float m, float3 pnt, float3 normal, float4 c_tex, float3 light_direction)
+{
+    float3 diffuseLighting;
+    return plight_infinity(m, pnt, normal, c_tex, light_direction, diffuseLighting);
+}
+
+float4 plight_local(float m, float3 pnt, float3 normal, float4 c_tex, float3 light_position, float light_range_rsq, out float rsqr)
+{
+    float3 diffuseLighting;
+    return plight_local(m, pnt, normal, c_tex, light_position, light_range_rsq, rsqr, diffuseLighting);
 }
 
 float3 specular_phong(float3 pnt, float3 normal, float3 light_direction)

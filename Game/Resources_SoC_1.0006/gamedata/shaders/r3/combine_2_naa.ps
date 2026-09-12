@@ -16,7 +16,7 @@ uniform float4 m_flare_params;
 #include "screenspace_debanding.h"
 #endif
 
-#ifdef SSFX_INDIRECT_LIGHT
+#if defined(SSFX_INDIRECT_LIGHT) && !defined(USE_SSGI)
 #include "screenspace_il.h"
 #endif
 
@@ -45,7 +45,7 @@ float4 main(p_screen I) : SV_Target
 #endif
 
     // Indirect light - SCREEN SPACE SHADERS - UPDATE 14
-#ifdef SSFX_INDIRECT_LIGHT
+#if defined(SSFX_INDIRECT_LIGHT) && !defined(USE_SSGI)
     ssfx_il(center, I.hpos, _P, gbuffer_load_normal(center), img, 0);
 #endif
 

@@ -72,6 +72,7 @@ public:
 // Just two static storage
 void CRender::create()
 {
+    o.ssgi_enabled = !!ps_r_ssgi;
     particles_pool.init();
     light_pool.init();
     r_sun.sun_cascade_pool.init();
@@ -192,6 +193,10 @@ void CRender::reset_begin()
 
 void CRender::reset_end()
 {
+    // Material shaders remain cached across device resets. Keep the MRT and
+    // composition on their original variant until the renderer is recreated.
+    if (o.ssgi_enabled != !!ps_r_ssgi)
+        Msg("! SSGI: enabling/disabling requires a game restart; vid_restart keeps the active setting.");
     Target = xr_new<CRenderTarget>();
 
     // AVO: let's reload details while changed details options on vid_restart
@@ -784,7 +789,8 @@ HRESULT CRender::shader_compile(LPCSTR name, DWORD const* pSrcData, UINT SrcData
 
     appendShaderOption(ps_r2_ls_flags.test(R2FLAG_SSFX_SKY_DEBANDING), "SSFX_DEBAND", "1");
 
-    appendShaderOption(ps_r2_ls_flags.test(R2FLAG_SSFX_INDIRECT_LIGHT), "SSFX_INDIRECT_LIGHT", "1");
+    appendShaderOption(o.ssgi_enabled, "USE_SSGI", "1");
+    appendShaderOption(!o.ssgi_enabled && ps_r2_ls_flags.test(R2FLAG_SSFX_INDIRECT_LIGHT), "SSFX_INDIRECT_LIGHT", "1");
 
     appendShaderOption(ps_r2_ls_flags.test(R2FLAG_SSFX_BLOOM), "SSFX_BLOOM", "1");
 

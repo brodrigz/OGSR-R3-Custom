@@ -13,6 +13,8 @@ void CRenderTarget::phase_scene_prepare()
         RCache.ClearRT(rt_Position->pRT, color);
         RCache.ClearRT(rt_Color->pRT, color);
         RCache.ClearRT(rt_Accumulator->pRT, color);
+        if (rt_ssgi_source)
+            RCache.ClearRT(rt_ssgi_source->pRT, color);
         RCache.ClearRT(rt_heat->pRT, color);
 
         //очистка Z-буфера перенесена на этап до начала рендера неба

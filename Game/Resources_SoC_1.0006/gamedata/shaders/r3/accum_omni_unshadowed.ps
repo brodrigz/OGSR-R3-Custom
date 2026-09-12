@@ -2,7 +2,7 @@
 #include "lmodel.h"
 
 // TODO: DX10: Move to Load
-float4 main(float4 tc : TEXCOORD0, float4 pos2d : SV_Position) : SV_Target
+SSGILightOutput main(float4 tc : TEXCOORD0, float4 pos2d : SV_Position) SSGI_LIGHT_SEMANTIC
 {
     const float bias_mul = 0.999f;
 
@@ -29,11 +29,12 @@ float4 main(float4 tc : TEXCOORD0, float4 pos2d : SV_Position) : SV_Target
     }
 
     float rsqr;
-    float4 light = plight_local(m, _P, _N, _C, Ldynamic_pos, Ldynamic_pos.w, rsqr);
+    float3 diffuseLighting;
+    float4 light = plight_local(m, _P, _N, _C, Ldynamic_pos, Ldynamic_pos.w, rsqr, diffuseLighting);
 
 #ifdef SSFX_ENHANCED_SHADERS
-    return float4(SRGBToLinear(Ldynamic_color.rgb), 0) * light;
+    return SSGIPackLight(float4(SRGBToLinear(Ldynamic_color.rgb), 0) * light, float4(diffuseLighting * SRGBToLinear(Ldynamic_color.rgb), 0));
 #else
-    return float4(Ldynamic_color * light);
+    return SSGIPackLight(float4(Ldynamic_color * light), float4(diffuseLighting * Ldynamic_color.rgb, 0));
 #endif
 }

@@ -1,0 +1,40 @@
+#include "common.h"
+#include "lmodel.h"
+
+Texture2D<float4> s_ssgi;
+Texture2D<float4> s_ssgi_source;
+uniform float4 ssgi_params; // intensity, debug mode
+
+float4 main(p_screen I) : SV_Target
+{
+    // The overlay runs at display resolution, while GI/gbuffer are render-sized.
+    uint width, height;
+    s_ssgi.GetDimensions(width, height);
+    int2 pixel = min(int2(I.tc0 * float2(width, height)), int2(width, height) - 1);
+    float2 uv = (float2(pixel) + 0.5) / float2(width, height);
+    gbuffer_data gbd = gbuffer_load_data(uv, float2(pixel) + 0.5);
+    if (gbd.P.z < 0.6 || gbd.P.z > 9999.0)
+        return float4(0, 0, 0, 1);
+
+    float4 gi = s_ssgi.Load(int3(pixel, 0));
+    float3 color;
+    if (ssgi_params.y < 1.5)
+    {
+        float mtl = gbd.mtl;
+#ifdef USE_R2_STATIC_SUN
+        mtl = xmaterial;
+#endif
+        mtl = abs(mtl - 0.95) <= 0.04 ? 0.0 : mtl;
+        color = gi.rgb * calc_albedo(float4(gbd.C, gbd.gloss), mtl) * ssgi_params.x;
+    }
+    else if (ssgi_params.y < 2.5)
+    {
+        float4 source = s_ssgi_source.Load(int3(pixel, 0));
+        color = max(0.0, source.rgb + source.a * SRGBToLinear(gbd.C));
+    }
+    else
+        // Age, not brightness or validity: white means 24 accumulated frames.
+        return float4(saturate(gi.a / 24.0).xxx, 1);
+
+    return float4(LinearTosRGB(color), 1);
+}

@@ -12,7 +12,7 @@
 
 // uniform float3 view_shadow_proj; // Unused
 
-float4 main(v2p_volume I) : SV_Target
+SSGILightOutput main(v2p_volume I) SSGI_LIGHT_SEMANTIC
 {
     gbuffer_data gbd = gbuffer_load_data(I.tc.xy / I.tc.w, I.hpos);
 
@@ -28,7 +28,8 @@ float4 main(v2p_volume I) : SV_Target
 #ifndef USE_R2_STATIC_SUN
     m = _P.w;
 #endif
-    float4 light = plight_infinity(m, _P, _N, _C, Ldynamic_dir);
+    float3 diffuseLighting;
+    float4 light = plight_infinity(m, _P, _N, _C, Ldynamic_dir, diffuseLighting);
 
     // ----- shadow
 
@@ -66,8 +67,8 @@ float4 main(v2p_volume I) : SV_Target
     float3 result = SRGBToLinear(s);
     result *= light * SRGBToLinear(Ldynamic_color.rgb);
 
-    return blend(float4(result, 0), I.tc);
+    return SSGIPackLight(blend(float4(result, 0), I.tc), float4(diffuseLighting * SRGBToLinear(s) * SRGBToLinear(Ldynamic_color.rgb), 0));
 #else
-    return blend(Ldynamic_color * light * shadows, I.tc);
+    return SSGIPackLight(blend(Ldynamic_color * light * shadows, I.tc), float4(diffuseLighting * Ldynamic_color.rgb * shadows, 0));
 #endif
 }

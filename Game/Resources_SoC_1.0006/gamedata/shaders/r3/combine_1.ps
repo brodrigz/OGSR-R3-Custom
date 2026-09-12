@@ -20,6 +20,11 @@ uniform float4 fakescope;
 #include "lmodel.h"
 #include "hmodel.h"
 
+#if defined(USE_SSGI) && !defined(OGSR_SSGI_SOURCE_PASS)
+Texture2D<float4> s_ssgi;
+uniform float4 ssgi_params; // intensity
+#endif
+
 #ifdef SSAO_QUALITY
 #ifdef USE_AO_BUFFER
 #ifdef USE_XEGTAO_BENT_NORMALS
@@ -39,13 +44,20 @@ Texture2D<float> s_ao;
 float4 main(p_screen I) : SV_Target
 {
     gbuffer_data gbd = gbuffer_load_data(I.tc0, I.hpos);
+#ifdef OGSR_SSGI_SOURCE_PASS
+    // This fullscreen pass has no geometry stencil. Sky/HUD are not sources.
+    if (gbd.P.z < 0.6 || gbd.P.z > 9999.0)
+        return 0;
+#endif
 
     // Sample the buffers:
     float4 P = float4(gbd.P, gbd.mtl); // position.(mtl or sun)
     float4 N = float4(gbd.N, gbd.hemi); // normal.hemi
     float4 D = float4(gbd.C, gbd.gloss); // rgb.gloss
 
+#ifndef OGSR_SSGI_SOURCE_PASS
     float4 L = s_accumulator.Sample(smp_nofilter, I.tc0); // diffuse.specular
+#endif
 
 #ifndef SSFX_NEWGLOSS
     if (abs(P.w - MAT_FLORA) <= 0.05)
@@ -64,7 +76,9 @@ float4 main(p_screen I) : SV_Target
     float sun_occ = P.w * 2;
 
     mtl = xmaterial;
+#ifndef OGSR_SSGI_SOURCE_PASS
     L += SRGBToLinear(D.rgb * Ldynamic_color.rgb * sun_occ) * plight_infinity(mtl, P.xyz, N.xyz, D.xyzw, Ldynamic_dir);
+#endif
 #endif
 
     float3 occ = float3(1.0, 1.0, 1.0);
@@ -93,22 +107,40 @@ float4 main(p_screen I) : SV_Target
     occ = compute_colored_ao(occ.x, D.xyz);
 #endif
 
+#ifndef OGSR_SSGI_SOURCE_PASS
     L.rgb += L.a * SRGBToLinear(D.rgb); // illum in alpha
+#endif
 
     // hemisphere
-    float3 hdiffuse, hspecular;
-    hmodel(hdiffuse, hspecular, mtl, N.w, D, P.xyz, N.xyz, ambientNormal);
+    float3 hdiffuse, hspecular, environmentDiffuse;
+    hmodel(hdiffuse, hspecular, mtl, N.w, D, P.xyz, N.xyz, ambientNormal, environmentDiffuse);
 
     // AO implementation
 #ifdef SSAO_QUALITY
 #ifdef SSFX_AO
-    hdiffuse *= (1.0f - SRGBToLinear(1.0f - occ) * (1.0f - dot(hdiffuse.rgb, LUMINANCE_VECTOR)));
+    float3 ambientVisibility = (1.0f - SRGBToLinear(1.0f - occ) * (1.0f - dot(hdiffuse.rgb, LUMINANCE_VECTOR)));
+    hdiffuse *= ambientVisibility;
+    environmentDiffuse *= ambientVisibility;
 #else
     hdiffuse *= occ;
+    environmentDiffuse *= occ;
 #endif
 #endif
 
+#ifdef OGSR_SSGI_SOURCE_PASS
+    // Add only diffuse environment light; retain the MRT's emissive alpha.
+    return float4(max(0.0, environmentDiffuse), 0);
+#else
     float3 color = L.rgb + hdiffuse.rgb;
+#ifdef USE_SSGI
+    float4 gi = s_ssgi.Load(int3(I.hpos.xy, 0));
+    float giMaterial = abs(mtl - 0.95) <= 0.04 ? 0.0 : mtl;
+    float3 giAlbedo = calc_albedo(D, giMaterial);
+    // The gather has already accounted for local visibility. XeGTAO continues
+    // to occlude the environment term; do not multiply the bounce by AO again.
+    float3 bounce = gi.rgb * giAlbedo * ssgi_params.x;
+    color += bounce;
+#endif
     color = LinearTosRGB(color); // gamma correct
 
 #ifdef SSFX_BEEFS_NVG
@@ -134,4 +166,5 @@ float4 main(p_screen I) : SV_Target
     float skyblend = saturate(pow(fog, 3.0)); //float skyblend = saturate(fog * fog);
 
     return float4(color, skyblend);
+#endif // OGSR_SSGI_SOURCE_PASS
 }

@@ -16,7 +16,7 @@ TextureCube env_s1;
 
 uniform float4 env_color; // color.w = lerp factor
 
-void hmodel(out float3 hdiffuse, out float3 hspecular, float m, float h, float4 alb_gloss, float3 Pnt, float3 normal, float3 ambientNormal)
+void hmodel(out float3 hdiffuse, out float3 hspecular, float m, float h, float4 alb_gloss, float3 Pnt, float3 normal, float3 ambientNormal, out float3 environmentDiffuse)
 {
     // [ SSS Test ]. Overwrite terrain material
     bool m_terrain = abs(m - 0.95) <= 0.04f;
@@ -143,11 +143,17 @@ void hmodel(out float3 hdiffuse, out float3 hspecular, float m, float h, float4 
     env_d = SRGBToLinear(env_d);
     env_s = SRGBToLinear(env_s); // gamma correct
 
-    hdiffuse = Amb_BRDF(rough, albedo, specular, env_d, env_s * !m_flora, -v2Pnt, nw).rgb;
+    hdiffuse = Amb_BRDF(rough, albedo, specular, env_d, env_s * !m_flora, -v2Pnt, nw, environmentDiffuse).rgb;
     hspecular = 0; // do not use hspec at all
 }
 
 // Existing callers (including forward materials) retain their original lighting.
+void hmodel(out float3 hdiffuse, out float3 hspecular, float m, float h, float4 alb_gloss, float3 Pnt, float3 normal, float3 ambientNormal)
+{
+    float3 environmentDiffuse;
+    hmodel(hdiffuse, hspecular, m, h, alb_gloss, Pnt, normal, ambientNormal, environmentDiffuse);
+}
+
 void hmodel(out float3 hdiffuse, out float3 hspecular, float m, float h, float4 alb_gloss, float3 Pnt, float3 normal)
 {
     hmodel(hdiffuse, hspecular, m, h, alb_gloss, Pnt, normal, normal);

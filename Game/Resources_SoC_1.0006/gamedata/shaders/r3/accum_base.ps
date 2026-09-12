@@ -18,7 +18,7 @@ float4 m_lmap[2];
 
 //LVutner: Force early-z
 [earlydepthstencil]
-float4 main(p_volume I, float4 pos2d : SV_Position) : SV_Target
+SSGILightOutput main(p_volume I, float4 pos2d : SV_Position) SSGI_LIGHT_SEMANTIC
 {
     float2 tcProj = I.tc.xy / I.tc.w;
 
@@ -48,7 +48,8 @@ float4 main(p_volume I, float4 pos2d : SV_Position) : SV_Target
 
     // ----- light-model
     float rsqr;
-    float4 light = plight_local(m, _P, _N, _C, Ldynamic_pos, Ldynamic_pos.w, rsqr);
+    float3 diffuseLighting;
+    float4 light = plight_local(m, _P, _N, _C, Ldynamic_pos, Ldynamic_pos.w, rsqr, diffuseLighting);
 
     // ----- shadow
 
@@ -82,8 +83,8 @@ float4 main(p_volume I, float4 pos2d : SV_Position) : SV_Target
 #ifdef SSFX_ENHANCED_SHADERS
     float3 result = SRGBToLinear(lightmap.rgb) * SRGBToLinear(s);
     result *= light * SRGBToLinear(Ldynamic_color.rgb);
-    return float4(result.rgb, 0);
+    return SSGIPackLight(float4(result.rgb, 0), float4(diffuseLighting * SRGBToLinear(lightmap.rgb) * SRGBToLinear(s) * SRGBToLinear(Ldynamic_color.rgb), 0));
 #else
-    return float4(Ldynamic_color * light * s * lightmap);
+    return SSGIPackLight(float4(Ldynamic_color * light * s * lightmap), float4(diffuseLighting * Ldynamic_color.rgb * s * lightmap.rgb, 0));
 #endif
 }

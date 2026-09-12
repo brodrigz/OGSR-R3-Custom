@@ -5,6 +5,7 @@
 class light;
 struct ShaderElement;
 class XeGTAOResources;
+class SSGIResources;
 
 static void dummy(){}
 
@@ -26,6 +27,13 @@ private:
     void InitXeGTAO();
     void DestroyXeGTAO();
     void phase_xegtao(CBackend& cmd_list);
+    SSGIResources* m_ssgi{};
+    ref_shader s_ssgi_source;
+    ref_shader s_ssgi_debug;
+    bool m_resetSSGIHistory{true};
+    void InitSSGI();
+    void DestroySSGI();
+    void phase_ssgi(CBackend& cmd_list);
     u32 dwAccumulatorClearMark;
     u32 dwFlareClearMark;
 
@@ -60,6 +68,7 @@ public:
 
     //
     ref_rt rt_Accumulator; // 64bit		(r,g,b,specular)
+    ref_rt rt_ssgi_source; // Optional linear diffuse lighting + emissive alpha, before GI/fog.
     ref_rt rt_Generic_0; // 32bit		(r,g,b,a)				// post-process, intermidiate results, etc.
     ref_rt rt_Generic_0_prev; // r2_RT_generic0_prev
     ref_rt rt_Generic_1; // 32bit		(r,g,b,a)				// post-process, intermidiate results, etc.

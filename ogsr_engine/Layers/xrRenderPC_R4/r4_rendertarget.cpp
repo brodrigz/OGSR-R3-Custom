@@ -239,6 +239,8 @@ CRenderTarget::CRenderTarget()
         }
 
         rt_Accumulator.create(r2_RT_accum, w, h, DXGI_FORMAT_R16G16B16A16_FLOAT);
+        if (options.ssgi_enabled)
+            rt_ssgi_source.create("$user$ssgi_source", w, h, DXGI_FORMAT_R16G16B16A16_FLOAT);
 
         rt_Color.create(r2_RT_albedo, w, h, DXGI_FORMAT_R8G8B8A8_UNORM);
 
@@ -349,6 +351,12 @@ CRenderTarget::CRenderTarget()
     }
 
     s_ssfx_bloom.create("ogsr_bloom");
+    if (options.ssgi_enabled)
+    {
+        s_ssgi_source.create("ogsr_ssgi_source");
+        s_ssgi_debug.create("ogsr_ssgi_debug");
+        InitSSGI();
+    }
     s_ssfx_bloom_lens.create("ogsr_bloom_flares");
     s_ssfx_bloom_downsample.create("ogsr_bloom_downsample");
     s_ssfx_bloom_upsample.create("ogsr_bloom_upsample");
@@ -615,6 +623,7 @@ CRenderTarget::~CRenderTarget()
     DestroyDLSS();
     DestroyFSR();
     DestroyXeGTAO();
+    DestroySSGI();
 
     _RELEASE(m_ImguiSRV);
     _RELEASE(m_ImguiTex);

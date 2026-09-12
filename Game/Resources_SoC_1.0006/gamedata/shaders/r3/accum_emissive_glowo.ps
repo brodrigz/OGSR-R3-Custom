@@ -1,9 +1,10 @@
 #include "common.h"
+#include "ogsr_ssgi_light.h"
 #include "sload.h"
 
 float4 pda_params;
 
-float4 main(p_flat I) : SV_Target
+SSGILightOutput main(p_flat I) SSGI_LIGHT_SEMANTIC
 {
     // diffuse
     float3 D = tbase(I.tcdh); // IN:  rgb.a
@@ -13,5 +14,5 @@ float4 main(p_flat I) : SV_Target
     float4 color = float4(D.rgb, 1);
     color *= float4(brightness, brightness, brightness, brightness);
 
-    return color;
+    return SSGIPackLight(color, color);
 }

@@ -79,6 +79,25 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
         t_envmap_0->surface_set(e0);
         t_envmap_1->surface_set(e1);
 
+        if (m_ssgi)
+        {
+            {
+                PIX_EVENT(ssgi_source);
+                RenderScreenTriangle(cmd_list, rt_ssgi_source, s_ssgi_source->E[separate_ao ? 1 : 0], [&]() {
+                    cmd_list.set_c("m_inv_v", Device.mInvView);
+                    cmd_list.set_c("L_ambient", ambclr);
+                    cmd_list.set_c("env_color", envclr);
+                });
+            }
+            phase_ssgi(cmd_list);
+
+            // The source pass and compute dispatches changed targets/state.
+            u_setrt(cmd_list, rt_Generic_0, nullptr, nullptr, nullptr, rt_Base_Depth->pZRT[cmd_list.context_id]);
+            RImplementation.rmNormal(cmd_list);
+            cmd_list.set_CullMode(CULL_NONE);
+            cmd_list.set_Stencil(TRUE, D3DCMP_LESSEQUAL, 0x01, 0xff, 0x00);
+        }
+
         // Draw
         cmd_list.set_Element(s_combine->E[separate_ao ? 4 : 0]);
         cmd_list.set_Geometry(TriangleGeom);
@@ -92,6 +111,8 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
         cmd_list.set_c("Ldynamic_dir", sundir);
 
         cmd_list.set_c("env_color", envclr);
+        if (m_ssgi)
+            cmd_list.set_c("ssgi_params", ps_r_ssgi_intensity, float(ps_r_ssgi_debug), 0.f, 0.f);
         cmd_list.set_c("fog_color", fogclr);
 
         cmd_list.Render(D3DPT_TRIANGLELIST, 0, 0, 3, 0, 1);
@@ -305,6 +326,16 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
         PIX_EVENT(RenderFlares);
         cmd_list.set_Stencil(FALSE);
         g_pGamePersistent->Environment().RenderFlares(cmd_list, FALSE, ps_r2_ls_flags_ext.test(R2FLAGEXT_LENS_FLARE) && r_lens_flare_mode == old_style_flare, TRUE);
+    }
+
+    // Keep diagnostics out of temporal color history, bloom and tone mapping.
+    if (m_ssgi && ps_r_ssgi_debug)
+    {
+        PIX_EVENT(ssgi_debug);
+        RenderScreenTriangle(cmd_list, pp_dst(), s_ssgi_debug->E[0], [&]() {
+            cmd_list.set_c("ssgi_params", ps_r_ssgi_intensity, float(ps_r_ssgi_debug), 0.f, 0.f);
+        });
+        pp_flip();
     }
 
     //	PP-if required

@@ -103,6 +103,13 @@ u32 ps_r_ao_mode = AO_MODE_SSDO;
 constexpr xr_token ao_mode_token[] = {{"st_gtao", AO_MODE_GTAO}, {"st_ssdo", AO_MODE_SSDO}, {"st_xegtao", AO_MODE_XEGTAO}, {nullptr, 0}};
 float ps_r_xegtao_radius = 0.5f;
 BOOL ps_r_xegtao_bent_normals = FALSE;
+BOOL ps_r_ssgi = FALSE;
+u32 ps_r_ssgi_quality = 2;
+float ps_r_ssgi_radius = 3.f;
+float ps_r_ssgi_thickness = 0.25f;
+float ps_r_ssgi_intensity = 1.f;
+int ps_r_ssgi_debug = 0;
+constexpr xr_token ssgi_quality_token[] = {{"low", 1}, {"medium", 2}, {"high", 3}, {nullptr, 0}};
 
 u32 ps_r_ao_resolution = AO_RES_FULL;
 constexpr xr_token ao_resolution_token[] = {{"legacy", AO_RES_LEGACY}, {"full", AO_RES_FULL}, {"half", AO_RES_HALF}, {nullptr, 0}};
@@ -832,6 +839,12 @@ void xrRender_initconsole()
     CMD3(CCC_Token, "r_ao_mode", &ps_r_ao_mode, ao_mode_token);
     CMD4(CCC_Float, "r_xegtao_radius", &ps_r_xegtao_radius, 0.05f, 4.0f);
     CMD2(CCC_Bool, "r_xegtao_bent_normals", &ps_r_xegtao_bent_normals); // Requires vid_restart.
+    CMD2(CCC_Bool, "r_ssgi", &ps_r_ssgi); // Requires a game restart; other SSGI settings are live.
+    CMD3(CCC_Token, "r_ssgi_quality", &ps_r_ssgi_quality, ssgi_quality_token);
+    CMD4(CCC_Float, "r_ssgi_radius", &ps_r_ssgi_radius, 0.25f, 10.f);
+    CMD4(CCC_Float, "r_ssgi_thickness", &ps_r_ssgi_thickness, 0.02f, 2.f);
+    CMD4(CCC_Float, "r_ssgi_intensity", &ps_r_ssgi_intensity, 0.f, 4.f);
+    CMD4(CCC_Integer, "r_ssgi_debug", &ps_r_ssgi_debug, 0, 3);
     CMD3(CCC_Token, "r2_ssao", &ps_r_ao_quality, qssao_token);
     CMD3(CCC_Token, "r_ao_resolution", &ps_r_ao_resolution, ao_resolution_token);
 

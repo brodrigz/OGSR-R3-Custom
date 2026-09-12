@@ -1,0 +1,10 @@
+function element_0(shader, t_base, t_second, t_detail)
+	shader:begin("stub_screen_space", "ogsr_ssgi_debug")
+		:fog(false)
+		:zb(false, false)
+	shader:dx10texture("s_position", "$user$position")
+	shader:dx10texture("s_diffuse", "$user$albedo")
+	shader:dx10texture("s_ssgi", "$user$ssgi")
+	shader:dx10texture("s_ssgi_source", "$user$ssgi_source")
+	shader:dx10sampler("smp_nofilter")
+end

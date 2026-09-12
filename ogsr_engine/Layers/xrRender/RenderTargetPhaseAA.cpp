@@ -760,6 +760,7 @@ void CRenderTarget::DestroyFSR()
 
 void CRenderTarget::ResetTemporalHistory()
 {
+    m_resetSSGIHistory = true;
     m_resetTemporalHistory = true;
     NGXWrapper.RequestHistoryReset();
     Fsr3Wrapper.RequestHistoryReset();

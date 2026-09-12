@@ -1,7 +1,8 @@
 #include "common.h"
+#include "ogsr_ssgi_light.h"
 #include "sload.h"
 
-float4 main(p_flat I) : SV_Target
+SSGILightOutput main(p_flat I) SSGI_LIGHT_SEMANTIC
 {
     // f_deffer O;
 
@@ -13,5 +14,5 @@ float4 main(p_flat I) : SV_Target
     float4 color = float4(D.rgb, 1);
     // color *= float4(brightness,brightness,brightness,brightness);
     color.w *= brightness;
-    return color;
+    return SSGIPackLight(color, color);
 }

@@ -74,6 +74,7 @@ public:
         u32 disasm : 1;
 
         u32 dx11_enable_tessellation : 1;
+        bool ssgi_enabled{}; // Latched before compiling shaders / allocating MRTs.
     } o;
     struct _stats
     {

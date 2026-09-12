@@ -6,7 +6,7 @@ void CRenderTarget::phase_accumulator(CBackend& cmd_list)
     if (dwAccumulatorClearMark == Device.dwFrame)
     {
         // normal operation - setup
-        u_setrt(cmd_list, rt_Accumulator, nullptr, nullptr, nullptr, rt_Base_Depth->pZRT[cmd_list.context_id]);
+        u_setrt(cmd_list, rt_Accumulator, rt_ssgi_source, nullptr, nullptr, rt_Base_Depth->pZRT[cmd_list.context_id]);
     }
     else
     {
@@ -14,11 +14,13 @@ void CRenderTarget::phase_accumulator(CBackend& cmd_list)
         dwAccumulatorClearMark = Device.dwFrame;
 
         // clear
-        u_setrt(cmd_list, rt_Accumulator, nullptr, nullptr, nullptr, rt_Base_Depth->pZRT[cmd_list.context_id]);
+        u_setrt(cmd_list, rt_Accumulator, rt_ssgi_source, nullptr, nullptr, rt_Base_Depth->pZRT[cmd_list.context_id]);
 
         reset_light_marker(cmd_list);
 
         cmd_list.ClearRT(rt_Accumulator, {}); // black
+        if (rt_ssgi_source)
+            cmd_list.ClearRT(rt_ssgi_source, {});
 
         //	render this after sun to avoid troubles with sun
 
