@@ -822,10 +822,6 @@
 			<text font="letterica16" r="215" g="195" b="170">ui_mm_sticky_aim</text>
 		</check_sticky_aim>
 
-		<check_alt_aim_remember x="195" y="380" width="243" height="21">
-			<options_item entry="g_alt_aim_remember" group="mm_opt_gameplay"/>
-			<text font="letterica16" r="215" g="195" b="170">ui_mm_alt_aim_remember</text>
-		</check_alt_aim_remember>
 		
 		<check_switch_slot x="20" y="305" width="243" height="21">
 			<options_item entry="g_mouse_wheel_switch_slot" group="mm_opt_gameplay"/>

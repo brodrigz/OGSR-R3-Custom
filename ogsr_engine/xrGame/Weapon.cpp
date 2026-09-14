@@ -766,9 +766,8 @@ void CWeapon::save(NET_Packet& output_packet)
     save_data(iAmmoElapsed, output_packet);
     save_data(m_flagsAddOnState, output_packet);
     save_data(m_ammoType, output_packet);
-    save_data(m_bZoomMode, output_packet);
-    if (psActorFlags.test(AF_ALT_AIM_REMEMBER))
-        output_packet.w_u8(AimAlt ? 1 : 0);
+    // bit0 = zoomed, bit1 = alt sight. Older saves wrote only 0/1.
+    output_packet.w_u8(u8(m_bZoomMode ? 1 : 0) | u8(is_second_zoom_offset_enabled ? 2 : 0));
 }
 
 void CWeapon::load(IReader& input_packet)
@@ -778,10 +777,10 @@ void CWeapon::load(IReader& input_packet)
     load_data(m_flagsAddOnState, input_packet);
     UpdateAddonsVisibility();
     load_data(m_ammoType, input_packet);
-    load_data(m_bZoomMode, input_packet);
-
-    if (psActorFlags.test(AF_ALT_AIM_REMEMBER) && input_packet.elapsed() >= 1)
-        AimAlt = !!input_packet.r_u8();
+    const u8 zoom_save = input_packet.r_u8();
+    m_bZoomMode = !!(zoom_save & 1);
+    is_second_zoom_offset_enabled = !!(zoom_save & 2);
+    UpdateSightModeAvailability();
 
     if (m_bZoomMode)
         OnZoomIn();

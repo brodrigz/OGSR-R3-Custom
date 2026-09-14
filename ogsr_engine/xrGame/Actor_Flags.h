@@ -31,7 +31,6 @@ enum
     AF_SPRINT_LOWER_WEAPON = 1 << 26,
     AF_SPRINT_HOLD = 1 << 27,
     AF_STICKY_AIM = 1 << 28,
-    AF_ALT_AIM_REMEMBER = 1 << 29,
 };
 
 //enum

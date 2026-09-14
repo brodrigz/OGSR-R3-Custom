@@ -174,9 +174,6 @@
 	<string id="ui_mm_sticky_aim">
 		<text>Sticky aim</text>
 	</string>
-	<string id="ui_mm_alt_aim_remember">
-		<text>Remember alt aim</text>
-	</string>
 	<string id="ui_st_take_all_hint">
 		<text>E - take everything.  R - take everything except weapons and armor.</text>
 	</string>
@@ -272,9 +269,6 @@
 	</string>
 	<string id="ui_mm_hint_sticky_aim">
 		<text>Keep ADS after reload and jam, for hold-aim and toggle-aim.</text>
-	</string>
-	<string id="ui_mm_hint_alt_aim_remember">
-		<text>Save each weapon's alternate sight across loads.</text>
 	</string>
 	<string id="ui_mm_hint_late_reload">
 		<text>Allow reload cancel until the magazine seats.</text>
