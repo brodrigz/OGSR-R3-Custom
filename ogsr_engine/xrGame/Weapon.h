@@ -566,6 +566,7 @@ public:
     bool show_crosshair();
     bool show_indicators();
     virtual bool ParentIsActor() const override;
+    virtual bool UseNPCFlameParticles() const override;
 
 private:
     float m_hit_probability[egdCount];

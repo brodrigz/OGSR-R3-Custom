@@ -2288,6 +2288,8 @@ bool CWeapon::ParentIsActor() const
     return smart_cast<const CActor*>(H_Parent()) != nullptr;
 }
 
+bool CWeapon::UseNPCFlameParticles() const { return H_Parent() && !ParentIsActor() && !IsSilencerAttached(); }
+
 const float& CWeapon::hit_probability() const
 {
     VERIFY((g_SingleGameDifficulty >= egdNovice) && (g_SingleGameDifficulty <= egdMaster));

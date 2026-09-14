@@ -118,6 +118,7 @@ protected:
     virtual const Fmatrix& get_ParticlesXFORM() = 0;
     virtual void ForceUpdateFireParticles(){};
     virtual bool IsHudModeNow() = 0;
+    virtual bool UseNPCFlameParticles() const { return false; }
 
     ////////////////////////////////////////////////
     //общие функции для работы с партиклами оружия
@@ -156,6 +157,8 @@ protected:
     shared_str m_sFlameParticlesCurrent;
     //для выстрела 1м и 2м видом стрельбы
     shared_str m_sFlameParticles;
+    //отдельный эффект для оружия в руках NPC
+    shared_str m_sNPCFlameParticles;
     //объект партиклов огня
     CParticlesObject* m_pFlameParticles;
 

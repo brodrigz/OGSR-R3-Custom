@@ -35,7 +35,7 @@ CShootingObject::CShootingObject(void)
     m_fTimeToAim = 0.0f;
 
     // particles
-    m_sFlameParticlesCurrent = m_sFlameParticles = NULL;
+    m_sNPCFlameParticles = m_sFlameParticlesCurrent = m_sFlameParticles = NULL;
     m_sSmokeParticlesCurrent = m_sSmokeParticles = NULL;
     m_sShellParticles = NULL;
     m_bForcedParticlesHudMode = false;
@@ -266,6 +266,18 @@ void CShootingObject::LoadFlameParticles(LPCSTR section, LPCSTR prefix)
     if (pSettings->line_exist(section, full_name))
         m_sFlameParticles = pSettings->r_string(section, full_name);
 
+    strconcat(sizeof(full_name), full_name, prefix, "npc_flame_particles");
+    if (pSettings->line_exist(section, full_name))
+        m_sNPCFlameParticles = pSettings->r_string(section, full_name);
+    // R3's particles_cop.xr replaces these groups with small HUD-oriented
+    // emitters. Use the standalone flame, whose texture and source survive
+    // that library override, for unsuppressed NPC weapons.
+    else if (m_sFlameParticles.equal("weapons\\generic_weapon02") || m_sFlameParticles.equal("weapons\\generic_weapon05") ||
+             m_sFlameParticles.equal("weapons\\generic_weapon06"))
+        m_sNPCFlameParticles = "weapons\\effects\\weapon_test_02_flame";
+    else
+        m_sNPCFlameParticles = m_sFlameParticles;
+
     strconcat(sizeof(full_name), full_name, prefix, "smoke_particles");
     if (pSettings->line_exist(section, full_name))
         m_sSmokeParticles = pSettings->r_string(section, full_name);
@@ -317,7 +329,8 @@ void CShootingObject::StartSmokeParticles(const Fvector& play_pos, const Fvector
 
 void CShootingObject::StartFlameParticles()
 {
-    if (0 == m_sFlameParticlesCurrent.size())
+    const shared_str& flame_particles = UseNPCFlameParticles() && m_sFlameParticlesCurrent == m_sFlameParticles ? m_sNPCFlameParticles : m_sFlameParticlesCurrent;
+    if (0 == flame_particles.size())
         return;
 
     //если партиклы циклические
@@ -328,15 +341,13 @@ void CShootingObject::StartFlameParticles()
     }
 
     StopFlameParticles();
-    m_pFlameParticles = CParticlesObject::Create(*m_sFlameParticlesCurrent, FALSE);
+    m_pFlameParticles = CParticlesObject::Create(*flame_particles, FALSE);
     UpdateFlameParticles();
     BOOL hudMode = IsHudModeNow() && m_bParticlesHudMode;
     m_pFlameParticles->Play(hudMode);
 }
 void CShootingObject::StopFlameParticles()
 {
-    if (0 == m_sFlameParticlesCurrent.size())
-        return;
     if (m_pFlameParticles == NULL)
         return;
 
@@ -347,8 +358,6 @@ void CShootingObject::StopFlameParticles()
 
 void CShootingObject::UpdateFlameParticles()
 {
-    if (0 == m_sFlameParticlesCurrent.size())
-        return;
     if (!m_pFlameParticles)
         return;
 
