@@ -132,6 +132,8 @@ bool CActor::WeaponLowered() const
 {
     if (!m_bWeaponLowered)
         return false;
+    if (IsTalking())
+        return true;
     auto* item = inventory().ActiveItem();
     auto* w = item ? item->cast_weapon() : nullptr;
     return w && w->CanLowerWeapon() && !w->IsZoomed();

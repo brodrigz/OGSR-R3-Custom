@@ -31,6 +31,7 @@ CUITalkWnd::CUITalkWnd()
 
     m_pOurDialogManager = NULL;
     m_pOthersDialogManager = NULL;
+    m_bKeptLoweredWeapon = false;
 
     ToTopicMode();
 
@@ -251,7 +252,8 @@ void CUITalkWnd::Draw() { inherited::Draw(); }
 
 void CUITalkWnd::Show()
 {
-    if (Core.Features.test(xrCore::Feature::more_hide_weapon))
+    m_bKeptLoweredWeapon = Actor() && Actor()->WeaponLowered();
+    if (Core.Features.test(xrCore::Feature::more_hide_weapon) && !m_bKeptLoweredWeapon)
         Actor()->SetWeaponHideState(INV_STATE_BLOCK_ALL, true);
 
     InitTalkDialog();
@@ -275,9 +277,10 @@ void CUITalkWnd::Hide()
     if (m_pActor->IsTalking())
         m_pActor->StopTalk();
 
-    if (Core.Features.test(xrCore::Feature::more_hide_weapon))
+    if (Core.Features.test(xrCore::Feature::more_hide_weapon) && !m_bKeptLoweredWeapon)
         m_pActor->SetWeaponHideState(INV_STATE_BLOCK_ALL, false);
 
+    m_bKeptLoweredWeapon = false;
     m_pActor = NULL;
 }
 

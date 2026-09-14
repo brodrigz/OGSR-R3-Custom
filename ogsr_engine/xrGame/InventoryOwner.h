@@ -73,7 +73,7 @@ public:
     virtual bool OfferTalk(CInventoryOwner* talk_partner);
     virtual void StartTalk(CInventoryOwner* talk_partner, bool start_trade = true);
     virtual void StopTalk();
-    virtual bool IsTalking();
+    virtual bool IsTalking() const;
 
     virtual void EnableTalk() { m_bAllowTalk = true; }
     virtual void DisableTalk() { m_bAllowTalk = false; }

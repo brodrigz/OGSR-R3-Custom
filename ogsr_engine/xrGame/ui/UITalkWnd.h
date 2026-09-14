@@ -87,6 +87,7 @@ protected:
     //так как иначе возникает ситуация, что класс, который
     //вызвал нам SendMessage обращается к удаленному объекту pListItem
     bool m_bNeedToUpdateQuestions;
+    bool m_bKeptLoweredWeapon;
 
     //текущий диалог, если NULL, то переходим в режим выбора темы
     DIALOG_SHARED_PTR m_pCurrentDialog;

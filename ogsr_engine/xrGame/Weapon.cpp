@@ -1860,7 +1860,11 @@ bool CWeapon::UseScopeTexture()
 void CWeapon::SwitchState(u32 S)
 {
     if (ParentIsActor() && Actor() && (S == eFire || S == eFire2 || S == eReload || S == eHiding || S == eBore || S == eSwitch))
-        Actor()->SetWeaponLowered(false);
+    {
+        const bool keep_lowered = Actor()->IsTalking() && (S == eHiding || S == eBore || S == eSwitch);
+        if (!keep_lowered)
+            Actor()->SetWeaponLowered(false);
+    }
 
     SetNextState(S); // Very-very important line of code!!! :)
     if (CHudItem::object().Local() && !CHudItem::object().getDestroy() /* && (S!=NEXT_STATE)*/

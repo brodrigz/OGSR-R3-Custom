@@ -274,7 +274,7 @@ void CInventoryOwner::StopTalk()
         ui_sp->TalkMenu->Stop();
 }
 
-bool CInventoryOwner::IsTalking() { return m_bTalking; }
+bool CInventoryOwner::IsTalking() const { return m_bTalking; }
 
 void CInventoryOwner::renderable_Render(u32 context_id, IRenderable* root)
 {
