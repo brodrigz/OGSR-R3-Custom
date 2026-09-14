@@ -175,6 +175,7 @@ bool CActor::OnActionPress(int cmd)
             mstate_wishful &= ~mcCrouch;
             m_bLowCrouchToggled = false;
         }
+        mstate_wishful &= ~mcLookout;
         m_bWalkToggled = false;
         if (psActorFlags.test(AF_SPRINT_HOLD))
             mstate_wishful |= mcSprint;
@@ -186,6 +187,8 @@ bool CActor::OnActionPress(int cmd)
     }
     case kL_LOOKOUT:
     case kR_LOOKOUT: {
+        if ((mstate_wishful & mcSprint) || (mstate_real & mcSprint))
+            return true;
         if (psActorFlags.test(AF_LEAN_TOGGLE) && cam_freelook == eflDisabled)
         {
             const u32 lookout = cmd == kL_LOOKOUT ? mcLLookout : mcRLookout;
@@ -405,11 +408,11 @@ void CActor::IR_OnKeyboardHold(int cmd)
     case kL_STRAFE: mstate_wishful |= mcLStrafe; break;
     case kR_STRAFE: mstate_wishful |= mcRStrafe; break;
     case kL_LOOKOUT:
-        if (!psActorFlags.test(AF_LEAN_TOGGLE) && cam_freelook == eflDisabled)
+        if (!psActorFlags.test(AF_LEAN_TOGGLE) && cam_freelook == eflDisabled && !(mstate_wishful & mcSprint) && !(mstate_real & mcSprint))
             mstate_wishful |= mcLLookout;
         break;
     case kR_LOOKOUT:
-        if (!psActorFlags.test(AF_LEAN_TOGGLE) && cam_freelook == eflDisabled)
+        if (!psActorFlags.test(AF_LEAN_TOGGLE) && cam_freelook == eflDisabled && !(mstate_wishful & mcSprint) && !(mstate_real & mcSprint))
             mstate_wishful |= mcRLookout;
         break;
     case kFWD: mstate_wishful |= mcFwd; break;

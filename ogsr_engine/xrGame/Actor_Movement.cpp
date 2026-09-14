@@ -42,6 +42,12 @@ IC static void generate_orthonormal_basis1(const Fvector& dir, Fvector& updir, F
 
 void CActor::g_cl_ValidateMState(float dt, u32 mstate_wf)
 {
+    if (mstate_wf & mcSprint)
+    {
+        mstate_wf &= ~mcLookout;
+        mstate_wishful &= ~mcLookout;
+    }
+
     // Lookout
     if ((mstate_wf & mcLLookout) && (mstate_wf & mcRLookout))
     {
@@ -61,7 +67,7 @@ void CActor::g_cl_ValidateMState(float dt, u32 mstate_wf)
         mstate_real &= ~mcLookout;
     }
 
-    if (mstate_real & (mcJump | mcFall | mcLanding | mcLanding2))
+    if (mstate_real & (mcJump | mcFall | mcLanding | mcLanding2 | mcSprint))
         mstate_real &= ~mcLookout;
 
     // закончить приземление
@@ -334,6 +340,13 @@ void CActor::g_cl_CheckControls(u32 mstate_wf, Fvector& vControlAccel, float& Ju
             moving_box_delay = 0;
             crouch_move = false;
             crouch_stop = false;
+        }
+
+        if (mstate_wf & mcSprint)
+        {
+            mstate_wf &= ~mcLookout;
+            mstate_wishful &= ~mcLookout;
+            mstate_real &= ~mcLookout;
         }
 
         if ((mstate_wf & mcSprint) && !CanSprint())
