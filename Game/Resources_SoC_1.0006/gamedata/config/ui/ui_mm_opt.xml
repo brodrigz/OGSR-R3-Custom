@@ -17,20 +17,20 @@
 		<texture>ui\ui_mm_rug02</texture>
 	</rug_video>
 	<main_dialog>
-		<dialog x="415" y="168" width="548" height="461">
+		<dialog x="415" y="140" width="548" height="530">
 			<texture>ui_menu_options_dlg</texture>
 		</dialog>
 		<cap_options x="45" y="9" width="378" height="33">
 			<text font="graffiti22" r="215" g="195" b="170">ui_mm_options</text>
 		</cap_options>
-		<btn_accept x="219" y="429" width="157" height="48">
+		<btn_accept x="219" y="498" width="157" height="48">
 			<text font="graffiti19" align="c">ui_mm_apply</text>
 			<texture>ui_button_main02</texture>
 			<text_color>
 				<e r="227" g="199" b="178"/> <t r="180" g="153" b="155"/> <d r="106" g="95" b="91"/> <h r="0" g="0" b="0"/>
 			</text_color>
 		</btn_accept>
-		<btn_cancel x="376" y="429" width="157" height="48">
+		<btn_cancel x="376" y="498" width="157" height="48">
 			<text font="graffiti19" align="c">ui_mm_cancel</text>
 			<texture>ui_button_main03</texture>
 			<text_color>
@@ -161,7 +161,7 @@
 			<options_item entry="rs_always_active" group="mm_opt_video"/>
 		</check_always_active>
 
-		<btn_advanced x="342" y="325" width="111" height="29">
+		<btn_advanced x="342" y="385" width="111" height="29">
 			<text align="c" font="letterica16" r="227" g="199" b="178">ui_mm_advanced</text>
 			<texture>ui_button_ordinary</texture>
 		</btn_advanced>
@@ -692,7 +692,7 @@
 			<options_item entry="r_mt_texload" group="mm_opt_video_adv"/>
 		</check_mt_texload>
 
-		<btn_to_simply x="342" y="325" width="111" height="29">
+		<btn_to_simply x="342" y="385" width="111" height="29">
 			<text align="c" font="letterica16" r="227" g="199" b="178">ui_mm_simply</text>
 			<texture>ui_button_ordinary</texture>
 		</btn_to_simply>
@@ -732,7 +732,7 @@
 			<list_font r="216" g="186" b="140" font="ui_font_utf"/>
         </list_snd_device>
 
-		<btn_default_set x="342" y="325" width="111" height="29">
+		<btn_default_set x="342" y="385" width="111" height="29">
 			<text align="c" font="letterica16" r="188" g="153" b="123">ui_mm_default</text>	
 			<texture>ui_button_ordinary</texture>
 		</btn_default_set>
@@ -802,28 +802,31 @@
 			<text font="letterica16" r="215" g="195" b="170">ui_mm_crosshair_hard</text>
 		</check_crosshair_hard-->
 
-		<check_aim_toggle x="20" y="280" width="243" height="21">
+		<check_aim_toggle x="20" y="277" width="243" height="21">
 			<options_item entry="wpn_aim_toggle" group="mm_opt_gameplay"/>
 			<text font="letterica16" r="215" g="195" b="170">ui_mm_aim_toggle</text>
 		</check_aim_toggle>
 
-		<check_sprint_lower_weapon x="20" y="330" width="243" height="21">
+		<check_sprint_lower_weapon x="20" y="321" width="243" height="21">
 			<options_item entry="g_sprint_lower_weapon" group="mm_opt_gameplay"/>
 			<text font="letterica16" r="215" g="195" b="170">ui_mm_sprint_lower_weapon</text>
 		</check_sprint_lower_weapon>
 
-		<check_sprint_hold x="20" y="355" width="243" height="21">
+		<check_sprint_hold x="20" y="343" width="243" height="21">
 			<options_item entry="g_sprint_hold" group="mm_opt_gameplay"/>
 			<text font="letterica16" r="215" g="195" b="170">ui_mm_sprint_hold</text>
 		</check_sprint_hold>
 
-		<check_sticky_aim x="20" y="380" width="243" height="21">
+		<check_sticky_aim x="20" y="365" width="243" height="21">
 			<options_item entry="g_sticky_aim" group="mm_opt_gameplay"/>
 			<text font="letterica16" r="215" g="195" b="170">ui_mm_sticky_aim</text>
 		</check_sticky_aim>
 
+		<check_backpack_anim x="20" y="387" width="170" height="21">
+			<text font="letterica16" r="215" g="195" b="170">ui_mm_backpack_anim</text>
+		</check_backpack_anim>
 		
-		<check_switch_slot x="20" y="305" width="243" height="21">
+		<check_switch_slot x="20" y="299" width="243" height="21">
 			<options_item entry="g_mouse_wheel_switch_slot" group="mm_opt_gameplay"/>
 			<text font="letterica16" r="215" g="195" b="170">ui_mm_switch_slot</text>
 		</check_switch_slot>
@@ -986,13 +989,13 @@
 			</scroll_view>
 		</key_binding>
 
-		<btn_default x="342" y="325" width="111" height="29">
+		<btn_default x="342" y="385" width="111" height="29">
 			<text align="c" font="letterica16" r="227" g="199" b="178">ui_mm_default</text>
 			<texture>ui_button_ordinary</texture>
 		</btn_default>
 	</tab_controls>
 	
-	<frame x="0" y="0" width="470" height="330">
+	<frame x="0" y="0" width="470" height="415">
 		<texture>ui_tablist_textbox</texture>
 	</frame>
 	

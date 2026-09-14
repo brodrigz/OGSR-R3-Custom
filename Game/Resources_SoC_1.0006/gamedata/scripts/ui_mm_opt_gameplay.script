@@ -29,6 +29,33 @@ function opt_gameplay:InitControls(x, y, xml)
 	xml:InitCheck("tab_gameplay:check_sprint_lower_weapon", self)
 	xml:InitCheck("tab_gameplay:check_sprint_hold", self)
 	xml:InitCheck("tab_gameplay:check_sticky_aim", self)
+	local function sebs_backpack_available()
+		local fs = getFS()
+		if not fs then
+			return false
+		end
+		local function has_file(path, name)
+			local ok, info = pcall(function()
+				return fs:exist(path, name)
+			end)
+			if not ok or info == nil or type(info) == "number" then
+				return false
+			end
+			local found = false
+			pcall(function()
+				local sz = tonumber(info.size_real) or 0
+				local nm = string.lower(info.name and tostring(info.name) or "")
+				local leaf = string.lower(string.match(name, "[^\\/]+$") or name)
+				found = sz > 0 and leaf ~= "" and string.find(nm, leaf, 1, true) ~= nil
+			end)
+			return found
+		end
+		return has_file("$game_scripts$", "hoc_backpack_inventory_anim.script")
+			and has_file("$game_config$", "misc\\hud_items\\hoc_backpack.ltx")
+	end
+	if sebs_backpack_available() then
+		xml:InitCheck("tab_gameplay:check_backpack_anim", self)
+	end
 	xml:InitCheck("tab_gameplay:check_switch_slot", self)
 	xml:InitCheck("tab_gameplay:check_weapon_bobbing", self)
 

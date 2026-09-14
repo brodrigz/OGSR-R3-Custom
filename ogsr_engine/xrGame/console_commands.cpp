@@ -1629,6 +1629,8 @@ void CCC_RegisterCommands()
     CMD3(CCC_Mask, "g_sprint_lower_weapon", &psActorFlags, AF_SPRINT_LOWER_WEAPON);
     CMD3(CCC_Mask, "g_sprint_hold", &psActorFlags, AF_SPRINT_HOLD);
     CMD3(CCC_Mask, "g_sticky_aim", &psActorFlags, AF_STICKY_AIM);
+    static BOOL backpack_anim_enabled = TRUE;
+    CMD2(CCC_Bool, "g_backpack_anim", &backpack_anim_enabled);
 
     // alife
 #ifdef DEBUG

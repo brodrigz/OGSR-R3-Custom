@@ -189,6 +189,9 @@
 	<string id="ui_mm_harvest_anim">
 		<text>Harvest animation</text>
 	</string>
+	<string id="ui_mm_backpack_anim">
+		<text>Backpack animation</text>
+	</string>
 	<string id="ui_mm_ledge_grab">
 		<text>Ledge grab</text>
 	</string>
@@ -284,6 +287,9 @@
 	</string>
 	<string id="ui_mm_hint_harvest_anim">
 		<text>Play mutant harvest animations.</text>
+	</string>
+	<string id="ui_mm_hint_backpack_anim">
+		<text>Play backpack open and close HUD animations.</text>
 	</string>
 	<string id="ui_mm_hint_ledge_grab">
 		<text>Allow climbing ledges.</text>

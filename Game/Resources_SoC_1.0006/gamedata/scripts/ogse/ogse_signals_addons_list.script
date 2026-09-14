@@ -1,0 +1,113 @@
+-- ?????? ???? ???????????? ???????
+-- ????? ???? ?????????????? ??????, ??????? ?? ????? ???????????? ?????????????
+-- ???????? ??, ? ??????? ??? ?????? ?? ?????????? ?? ogse
+addons = {
+    "ogsr_memory_control",
+	"laucer_inventory_sorting",
+    "ogse_wpn_explode_fx",
+    "ogse_st_mgr",
+	"dsh",
+	"dsh_enemies",
+	"dsh_walking_stalkers",
+	"trade_manager",
+	"ogse_sleep_mgr",
+	"dsh_cop_weather",
+	"ogse_surge_mgr",
+    "jr_helmets",
+    "jr_mod_inv",
+	"ogse_body_states",
+    "ogse_unist",
+	"game_difficulties",
+	"ogse_qt",
+	"ogse_night",
+	"rad_art_mgr",
+	"ogse_fixes",
+	"dsh_torch",
+	"ogse_torch",
+	"ogsr_dof",
+	"PMA_escape",
+	"ogse_night_vision",
+	"ogsr_scope_nightvision",
+	"ogse_hud_control",
+	"dsh_hud_fx",
+	-- "zzz_bas_laser_control", -- requires removed weapon:get_laser_on() API
+	"treasure_manager",
+    "task_manager",
+	"ui_inGame2_radblood",
+	"xr_combat_companion",
+	"ogsr_actor_animation",
+	"ogsr_tactical_compass",
+	"ogsr_ledge_grabbing",
+	"ogsr_dialog_fov",
+	"dsh_respawn",
+    "dsh_drag_drop",
+    "rad_funcs",
+    "rad_repair",
+    "ogsr_items_anims",
+    "jr_slow_med",
+	"fakelens",
+	--"ogsr_3dss",
+	"ogsr_ammo_discharge",
+    "rad_actor_anims_n_sounds",
+    "ciga_effects",
+	--"ogse_hideouts", --?????? ???? ????? ?????????? ????????!
+    "ogse_anomaly",
+	"dsh_anomaly_detector", --?????? ???? ????? ogse_anomaly!
+    "ui_inv_descr",
+	"ui_inv_add",
+    "rad_knife_condition",
+    --"addon_detectors",
+    "ogsr_quick_saveload",
+	"ogsr_addons_npc",
+	"ogsr_exo_step_sound",
+	"jr_rain_footsteps",
+	"rad_trans_purge",
+	"rad_respawn",
+	"rad_gear_rustle_sounds",
+	"blood_pool",
+	"animation_common",
+	"aol_anim_transitions",
+	"uni_anim_core",
+	--"shotgun_unjam_fix",
+	"aol_sprint_cancel",
+	"uni_anim_ammo",
+	"rad_hit_snd",
+	"free_zoom",
+	"ui_handradio",
+	"grok_casings_sounds",
+	--"rad_quick_nade",
+	"rad_npc_immunity",
+	"rad_dev_mode",
+	"rad_map_spots",
+	"swm_legs",
+	"ogse_dynamic_hud",
+	"ogse_quick_slots"
+}
+
+local function sebs_backpack_available()
+	local fs = getFS()
+	if not fs then
+		return false
+	end
+	local function has_file(path, name)
+		local ok, info = pcall(function()
+			return fs:exist(path, name)
+		end)
+		if not ok or info == nil or type(info) == "number" then
+			return false
+		end
+		local found = false
+		pcall(function()
+			local sz = tonumber(info.size_real) or 0
+			local nm = string.lower(info.name and tostring(info.name) or "")
+			local leaf = string.lower(string.match(name, "[^\\/]+$") or name)
+			found = sz > 0 and leaf ~= "" and string.find(nm, leaf, 1, true) ~= nil
+		end)
+		return found
+	end
+	return has_file("$game_scripts$", "hoc_backpack_inventory_anim.script")
+		and has_file("$game_config$", "misc\\hud_items\\hoc_backpack.ltx")
+end
+if sebs_backpack_available() then
+	addons[#addons + 1] = "hoc_backpack_inventory_anim"
+end
