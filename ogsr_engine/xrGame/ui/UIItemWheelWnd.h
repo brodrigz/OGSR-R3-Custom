@@ -11,6 +11,7 @@ enum EItemWheelTab : u32
     eItemWheelMeds,
     eItemWheelFood,
     eItemWheelGrenades,
+    eItemWheelAddons,
     eItemWheelTabCount
 };
 
@@ -36,6 +37,8 @@ class CUIItemWheelWnd : public CUIDialogWnd
         u16 object_id{u16(-1)};
         bool grenade{};
         bool detector{};
+        bool addon{};
+        bool addon_attached{};
         float angle{};
     };
 
@@ -59,6 +62,8 @@ class CUIItemWheelWnd : public CUIDialogWnd
     float m_radius{145.f};
     float m_radius_y{145.f};
     float m_aspect_kx{1.f};
+    ref_sound m_snd_attach;
+    ref_sound m_snd_detach;
 
     void LayoutChrome();
     void LayoutTabs();

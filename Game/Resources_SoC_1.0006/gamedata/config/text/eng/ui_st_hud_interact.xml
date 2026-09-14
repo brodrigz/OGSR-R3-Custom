@@ -375,6 +375,9 @@
 	<string id="st_item_wheel_grenades">
 		<text>Grenades</text>
 	</string>
+	<string id="st_item_wheel_attachments">
+		<text>Attachments</text>
+	</string>
 	<string id="st_item_wheel_empty">
 		<text>Empty</text>
 	</string>

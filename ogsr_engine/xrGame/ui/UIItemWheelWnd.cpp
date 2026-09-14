@@ -10,12 +10,17 @@
 #include "../Antirad.h"
 #include "../Grenade.h"
 #include "../CustomDetector.h"
+#include "../Weapon.h"
+#include "../scope.h"
+#include "../silencer.h"
+#include "../grenadelauncher.h"
 #include "../player_hud.h"
 #include "../hudmanager.h"
 #include "../string_table.h"
 #include "../xr_level_controller.h"
 #include "../xrMessages.h"
 #include "../../xr_3da/xr_input.h"
+#include "UIIconParams.h"
 
 #include <dinput.h>
 
@@ -30,8 +35,8 @@ constexpr u32 kMaxWheelSlices = 12;
 constexpr float kIconSize = 42.f;
 constexpr float kDeadzoneSq = 24.f * 24.f;
 
-LPCSTR tab_titles[eItemWheelTabCount] = {"st_item_wheel_pins", "st_item_wheel_meds", "st_item_wheel_food", "st_item_wheel_grenades"};
-LPCSTR tab_textures[eItemWheelTabCount] = {"ui_qaw_category_devices", "ui_qaw_category_meds", "ui_qaw_category_food", "ui_qaw_category_grenades"};
+LPCSTR tab_titles[eItemWheelTabCount] = {"st_item_wheel_pins", "st_item_wheel_meds", "st_item_wheel_food", "st_item_wheel_grenades", "st_item_wheel_attachments"};
+LPCSTR tab_textures[eItemWheelTabCount] = {"ui_qaw_category_devices", "ui_qaw_category_meds", "ui_qaw_category_food", "ui_qaw_category_grenades", "ui_qaw_category_attachments"};
 
 xr_vector<shared_str> s_pins;
 
@@ -95,6 +100,18 @@ bool IsFood(CInventoryItem* item) { return smart_cast<CEatableItem*>(item) && !I
 bool IsGrenade(CInventoryItem* item) { return smart_cast<CGrenade*>(item); }
 
 bool IsDetector(CInventoryItem* item) { return smart_cast<CCustomDetector*>(item); }
+
+bool IsAddonItem(CInventoryItem* item)
+{
+    return smart_cast<CScope*>(item) || smart_cast<CSilencer*>(item) || smart_cast<CGrenadeLauncher*>(item);
+}
+
+bool WeaponBusy(CWeapon* wpn)
+{
+    if (!wpn)
+        return true;
+    return wpn->GetState() != CHudItem::eIdle;
+}
 
 bool ItemVisible(CInventoryItem* item)
 {
@@ -235,6 +252,9 @@ CUIItemWheelWnd::CUIItemWheelWnd()
         m_tab_nums[i].SetTextAlignment(CGameFont::alCenter);
     }
     m_category.Show(false);
+
+    create_ui_snd(m_snd_attach, "interface\\inv_attach_addon");
+    create_ui_snd(m_snd_detach, "interface\\inv_detach_addon");
 
     LayoutChrome();
 
@@ -380,6 +400,8 @@ void CUIItemWheelWnd::Rebuild()
         u32 count{};
         bool grenade{};
         bool detector{};
+        bool addon{};
+        bool addon_attached{};
     };
     xr_vector<Group> groups;
 
@@ -397,7 +419,18 @@ void CUIItemWheelWnd::Rebuild()
         }
         if (groups.size() >= kMaxWheelSlices)
             return;
-        groups.push_back({sect, itm, 1, as_grenade, IsDetector(itm)});
+        groups.push_back({sect, itm, 1, as_grenade, IsDetector(itm), IsAddonItem(itm), false});
+    };
+
+    auto add_attached_addon = [&](const shared_str& sect) {
+        if (!sect.size() || groups.size() >= kMaxWheelSlices)
+            return;
+        for (const Group& g : groups)
+        {
+            if (g.section == sect)
+                return;
+        }
+        groups.push_back({sect, nullptr, 1, false, false, true, true});
     };
 
     if (m_tab == eItemWheelPins)
@@ -425,7 +458,25 @@ void CUIItemWheelWnd::Rebuild()
                 ++count;
             }
             if (found)
-                groups.push_back({sect, found, count, grenade, detector});
+                groups.push_back({sect, found, count, grenade, detector, IsAddonItem(found), false});
+        }
+    }
+    else if (m_tab == eItemWheelAddons)
+    {
+        if (CWeapon* wpn = smart_cast<CWeapon*>(actor->inventory().ActiveItem()))
+        {
+            if (wpn->ScopeAttachable() && wpn->IsScopeAttached())
+                add_attached_addon(wpn->GetScopeName());
+            if (wpn->SilencerAttachable() && wpn->IsSilencerAttached())
+                add_attached_addon(wpn->GetSilencerName());
+            if (wpn->GrenadeLauncherAttachable() && wpn->IsGrenadeLauncherAttached())
+                add_attached_addon(wpn->GetGrenadeLauncherName());
+
+            for (CInventoryItem* itm : inv.m_all)
+            {
+                if (ItemVisible(itm) && itm->Useful() && wpn->CanAttach(itm))
+                    add_item(itm, false);
+            }
         }
     }
     else
@@ -456,9 +507,11 @@ void CUIItemWheelWnd::Rebuild()
     {
         Slice s;
         s.section = groups[i].section;
-        s.object_id = groups[i].item->object().ID();
+        s.object_id = groups[i].item ? groups[i].item->object().ID() : u16(-1);
         s.grenade = groups[i].grenade;
         s.detector = groups[i].detector;
+        s.addon = groups[i].addon;
+        s.addon_attached = groups[i].addon_attached;
         s.angle = span * float(i);
 
         const float x = m_center.x + _sin(s.angle) * m_radius;
@@ -466,16 +519,19 @@ void CUIItemWheelWnd::Rebuild()
 
         s.hover = xr_new<CUIStatic>();
         s.hover->SetAutoDelete(true);
-        s.hover->InitTexture("ui_qaw_opt_hover");
+        s.hover->InitTexture(s.addon_attached ? "ui_qaw_opt_selected" : "ui_qaw_opt_hover");
         s.hover->SetStretchTexture(true);
         s.hover->SetWndSize(m_hover_sz);
         PlaceCentered(s.hover, x, y);
-        s.hover->Show(false);
+        s.hover->Show(s.addon_attached);
         m_items_root.AttachChild(s.hover);
 
         s.icon = xr_new<CUIStatic>();
         s.icon->SetAutoDelete(true);
-        groups[i].item->m_icon_params.set_shader(s.icon);
+        if (groups[i].item)
+            groups[i].item->m_icon_params.set_shader(s.icon);
+        else
+            CIconParams(groups[i].section).set_shader(s.icon);
         s.icon->SetWndSize(Fvector2().set(kIconSize, kIconSize));
         PlaceCentered(s.icon, x, y);
         m_items_root.AttachChild(s.icon);
@@ -515,7 +571,7 @@ void CUIItemWheelWnd::UpdateHover()
     if (dx * dx + dy * dy < kDeadzoneSq)
     {
         for (Slice& s : m_slices)
-            s.hover->Show(false);
+            s.hover->Show(s.addon_attached);
         return;
     }
 
@@ -533,7 +589,7 @@ void CUIItemWheelWnd::UpdateHover()
     }
 
     for (u32 i = 0; i < n; ++i)
-        m_slices[i].hover->Show(int(i) == m_hovered);
+        m_slices[i].hover->Show(int(i) == m_hovered || m_slices[i].addon_attached);
 }
 
 void CUIItemWheelWnd::UpdateCursor()
@@ -577,6 +633,48 @@ void CUIItemWheelWnd::ActivateHovered()
     CActor* actor = Actor();
     if (!actor)
         return;
+
+    if (m_slices[m_hovered].addon)
+    {
+        CWeapon* wpn = smart_cast<CWeapon*>(actor->inventory().ActiveItem());
+        if (WeaponBusy(wpn))
+            return;
+
+        if (m_slices[m_hovered].addon_attached)
+        {
+            wpn->Detach(m_slices[m_hovered].section.c_str(), true);
+            if (m_snd_detach._handle())
+                m_snd_detach.play(nullptr, sm_2D);
+        }
+        else
+        {
+            CInventoryItem* item = actor->inventory().get_object_by_id(m_slices[m_hovered].object_id);
+            if (!item || !item->Useful())
+            {
+                Rebuild();
+                return;
+            }
+
+            if (!wpn->CanAttach(item))
+            {
+                if (smart_cast<CScope*>(item) && wpn->IsScopeAttached())
+                    wpn->Detach(wpn->GetScopeName().c_str(), true);
+                else if (smart_cast<CSilencer*>(item) && wpn->IsSilencerAttached())
+                    wpn->Detach(wpn->GetSilencerName().c_str(), true);
+                else if (smart_cast<CGrenadeLauncher*>(item) && wpn->IsGrenadeLauncherAttached())
+                    wpn->Detach(wpn->GetGrenadeLauncherName().c_str(), true);
+            }
+
+            if (wpn->CanAttach(item) && wpn->Attach(item, true))
+            {
+                if (m_snd_attach._handle())
+                    m_snd_attach.play(nullptr, sm_2D);
+            }
+        }
+
+        CloseWheel();
+        return;
+    }
 
     CInventoryItem* item = actor->inventory().get_object_by_id(m_slices[m_hovered].object_id);
     if (!item || !item->Useful())
@@ -716,6 +814,11 @@ bool CUIItemWheelWnd::OnKeyboard(int dik, EUIMessages keyboard_action)
     if (dik == DIK_4)
     {
         SetTab(eItemWheelGrenades);
+        return true;
+    }
+    if (dik == DIK_5)
+    {
+        SetTab(eItemWheelAddons);
         return true;
     }
 
