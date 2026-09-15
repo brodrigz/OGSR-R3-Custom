@@ -329,8 +329,9 @@ void CUIMainIngameWnd::UpdateHudClusterLayout()
     {
         float fx = m_xml_flashlight_pos.x + dx;
         float fy = m_xml_flashlight_pos.y;
-        // Left-cluster used to clamp X onto the health bar. Keep it under the bar instead.
-        if (fx < 4.f)
+        // Bottom-left minimap covers the XML flashlight slot; park under the health cluster.
+        // Same for left-shifted clusters that would clamp off-screen.
+        if (pos == 0 || fx < 4.f)
             fx = m_xml_health_pos.x + dx;
         UIFlashlightIcon.SetWndPos(fx, fy);
     }
@@ -668,7 +669,8 @@ LPCSTR ShortInteractVerb(LPCSTR action_id)
 
     if (action_id)
     {
-        if (!xr_strcmp(action_id, "inventory_item_use") || !xr_strcmp(action_id, "inventory_item_use_or_drag"))
+        if (!xr_strcmp(action_id, "inventory_item_use") || !xr_strcmp(action_id, "inventory_item_use_or_drag") ||
+            !xr_strcmp(action_id, "st_pick_rucksack"))
         {
             id = "st_hud_interact_take";
             fallback = "Take";
@@ -704,6 +706,11 @@ LPCSTR ShortInteractVerb(LPCSTR action_id)
             id = "st_hud_interact_unload";
             fallback = "Unload";
         }
+        else if (!xr_strcmp(action_id, "inventory_box_use") || !xr_strcmp(action_id, "container_use"))
+        {
+            id = "st_hud_interact_use";
+            fallback = "Use";
+        }
         else
             return nullptr;
     }
@@ -712,6 +719,36 @@ LPCSTR ShortInteractVerb(LPCSTR action_id)
     if (!translated || !xr_strcmp(*translated, id))
         return fallback;
     return *translated;
+}
+
+// Drop " (F)" / " (SHIFT+F)" style key hints from tip strings when the keycap already shows the bind.
+void StripParentheticalKeyHints(char* dst, u32 sz, LPCSTR src)
+{
+    if (!dst || !sz)
+        return;
+    dst[0] = 0;
+    if (!src || !src[0])
+        return;
+
+    u32 o = 0;
+    for (u32 i = 0; src[i] && o + 1 < sz;)
+    {
+        if (src[i] == '(')
+        {
+            const char* end = strchr(src + i, ')');
+            if (end)
+            {
+                while (o > 0 && (dst[o - 1] == ' ' || dst[o - 1] == '\t'))
+                    --o;
+                i = u32(end - src) + 1;
+                continue;
+            }
+        }
+        dst[o++] = src[i++];
+    }
+    while (o > 0 && (dst[o - 1] == ' ' || dst[o - 1] == '\t' || dst[o - 1] == '\n' || dst[o - 1] == '\r'))
+        --o;
+    dst[o] = 0;
 }
 
 LPCSTR InteractHudString(LPCSTR id, LPCSTR fallback)
@@ -733,8 +770,9 @@ LPCSTR InteractTipId(CGameObject* obj)
 
 LPCSTR CanonicalInteractAction(CGameObject* obj, LPCSTR actor_action)
 {
+    // Prefer the tip id (not Actor's already-translated m_sDefaultObjAction, which embeds key names).
     LPCSTR tip = InteractTipId(obj);
-    if (tip && ShortInteractVerb(tip))
+    if (tip && tip[0])
         return tip;
     if (actor_action && ShortInteractVerb(actor_action))
         return actor_action;
@@ -1613,12 +1651,23 @@ void CUIMainIngameWnd::RenderQuickInfos()
         UIStaticQuickHelp.TextureOff();
 
         string128 key{};
+        string256 quiet_verb{};
         LPCSTR verb = nullptr;
         if (has_prompt)
         {
             PrimaryUseKey(key, sizeof(key), IsDragInteractAction(prompt_action));
-            verb = cfg.quiet_action ? ShortInteractVerb(prompt_action) : nullptr;
-            if (!verb || !verb[0])
+            if (cfg.quiet_action)
+            {
+                verb = ShortInteractVerb(prompt_action);
+                if (!verb || !verb[0])
+                {
+                    const shared_str translated = CStringTable().translate(prompt_action);
+                    LPCSTR src = translated.size() ? *translated : prompt_action;
+                    StripParentheticalKeyHints(quiet_verb, sizeof(quiet_verb), src);
+                    verb = quiet_verb[0] ? quiet_verb : ShortInteractVerb(nullptr);
+                }
+            }
+            else
             {
                 if (object_changed || _stricmp(prompt_action, UIStaticQuickHelp.GetText()))
                     UIStaticQuickHelp.SetTextST(prompt_action);

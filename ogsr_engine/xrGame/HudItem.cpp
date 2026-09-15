@@ -20,8 +20,58 @@
 #include "xr_level_controller.h"
 #include "level.h"
 #include "entity_alive.h"
+#include "ai_space.h"
+#include "script_engine.h"
+#include "script_game_object.h"
 
 ENGINE_API extern float psHUD_FOV_def;
+
+namespace
+{
+// Anomaly-compatible Lua bridge for scripted_snd / anim mutators.
+// Scripts define _G.CHudItem__PlayHUDMotion(anm_table, obj) and optionally
+// _G.CHudItem__OnAnimationEnd(obj, section, motion, state, slot).
+bool CallPlayHUDMotionScript(shared_str& motion, bool& mix_in, u32& state, float& speed, CGameObject& go)
+{
+    ::luabind::functor<::luabind::object> funct;
+    if (!ai().script_engine().functor("_G.CHudItem__PlayHUDMotion", funct))
+        return false;
+
+    ::luabind::object table = ::luabind::newtable(ai().script_engine().lua());
+    table["anm_name"] = *motion;
+    table["anm_mixin"] = mix_in;
+    table["anm_state"] = state;
+    table["anm_speed"] = speed;
+
+    const ::luabind::object output = funct(table, go.lua_game_object());
+    if (!output || output.type() != LUA_TTABLE)
+        return false;
+
+    const ::luabind::object name = output["anm_name"];
+    const ::luabind::object mixin = output["anm_mixin"];
+    const ::luabind::object st = output["anm_state"];
+    const ::luabind::object spd = output["anm_speed"];
+    if (name && name.type() == LUA_TSTRING)
+        motion = ::luabind::object_cast<LPCSTR>(name);
+    if (mixin && mixin.type() == LUA_TBOOLEAN)
+        mix_in = ::luabind::object_cast<bool>(mixin);
+    if (st && st.type() == LUA_TNUMBER)
+        state = ::luabind::object_cast<u32>(st);
+    if (spd && spd.type() == LUA_TNUMBER)
+        speed = ::luabind::object_cast<float>(spd);
+
+    return true;
+}
+
+void CallOnAnimationEndScript(CGameObject& go, LPCSTR section, LPCSTR motion, u32 state, u32 slot)
+{
+    ::luabind::functor<void> funct;
+    if (!ai().script_engine().functor("_G.CHudItem__OnAnimationEnd", funct))
+        return;
+
+    funct(go.lua_game_object(), section, motion, state, slot);
+}
+} // namespace
 
 CHudItem::CHudItem()
 {
@@ -353,6 +403,8 @@ void CHudItem::UpdateCL()
                 m_dwMotionEndTm = 0;
                 m_dwMotionCurrTm = 0;
                 m_bStopAtEndAnimIsRunning = false;
+                if (CGameObject* go = smart_cast<CGameObject*>(&object()))
+                    CallOnAnimationEndScript(*go, HudSection().c_str(), m_current_motion.c_str(), m_startedMotionState, animation_slot());
                 OnAnimationEnd(m_startedMotionState);
             }
         }
@@ -424,15 +476,30 @@ u32 CHudItem::PlayHUDMotion(const char* M, const bool bMixIn, const u32 state, c
         }
     }
 
+    shared_str motion = M;
+    bool mix_in = bMixIn;
+    u32 motion_state = state;
+    float motion_speed = speed;
+
+    if (HudItemData())
+    {
+        if (CGameObject* go = smart_cast<CGameObject*>(&object()))
+        {
+            CallPlayHUDMotionScript(motion, mix_in, motion_state, motion_speed, *go);
+            if (!xr_strcmp(*motion, "$cancel"))
+                return 0;
+        }
+    }
+
     // Msg("~~[%s] Playing motion [%s] for [%s]", __FUNCTION__, M.c_str(), HudSection().c_str());
-    u32 anim_time = PlayHUDMotion_noCB(M, bMixIn, randomAnim, speed);
+    u32 anim_time = PlayHUDMotion_noCB(*motion, mix_in, randomAnim, motion_speed);
     if (anim_time > 0)
     {
         m_bStopAtEndAnimIsRunning = true;
         m_dwMotionStartTm = Device.dwTimeGlobal;
         m_dwMotionCurrTm = m_dwMotionStartTm;
         m_dwMotionEndTm = m_dwMotionStartTm + anim_time;
-        m_startedMotionState = state;
+        m_startedMotionState = motion_state;
     }
     else
         m_bStopAtEndAnimIsRunning = false;

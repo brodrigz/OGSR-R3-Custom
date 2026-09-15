@@ -104,7 +104,7 @@ constexpr xr_token qpreset_token[] = {{"Minimum", 0}, {"Low", 1}, {"Default", 2}
 u32 ps_r_ao_mode = AO_MODE_SSDO;
 constexpr xr_token ao_mode_token[] = {{"st_gtao", AO_MODE_GTAO}, {"st_ssdo", AO_MODE_SSDO}, {"st_xegtao", AO_MODE_XEGTAO}, {nullptr, 0}};
 float ps_r_xegtao_radius = 0.5f;
-BOOL ps_r_xegtao_bent_normals = FALSE;
+BOOL ps_r_xegtao_bent_normals = TRUE;
 
 u32 ps_r_ao_resolution = AO_RES_FULL;
 constexpr xr_token ao_resolution_token[] = {{"legacy", AO_RES_LEGACY}, {"full", AO_RES_FULL}, {"half", AO_RES_HALF}, {nullptr, 0}};
@@ -177,6 +177,7 @@ Flags64 ps_r2_ls_flags = {
     R3FLAG_VOLUMETRIC_SMOKE |
     R2FLAG_DETAIL_BUMP | 
     R2FLAG_SSFX_HEIGHT_FOG |
+    R2FLAG_SSFX_SKY_DEBANDING |
     R2FLAG_SSFX_BLOOM |
     R2FLAG_STEEP_PARALLAX | 
     R2FLAG_TONEMAP | 
@@ -249,7 +250,7 @@ Fvector3 ps_ssfx_shadows{
            // Maximum shadow map resolution. When lights are closer, the resolution increases to improve the image quality of shadows ( at the cost of performance ).
 Fvector3 ps_ssfx_shadow_bias{0.4f, 0.03f, 0.0f};
 
-int ps_ssfx_bloom_use_presets = 0;
+int ps_ssfx_bloom_use_presets = 1;
 Fvector4 ps_ssfx_bloom_1 = {4.f, 4.f, 0.f, 0.5f}; // Threshold, Exposure, -, Sky
 Fvector4 ps_ssfx_bloom_2 = {1.7f, 0.7f, 0.5f, 0.5f}; // Blur Radius, Vibrance, Lens, Dirt
 

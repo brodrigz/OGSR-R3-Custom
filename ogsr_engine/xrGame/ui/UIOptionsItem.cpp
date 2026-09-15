@@ -88,6 +88,7 @@ void CUIOptionsItem::SaveValue()
     if (m_entry == "vid_mode" || m_entry == "rs_fullscreen" || m_entry == "rs_v_sync" ||
         m_entry == "r2_volumetric_lights" || m_entry == "r3_dynamic_wet_surfaces" || m_entry == "r__detail_radius" ||
         m_entry == "r2_sun_quality" || m_entry == "r_ao_mode" || m_entry == "r2_ssao" ||
+        m_entry == "r_xegtao_bent_normals" ||
         m_entry == "r_sslr_enable" || m_entry == "ssfx_height_fog" || m_entry == "ssfx_sky_debanding" || m_entry == "ssfx_indirect_light"
         || m_entry == "r2_mblur_enable"
         )

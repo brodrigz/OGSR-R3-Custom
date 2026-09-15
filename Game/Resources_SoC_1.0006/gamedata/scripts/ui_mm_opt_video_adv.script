@@ -29,6 +29,7 @@ local adv_vid_opt_params = {
 	{ "lens_flare",            "check", 0, hint_colors.green,  "video_settings_name_67", "" },
 	--
 	{ "ao_mode",               "list",  0, hint_colors.red   , "video_settings_name_38", "video_settings_desc_38" },
+	{ "r_xegtao_bent_normals", "check", 1, hint_colors.red   , "video_settings_name_73", "video_settings_desc_73" },
 	{ "ssao",                  "list",  0, hint_colors.red   , "video_settings_name_37", "video_settings_desc_37" },
 	--
 	{ "r3_dynamic_wet_surfaces","check",0, hint_colors.yellow, "video_settings_name_49", "video_settings_desc_49" },
@@ -85,6 +86,7 @@ function opt_video_adv:InitControls(x, y, xml, handler)
 	xml:InitFrame("frame", self)
 	self.scroll_v = xml:InitScrollView("video_adv:scroll_v", self)
 	self.upscaler_rows = {}
+	self.ao_mode_rows = {}
 
 	-- перебираем с конца, поскольку в настройках scroll view в xml стоит параметр flip_vert="1",
 	-- который инвертирует порядок элементов, что в свою очередь сделано для того, чтобы визуально первые элементы
@@ -133,6 +135,10 @@ function opt_video_adv:InitControls(x, y, xml, handler)
 
 		if opt == "aa" then
 			self.aa_list = ctl
+		elseif opt == "ao_mode" then
+			self.ao_mode_list = ctl
+		elseif opt == "r_xegtao_bent_normals" then
+			self.ao_mode_rows[opt] = _st
 		elseif opt == "dlss_quality" then
 			self.upscaler_rows[opt] = _st
 			self.dlss_quality_list = ctl
@@ -151,6 +157,12 @@ function opt_video_adv:InitControls(x, y, xml, handler)
 			self:UpdateUpscalerQualityRows()
 		end)
 	end
+	if self.ao_mode_list then
+		handler:Register(self.ao_mode_list, "video_adv:list_ao_mode")
+		handler:AddCallback("video_adv:list_ao_mode", ui_events.LIST_ITEM_SELECT, function()
+			self:UpdateAoModeRows()
+		end)
+	end
 	if self.dlss_quality_list then
 		handler:Register(self.dlss_quality_list, "video_adv:list_dlss_quality")
 		handler:AddCallback("video_adv:list_dlss_quality", ui_events.LIST_ITEM_SELECT, function()
@@ -160,6 +172,7 @@ function opt_video_adv:InitControls(x, y, xml, handler)
 		end)
 	end
 	self:UpdateUpscalerQualityRows()
+	self:UpdateAoModeRows()
 
 	local btn = xml:Init3tButton("video_adv:btn_to_simply",	self)
 	handler:Register(btn, "btn_simply_graphic")
@@ -187,6 +200,16 @@ function opt_video_adv:UpdateUpscalerQualityRows()
 	end
 	if self.upscaler_rows.fsr3_quality then
 		self.upscaler_rows.fsr3_quality:Show(mode == "st_opt_fsr3")
+	end
+	if self.scroll_v then
+		self.scroll_v:ForceUpdate()
+	end
+end
+
+function opt_video_adv:UpdateAoModeRows()
+	local mode = get_console():get_string("r_ao_mode") or ""
+	if self.ao_mode_rows.r_xegtao_bent_normals then
+		self.ao_mode_rows.r_xegtao_bent_normals:Show(mode == "st_xegtao")
 	end
 	if self.scroll_v then
 		self.scroll_v:ForceUpdate()

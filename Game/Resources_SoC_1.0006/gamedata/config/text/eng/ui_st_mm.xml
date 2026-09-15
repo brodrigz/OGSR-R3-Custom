@@ -231,6 +231,9 @@
 	<string id="ui_mm_ssao_quality">
 		<text>AO Quality</text>
 	</string>
+	<string id="ui_mm_xegtao_bent_normals">
+		<text>XeGTAO bent normals</text>
+	</string>
 
 	<string id="ui_mm_r2_steep_parallax">
 		<text>Steep parallax</text>
@@ -955,6 +958,9 @@
 	<string id="video_settings_name_72">
 		<text>DLSS preset - r_aa_dlss_preset</text>
 	</string>
+	<string id="video_settings_name_73">
+		<text>XeGTAO bent normals - r_xegtao_bent_normals</text>
+	</string>
 
 	<string id="video_settings_desc_1">
 		<text>Motion blur - blurring of the image when turning the camera, playing scenes of movement or fast-moving objects.</text>
@@ -1160,6 +1166,9 @@
 %c[yellow] \nCNN:\nF - legacy CNN model (deprecated).
 %c[green] \nTransformer:\nJ - less ghosting, more flicker (NVIDIA recommends K).\nK - 1st-gen transformer, default for DLAA / Quality / Balanced.\nL - 2nd-gen transformer, sharper and slower, default for Ultra Performance (RTX 40+).\nM - 2nd-gen transformer, similar to L but faster, default for Performance (RTX 40+).
 Default follows NVIDIA / driver OTA.</text>
+	</string>
+	<string id="video_settings_desc_73">
+		<text>When XeGTAO is selected, enables bent normals for more accurate diffuse ambient occlusion shading. Requires a video restart (vid_restart).</text>
 	</string>
 
 </string_table>
