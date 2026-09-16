@@ -37,4 +37,6 @@ $RECYCLE.BIN/
 /OGSR_Engine_private.cdproj
 
 ogsr_build_info.hpp
-/release
+/release/*
+!/release/*.ps1
+!/release/*.md
