@@ -1,0 +1,180 @@
+-- Dedicated 2D scope NV controller. The engine resolves scope_nightvision
+-- from the active optic; this module owns only R3 shader policy and cleanup.
+
+function attach(sm)
+    sm:subscribe({ signal = "on_actor_weapon_zoom_in", fun = this.on_weapon_zoom_in })
+    sm:subscribe({ signal = "on_actor_weapon_zoom_out", fun = this.on_weapon_zoom_out })
+    sm:subscribe({ signal = "on_actor_weapon_alt_aim_switch", fun = this.on_alt_aim_switch })
+    sm:subscribe({ signal = "on_update", fun = this.on_update })
+    sm:subscribe({ signal = "on_before_destroy", fun = this.on_before_destroy })
+    sm:subscribe({ signal = "on_death", fun = this.on_death })
+end
+
+local state = {
+    active = false,
+    weapon_id = nil,
+    profile = nil,
+    wearable_was_active = false,
+    pending_weapon_id = nil,
+    pending_profile = nil,
+}
+
+local function clear_pending()
+    state.pending_weapon_id = nil
+    state.pending_profile = nil
+end
+
+local function resolve_profile(weapon)
+    if not weapon
+        or not weapon:is_weapon()
+        or (weapon:is_weapon_gl() and weapon:get_gl_mode())
+        or weapon:is_3dss_enabled()
+        or not weapon:has_scope_nightvision()
+    then
+        return nil
+    end
+
+    local weapon_impl = weapon:get_weapon()
+    if not weapon_impl or not weapon_impl:UseScopeTexture() then
+        return nil
+    end
+
+    local profile = weapon:get_scope_nightvision()
+    if not profile or profile == "" or profile == "none" then
+        return nil
+    end
+
+    return profile
+end
+
+local function stop_scope_nv()
+    clear_pending()
+
+    if not state.active then
+        return
+    end
+
+    ogse_night_vision.stop_scope_nightvision_visual()
+
+    if state.wearable_was_active then
+        ogse_night_vision.restore_wearable_nightvision_visual()
+    end
+
+    state.active = false
+    state.weapon_id = nil
+    state.profile = nil
+    state.wearable_was_active = false
+end
+
+local function start_scope_nv(weapon, profile)
+    if state.active
+        and state.weapon_id == weapon:id()
+        and state.profile == profile
+    then
+        return
+    end
+
+    stop_scope_nv()
+
+    state.wearable_was_active = ogse_night_vision.is_nv_working()
+    if state.wearable_was_active then
+        ogse_night_vision.suspend_wearable_nightvision_visual()
+    end
+
+    if not ogse_night_vision.start_scope_nightvision_visual(profile) then
+        state.wearable_was_active = false
+        return
+    end
+
+    state.active = true
+    state.weapon_id = weapon:id()
+    state.profile = profile
+end
+
+local function queue_scope_nv(weapon, profile)
+    stop_scope_nv()
+    state.pending_weapon_id = weapon:id()
+    state.pending_profile = profile
+end
+
+function on_weapon_zoom_in(weapon)
+    local profile = resolve_profile(weapon)
+    if profile then
+        queue_scope_nv(weapon, profile)
+    else
+        stop_scope_nv()
+    end
+end
+
+function on_weapon_zoom_out(weapon)
+    if not state.active and not state.pending_weapon_id then
+        return
+    end
+
+    if not weapon
+        or state.weapon_id == weapon:id()
+        or state.pending_weapon_id == weapon:id()
+    then
+        stop_scope_nv()
+    end
+end
+
+function on_alt_aim_switch(alt_enabled)
+    if alt_enabled then
+        stop_scope_nv()
+        return
+    end
+
+    local actor = db.actor
+    local weapon = actor and actor:active_item()
+    local profile = actor and actor:zoom_mode() and resolve_profile(weapon)
+    if profile then
+        queue_scope_nv(weapon, profile)
+    end
+end
+
+function on_update()
+    local actor = db.actor
+    if not actor or not actor:alive() then
+        stop_scope_nv()
+        return
+    end
+
+    local weapon = actor:active_item()
+    local profile = resolve_profile(weapon)
+    local is_zoomed = actor:zoom_mode()
+
+    if state.pending_weapon_id then
+        if not weapon
+            or not is_zoomed
+            or weapon:id() ~= state.pending_weapon_id
+            or profile ~= state.pending_profile
+        then
+            clear_pending()
+        elseif ogse_wpn_utils.is_aiming_complete(weapon) then
+            local pending_profile = state.pending_profile
+            clear_pending()
+            start_scope_nv(weapon, pending_profile)
+        end
+    end
+
+    if not state.active then
+        return
+    end
+
+    if not weapon
+        or not is_zoomed
+        or weapon:id() ~= state.weapon_id
+        or profile ~= state.profile
+    then
+        stop_scope_nv()
+    end
+end
+
+function on_before_destroy()
+    stop_scope_nv()
+end
+
+function on_death()
+    stop_scope_nv()
+end

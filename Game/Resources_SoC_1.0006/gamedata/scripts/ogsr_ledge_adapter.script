@@ -1,0 +1,129 @@
+-- Project-specific gameplay adapter for the generic ledge controller.
+
+local M = this
+
+local function clamp_value(value, minimum, maximum)
+    return math.max(minimum, math.min(maximum, value))
+end
+
+local OUTFIT_SLOT = 6
+local DETECTOR_SLOT = 8
+local HUD_IDLE = 0
+
+function M.get_outfit()
+    return db.actor and db.actor:item_in_slot(OUTFIT_SLOT) or nil
+end
+
+function M.get_detector()
+    return db.actor and db.actor:item_in_slot(DETECTOR_SLOT) or nil
+end
+
+function M.get_actor_weight()
+    return db.actor and db.actor:get_total_weight() or 0
+end
+
+function M.get_max_weight()
+    return db.actor and db.actor:get_max_walk_weight() or 0
+end
+
+function M.get_outfit_class()
+    local outfit = M.get_outfit()
+    if not outfit then return "naked" end
+
+    local ini = system_ini()
+    local section = outfit:section()
+    if ini:line_exist(section, "exo") and ini:r_bool(section, "exo") then return "exo" end
+
+    local weight = ini:line_exist(section, "inv_weight") and ini:r_float(section, "inv_weight") or 0
+    local power_loss = ini:line_exist(section, "power_loss") and ini:r_float(section, "power_loss") or 1
+    if weight >= 7 or power_loss >= 1.2 then return "heavy" end
+    if weight >= 4.5 or power_loss >= 1.05 then return "medium" end
+    return "light"
+end
+
+function M.outfit_has_mask()
+    local outfit = M.get_outfit()
+    if not outfit then return false end
+    local ini = system_ini()
+    local section = outfit:section()
+    return ini:line_exist(section, "mask_control") and ini:r_float(section, "mask_control") > 0
+end
+
+function M.get_stamina()
+    return db.actor and db.actor.power or 0
+end
+
+function M.change_stamina(delta)
+    if db.actor then db.actor.power = clamp_value(db.actor.power + delta, 0, 1) end
+end
+
+function M.get_satiety()
+    return db.actor and db.actor.satiety or 0
+end
+
+function M.change_satiety(delta)
+    if db.actor then db.actor.satiety = clamp_value(db.actor.satiety + delta, 0, 1) end
+end
+
+function M.is_on_ladder()
+    return IsMoveState("mcClimb")
+end
+
+function M.is_crouched()
+    return IsMoveState("mcCrouch")
+end
+
+function M.is_hud_busy()
+    if not game.hud_motion_allowed() then return true end
+    local item = db.actor and db.actor:active_item() or nil
+    return item and item:get_hud_item_state() ~= HUD_IDLE or false
+end
+
+function M.can_mantle()
+    if not db.actor or not db.actor:alive() then return false, "actor unavailable" end
+    if level.main_input_receiver() then return false, "UI owns input" end
+    if game.has_active_tutorial() then return false, "tutorial active" end
+    if db.actor:is_talking() then return false, "dialog active" end
+    if db.actor:get_current_holder() then return false, "vehicle active" end
+    if M.is_on_ladder() then return false, "ladder active" end
+    if level.only_movekeys_allowed() then return false, "movement input already owned" end
+    if M.is_hud_busy() then return false, "HUD item busy" end
+    return true
+end
+
+function M.snapshot_permissions()
+    return {
+        movement_only = level.only_movekeys_allowed(),
+        ladder_allowed = level.actor_ladder_allowed(),
+    }
+end
+
+function M.apply_mantle_permissions()
+    level.only_allow_movekeys(true)
+    level.set_actor_allow_ladder(false)
+end
+
+function M.restore_permissions(snapshot)
+    if not snapshot then return end
+    level.only_allow_movekeys(snapshot.movement_only == true)
+    level.set_actor_allow_ladder(snapshot.ladder_allowed == true)
+end
+
+function M.detector_is_active()
+    local actor = db.actor and get_actor_obj() or nil
+    return actor and actor:IsDetectorActive() or false
+end
+
+function M.snapshot_active_equipment()
+    if not db.actor then return nil end
+
+    local active_item = db.actor:active_item()
+    local detector = M.get_detector()
+    return {
+        actor_id = db.actor:id(),
+        active_slot = db.actor:active_slot(),
+        active_item_id = active_item and active_item:id() or nil,
+        detector_id = detector and detector:id() or nil,
+        detector_was_active = M.detector_is_active(),
+    }
+end

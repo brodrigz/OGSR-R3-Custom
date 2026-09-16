@@ -1,0 +1,449 @@
+-- -*- mode: lua; coding: windows-1251-dos -*-
+-- Dialog camera / FOV. Port of Anomaly DynamicUI (Demonized Dialog FOV)
+-- for OGSR / Radiophobia. One option: on = zoom, look-at, right-side panel;
+-- off = vanilla centered talk.
+
+local DEFAULTS = {
+	enabled = true,
+	zoom_fov_modifier = 1.3,
+	min_zoom_fov = 55,
+	distance_fov = true,
+	fov_smoothing = 20,
+	turn_modifier = 1,
+	smoothing = 30,
+}
+
+local ratio_to_rotate = {
+	[1.333] = -11,
+	[1.600] = -13.5,
+	[1.777] = -15.5,
+	[2.370] = -21.5,
+	[3.555] = -31,
+}
+
+local ratio_to_rotate_keys
+local smoothed_values = {}
+
+local talking = false
+local camera_on = false
+local ui_shifted = false
+local PANEL_SHIFT = 259
+local zoom_fov_active = false
+local zoom_fov_active_always = false
+local saved_fov
+local saved_hud_fov
+local zoom_fov_from
+local zoom_fov_to
+local zoom_hud_fov_from
+local zoom_hud_fov_to
+local saved_npc
+local saved_dist
+local saved_rotate
+
+local function similar(f1, f2, e)
+	return math.abs(f1 - f2) <= (e or 0.001)
+end
+
+local function trunc(float, decimal)
+	local d = 10 ^ (decimal or 1)
+	return math.floor(float * d) / d
+end
+
+local function lerp(a, b, f)
+	if a and b and f then
+		return a + f * (b - a)
+	end
+	return a or b or 0
+end
+
+local function clamp(v, lo, hi)
+	if v < lo then return lo end
+	if v > hi then return hi end
+	return v
+end
+
+local function time_delta()
+	return math.min(50, device().time_delta)
+end
+
+local function copy_vec(src)
+	return vector():set(src.x, src.y, src.z)
+end
+
+local function vector_rotate_y(value, angle_degrees)
+	local angle = math.rad(angle_degrees)
+	local cosine = math.cos(angle)
+	local sine = math.sin(angle)
+	return vector():set(
+		value.x * cosine - value.z * sine,
+		value.y,
+		value.x * sine + value.z * cosine
+	)
+end
+
+local function is_empty(t)
+	return t == nil or next(t) == nil
+end
+
+local function array_keys(t, sorted)
+	local res = {}
+	for k in pairs(t) do
+		table.insert(res, k)
+	end
+	if sorted then
+		table.sort(res)
+	end
+	return res
+end
+
+local function bisect_left(a, x, lo, hi)
+	lo = lo or 1
+	hi = hi or #a
+	while lo < hi do
+		local mid = math.floor((lo + hi) * 0.5)
+		if a[mid] < x then
+			lo = mid + 1
+		else
+			hi = mid
+		end
+	end
+	return lo
+end
+
+local function lookup(t, key, tkeys)
+	if is_empty(t) then return 0 end
+	if t[key] then return t[key] end
+	if not tkeys then
+		tkeys = array_keys(t, true)
+	end
+	local tkeys_len = #tkeys
+	if key <= tkeys[1] then
+		if not tkeys[2] then return t[tkeys[1]] end
+		local hi, lo = tkeys[2], tkeys[1]
+		return lerp(t[lo], t[hi], (key - lo) / (hi - lo))
+	end
+	if key >= tkeys[tkeys_len] then
+		if not tkeys[tkeys_len - 1] then return t[tkeys[tkeys_len]] end
+		local hi, lo = tkeys[tkeys_len], tkeys[tkeys_len - 1]
+		return lerp(t[lo], t[hi], (key - lo) / (hi - lo))
+	end
+	local where = bisect_left(tkeys, key)
+	local lo = tkeys[where - 1] or tkeys[where]
+	local hi = tkeys[where]
+	if lo == hi then return t[lo] end
+	local delta = (key - lo) / (hi - lo)
+	return delta * t[hi] + (1 - delta) * t[lo]
+end
+
+local function ema(key, value, def, steps, delta)
+	steps = steps or 11.5
+	delta = delta or steps
+	local smoothing_alpha = 2.0 / (steps + 1)
+	if smoothed_values[key] then
+		smoothed_values[key] = smoothed_values[key] + math.min(smoothing_alpha * (delta / steps), 1) * (value - smoothed_values[key])
+	else
+		smoothed_values[key] = def or value
+	end
+	return smoothed_values[key]
+end
+
+local function flag(key, default_on)
+	local v = ui_data.load(key)
+	if v == nil then return default_on end
+	return v and true or false
+end
+
+local function feature_enabled()
+	return flag("rad3_dialog_ui", DEFAULTS.enabled)
+end
+
+local function settings()
+	return {
+		enabled = feature_enabled(),
+		zoom_fov_enabled = true,
+		track_npc = true,
+		zoom_fov_modifier = DEFAULTS.zoom_fov_modifier,
+		min_zoom_fov = DEFAULTS.min_zoom_fov,
+		distance_fov = DEFAULTS.distance_fov,
+		fov_smoothing = DEFAULTS.fov_smoothing,
+		turn_modifier = DEFAULTS.turn_modifier,
+		smoothing = DEFAULTS.smoothing,
+	}
+end
+
+local function get_float(name, fallback)
+	local ok, v = pcall(function()
+		return get_console():get_float(name)
+	end)
+	if not ok or v == nil then
+		return fallback
+	end
+	return v
+end
+
+local function exec(name, value)
+	get_console():execute(string.format("%s %.4f", name, value))
+end
+
+local function clear_talk_dof()
+	pcall(function()
+		set_dof_params(0.0, 0.0, 0.0, 0.0)
+	end)
+end
+
+local function talk_dialog_wnd()
+	local ok, root = pcall(function()
+		return level.get_talk_wnd()
+	end)
+	if not ok or not root then return nil end
+	local child = root:FindChild("----CUITalkDialogWnd")
+	return child or root
+end
+
+local function shift_talk_panel(enable)
+	pcall(function()
+		local wnd = talk_dialog_wnd()
+		if not wnd then return end
+		local pos = wnd:GetWndPos()
+		if enable then
+			if not ui_shifted then
+				wnd:SetWndPos(pos.x + PANEL_SHIFT, pos.y)
+				ui_shifted = true
+			end
+		elseif ui_shifted then
+			wnd:SetWndPos(pos.x - PANEL_SHIFT, pos.y)
+			ui_shifted = false
+		end
+	end)
+end
+
+local function head_pos(npc)
+	if blood_pool and blood_pool.safe_bone_pos then
+		local ok, pos = pcall(blood_pool.safe_bone_pos, npc, "bip01_head")
+		if ok and pos then
+			return pos
+		end
+	end
+	local ok, bone_id = pcall(function()
+		return npc:get_bone_id("bip01_head")
+	end)
+	if ok and bone_id and bone_id ~= 65535 then
+		return npc:bone_position(bone_id)
+	end
+	local pos = copy_vec(npc:position())
+	pos.y = pos.y + 1.6
+	return pos
+end
+
+local function talking_npc()
+	if not db.actor then return nil end
+	local ok, npc = pcall(function()
+		return db.actor:get_talk_partner()
+	end)
+	if not ok or not npc then return nil end
+	if npc:id() == db.actor:id() then return nil end
+	local alive = true
+	pcall(function()
+		alive = npc:alive()
+	end)
+	if not alive then return nil end
+	return npc
+end
+
+local function stop_fov()
+	smoothed_values.fov = nil
+	smoothed_values.hud_fov = nil
+	zoom_fov_active = false
+	zoom_fov_active_always = false
+end
+
+local function reset_fov()
+	stop_fov()
+	if not saved_fov then return end
+	exec("fov", saved_fov)
+	if saved_hud_fov then
+		exec("hud_fov", saved_hud_fov)
+	end
+	saved_fov = nil
+	saved_hud_fov = nil
+end
+
+local function start_fov(fov_from, fov_to, fov_hud_from, fov_hud_to, active_always)
+	zoom_fov_from = fov_from or get_float("fov", 75)
+	zoom_fov_to = fov_to
+	zoom_hud_fov_from = fov_hud_from or get_float("hud_fov", 0.45)
+	zoom_hud_fov_to = fov_hud_to
+	zoom_fov_active = true
+	zoom_fov_active_always = active_always and true or false
+end
+
+local function change_fov()
+	if not zoom_fov_to then
+		stop_fov()
+		return
+	end
+	local s = settings()
+	local steps = s.fov_smoothing
+	local delta = time_delta()
+	local smoothed_fov = ema("fov", zoom_fov_to, zoom_fov_from, steps, delta)
+	exec("fov", clamp(smoothed_fov, 5, 140))
+	local smoothed_hud_fov = ema("hud_fov", zoom_hud_fov_to, zoom_hud_fov_from, steps, delta)
+	exec("hud_fov", clamp(smoothed_hud_fov, 0.1, 1.0))
+	if not zoom_fov_active_always and similar(smoothed_fov, zoom_fov_to, 0.02) then
+		exec("fov", clamp(zoom_fov_to, 5, 140))
+		exec("hud_fov", clamp(zoom_hud_fov_to, 0.1, 1.0))
+		stop_fov()
+	end
+end
+
+local function stop_move_camera()
+	if camera_on then
+		pcall(level.remove_cam_custom_position_direction)
+		camera_on = false
+	end
+	smoothed_values.look_dir_x = nil
+	smoothed_values.look_dir_y = nil
+	smoothed_values.look_dir_z = nil
+	saved_rotate = nil
+	saved_npc = nil
+	saved_dist = nil
+end
+
+local function move_camera()
+	if not saved_npc or not db.actor then
+		stop_move_camera()
+		return
+	end
+	local s = settings()
+	if not s.track_npc then
+		stop_move_camera()
+		return
+	end
+
+	local look_pos = head_pos(saved_npc)
+	local cam = copy_vec(device().cam_pos)
+	local look_dir = vector():set(look_pos.x - cam.x, look_pos.y - cam.y, look_pos.z - cam.z)
+	if look_dir:magnitude() < 0.001 then
+		return
+	end
+	look_dir:normalize()
+
+	local rotate_deg
+	if saved_rotate then
+		rotate_deg = saved_rotate
+	else
+		local ratio = trunc(device().width / device().height, 3)
+		if not ratio_to_rotate_keys then
+			ratio_to_rotate_keys = array_keys(ratio_to_rotate, true)
+		end
+		rotate_deg = lookup(ratio_to_rotate, ratio, ratio_to_rotate_keys)
+		saved_rotate = rotate_deg
+	end
+	if saved_dist and s.zoom_fov_enabled and s.distance_fov then
+		rotate_deg = rotate_deg / saved_dist
+	end
+	rotate_deg = rotate_deg * s.turn_modifier
+	local new_look_dir = vector_rotate_y(look_dir, rotate_deg)
+
+	local steps = s.smoothing
+	local delta = time_delta()
+	local smoothed_look_dir = vector():set(
+		ema("look_dir_x", new_look_dir.x, look_dir.x, steps, delta),
+		ema("look_dir_y", new_look_dir.y, look_dir.y, steps, delta),
+		ema("look_dir_z", new_look_dir.z, look_dir.z, steps, delta)
+	)
+	if smoothed_look_dir:magnitude() < 0.001 then
+		return
+	end
+	smoothed_look_dir:normalize()
+
+	local hpb = vector():set(smoothed_look_dir:getH(), smoothed_look_dir:getP(), 0)
+	level.set_cam_custom_position_direction(cam, hpb, 1, true, false)
+	camera_on = true
+end
+
+local function reset(soft_fov)
+	if soft_fov then
+		if saved_fov then
+			start_fov(get_float("fov", zoom_fov_to or saved_fov), saved_fov, get_float("hud_fov", zoom_hud_fov_to or saved_hud_fov), saved_hud_fov)
+		end
+	else
+		reset_fov()
+	end
+	stop_move_camera()
+	shift_talk_panel(false)
+	talking = false
+end
+
+local function hard_reset()
+	reset(false)
+end
+
+local function on_talk_open()
+	local s = settings()
+	if not s.enabled then return end
+	talking = true
+	saved_npc = talking_npc()
+	if saved_npc then
+		local dist = device().cam_pos:distance_to(head_pos(saved_npc)) - 0.2
+		saved_dist = math.max(1, dist)
+	end
+	if s.zoom_fov_enabled then
+		saved_fov = zoom_fov_active and saved_fov or get_float("fov", 75)
+		local new_fov = math.min(s.min_zoom_fov, saved_fov / s.zoom_fov_modifier)
+		if saved_dist and s.distance_fov then
+			new_fov = math.atan(math.tan(new_fov * (0.5 * math.pi / 180)) / saved_dist) / (0.5 * math.pi / 180)
+		end
+		new_fov = clamp(new_fov, 5, 140)
+		saved_hud_fov = zoom_fov_active and saved_hud_fov or get_float("hud_fov", 0.45)
+		local new_hud_fov = saved_hud_fov / (saved_fov / new_fov)
+		new_hud_fov = clamp(new_hud_fov, 0.1, 1.0)
+		start_fov(saved_fov, new_fov, saved_hud_fov, new_hud_fov, true)
+	end
+	if s.track_npc and saved_npc then
+		camera_on = false
+	end
+	shift_talk_panel(true)
+	clear_talk_dof()
+end
+
+local function on_talk_hide()
+	if talking or camera_on or saved_fov then
+		reset(true)
+	end
+end
+
+function on_update()
+	if not db.actor then return end
+	local s = settings()
+	if not s.enabled then
+		if talking or camera_on or saved_fov or zoom_fov_active or ui_shifted then
+			hard_reset()
+		end
+		return
+	end
+	if talking and s.zoom_fov_enabled and zoom_fov_active then
+		change_fov()
+	elseif zoom_fov_active then
+		change_fov()
+	end
+	if talking and s.track_npc and saved_npc then
+		move_camera()
+	elseif camera_on then
+		stop_move_camera()
+	end
+	if talking and not s.zoom_fov_enabled and saved_fov then
+		reset_fov()
+	end
+	if talking then
+		clear_talk_dof()
+	end
+end
+
+function attach(sm)
+	sm:subscribe({ signal = "on_talk_open", fun = on_talk_open })
+	sm:subscribe({ signal = "on_talk_hide", fun = on_talk_hide })
+	sm:subscribe({ signal = "on_update", fun = on_update })
+	sm:subscribe({ signal = "on_before_destroy", fun = hard_reset })
+	sm:subscribe({ signal = "on_death", fun = hard_reset })
+end

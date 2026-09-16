@@ -29,7 +29,7 @@ local adv_vid_opt_params = {
 	{ "lens_flare",            "check", 0, hint_colors.green,  "video_settings_name_67", "" },
 	--
 	{ "ao_mode",               "list",  0, hint_colors.red   , "video_settings_name_38", "video_settings_desc_38" },
-	{ "r_xegtao_bent_normals", "check", 1, hint_colors.red   , "video_settings_name_73", "video_settings_desc_73" },
+	{ "r_xegtao_bent_normals", "check", 0, hint_colors.red   , "video_settings_name_73", "video_settings_desc_73" },
 	{ "ssao",                  "list",  0, hint_colors.red   , "video_settings_name_37", "video_settings_desc_37" },
 	--
 	{ "r3_dynamic_wet_surfaces","check",0, hint_colors.yellow, "video_settings_name_49", "video_settings_desc_49" },

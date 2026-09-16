@@ -1,223 +1,294 @@
 <?xml version="1.0" encoding="windows-1251" ?>
 <string_table>
-	<!--   -->
-	<!--   (  ) -->
-	<string id="ui_mm_newgame">
-		<text> </text>
+	<string id="rus">
+		<text>русский</text>
 	</string>
-	<string id="ui_mm_load_game">
-		<text></text>
+	<string id="eng">
+		<text>английский (English)</text>
 	</string>
-	<string id="ui_mm_last_save">
-		<text> </text>
+	
+	
+	
+
+	<string id="econ_1">
+		<text>Турист</text>
 	</string>
-	<string id="ui_mm_options_n">
-		<text></text>
+	<string id="econ_2">
+		<text>Проводник</text>
 	</string>
-	<string id="ui_mm_credits">
-		<text></text>
+	<string id="econ_3">
+		<text>Мусорщик</text>
 	</string>
-	<string id="ui_mm_quit2windows">
-		<text>  Windows</text>
+	<string id="econ_4">
+		<text>Выживание</text>
+	</string>	
+	
+	<string id="gdiff_1">
+		<text>Лёгкая</text>
 	</string>
-	<string id="ui_st_want_to_leave_game_q">
-		<text>    ?</text>
+	<string id="gdiff_2">
+		<text>Средняя</text>
 	</string>
-	<!--   ( ,  ) -->
-	<string id="ui_mm_return_game">
-		<text> </text>
+	<string id="gdiff_3">
+		<text>Тяжёлая</text>
 	</string>
-	<string id="ui_mm_quit_game">
-		<text> </text>
+	<string id="gdiff_4">
+		<text>Хардкор</text>
 	</string>
-	<!--   ( ,  ) -->
-	<string id="st_game_over_press_jump">
-		<text> ($$ACTION_JUMP$$)     </text>
-	</string>
-	<!--    -->
+	
+	<!-- Difficulty screen -->
 	<string id="ui_mm_novice">
-		<text></text>
+		<text>[Лёгкая | Турист]</text>
 	</string>
 	<string id="ui_mm_stalker">
-		<text></text>
+		<text>[Средняя | Проводник]</text>
 	</string>
 	<string id="ui_mm_veteran">
-		<text></text>
+		<text>[Тяжёлая | Мусорщик]</text>
 	</string>
 	<string id="ui_mm_master">
-		<text></text>
+		<text>[Хардкор | Выживание]</text>
 	</string>
 	<string id="ui_mm_back">
-		<text></text>
+		<text>Назад</text>
 	</string>
-	<!--   -->
+	
+	<string id="kb_weapon8">
+		<text>Детектор</text>
+	</string>	
+	<string id="quick_use_str_1">
+		<text>$$ACTION_QUICK_SLOT_1$$</text>
+	</string>
+	<string id="quick_use_str_2">
+		<text>$$ACTION_QUICK_SLOT_2$$</text>
+	</string>
+	<string id="quick_use_str_3">
+		<text>$$ACTION_QUICK_SLOT_3$$</text>
+	</string>
+	<string id="quick_use_str_4">
+		<text>$$ACTION_QUICK_SLOT_4$$</text>
+	</string>
+	
+	<string id="kb_quick_slot_1">
+		<text>Быстрый слот 1</text>
+	</string>
+	<string id="kb_quick_slot_2">
+		<text>Быстрый слот 2</text>
+	</string>
+	<string id="kb_quick_slot_3">
+		<text>Быстрый слот 3</text>
+	</string>
+	<string id="kb_quick_slot_4">
+		<text>Быстрый слот 4</text>
+	</string>
+
+	<!-- ГЛАВНОЕ МЕНЮ -->
+	<!-- Первый экран (игра не загружена) -->
+	<string id="ui_mm_newgame">
+		<text>Новая игра</text>
+	</string>
+	<string id="ui_mm_load_game">
+		<text>Загрузить</text>
+	</string>
+	<string id="ui_mm_last_save">
+		<text>Последняя запись</text>
+	</string>
+	<string id="ui_mm_options_n">
+		<text>Настройки</text>
+	</string>
+	<string id="ui_mm_legal">
+		<text>Правовая информация</text>
+	</string>
+	<string id="ui_mm_legal_statement">
+		<text>Radiophobia 3 - это созданная фанатами модификация для игры S.T.A.L.K.E.R., разработанная и полностью принадлежащая компании GSC Game World. Radiophobia 3 не является официальным продуктом GSC Game World и представляет собой производную работу, основанную на их играх S.T.A.L.K.E.R. \n \n Оригинальные игры можно купить здесь:</text>
+	</string>
+	<string id="ui_mm_credits">
+		<text>Создатели</text>
+	</string>
+	<string id="ui_mm_quit2windows">
+		<text>Выйти в Windows</text>
+	</string>
+	<string id="ui_st_want_to_leave_game_q">
+		<text>Вы действительно хотите покинуть ЗОНУ?</text>
+	</string>
+	<!-- Первый экран (игра загружена, недостающие строки) -->
+	<string id="ui_mm_return_game">
+		<text>Продолжить игру</text>
+	</string>
+	<string id="ui_mm_quit_game">
+		<text>Завершить игру</text>
+	</string>
+	<!-- Первый экран (после смерти, недостающие строки) -->
+	<string id="st_game_over_press_jump">
+		<text>Нажмите ($$ACTION_JUMP$$) для выхода в главное меню</text>
+	</string>
+	<!-- Окно загрузки -->
 	<string id="ui_mm_load">
-		<text></text>
+		<text>Выбрать</text>
 	</string>
-	<!--   -->
+	<!-- загрузка разное -->
 	<string id="ui_st_load_game_confirm">
-		<text>      .  ?</text>
+		<text>Загрузка игры приведет к потере несохраненных данных. Желаете продолжить?</text>
 	</string>
 	<string id="ui_st_invalid_saved_game">
-		<text>        .</text>
+		<text>Не совпадает версия сохранённой игры или сохранённая игра испорчена.</text>
 	</string>	
 	<string id="ui_mm_delete_existing_file_q">
-		<text>    ?</text>
+		<text>Вы действительно хотите удалить файл?</text>
 	</string>
 	<string id="ui_load_press_any_key_to_start">
-		<text>      </text>
+		<text>Нажмите любую клавишу для перехода к игре</text>
 	</string>
-	<!--   -->
+	<!-- Окно сохранения -->
 	<string id="ui_mm_save_game">
-		<text></text>
+		<text>Сохранить</text>
 	</string>
 	<string id="ui_mm_save">
-		<text></text>
+		<text>Сохранить</text>
 	</string>
 	<string id="ui_st_file_exist_owerwrite_q">
-		<text>     . ?</text>
+		<text>Файл с таким именем уже существует. Перезаписать?</text>
 	</string>
 	<string id="ui_st_file_name_is_empty">
-		<text>  </text>
+		<text>Имя файла пустое</text>
 	</string>
-	<!--     -->
+	<!-- Запрос на прерывание игры -->
 	<string id="ui_mm_quit_game_message">
-		<text> ?</text>
+		<text>Прервать игру?</text>
 	</string>
-	<!--     Windows -->
+	<!-- Запрос на выход в Windows -->
 	<string id="ui_mm_quit_windows_message">
-		<text> ?</text>
+		<text>Покинуть ЗОНУ?</text>
 	</string>
-	<!--  -->
+	<!-- Общие -->
 	<string id="ui_mm_cancel">
-		<text></text>
+		<text>Отмена</text>
 	</string>
 	<string id="ui_mm_apply">
-		<text></text>
+		<text>Применить</text>
 	</string>
 	<string id="ui_mm_delete">
-		<text></text>
+		<text>Удалить</text>
 	</string>
-	<!--   -->
+	<!-- Окно настроек -->
 	<string id="ui_mm_options">
-		<text></text>
+		<text>НАСТРОЙКИ</text>
 	</string>
-	<!--  "" -->
+	<!-- Экран "Видео" -->
 	<string id="ui_mm_video">
-		<text></text>
+		<text>Видео</text>
 	</string>
-	<!--  -->
+	<!-- Пресеты -->
 	<string id="Minimum">
-		<text></text>
+		<text>минимальные</text>
 	</string>
 	<string id="Low">
-		<text></text>
+		<text>низкие</text>
 	</string>
 	<string id="Default">
-		<text></text>
+		<text>средние</text>
 	</string>
 	<string id="High">
-		<text></text>
+		<text>высокие</text>
 	</string>
 	<string id="Extreme">
-		<text></text>
+		<text>максимальные</text>
 	</string>
-	<!--    -->
+	<!-- базовые настройки видео -->
 	<string id="ui_mm_quality_presets">
-		<text> </text>
+		<text>Установки качества</text>
 	</string>
 	<string id="ui_mm_resolution">
-		<text></text>
+		<text>Разрешение</text>
 	</string>
 	<string id="ui_mm_fps_lock">
-		<text> FPS</text>
+		<text>Лимит FPS</text>
 	</string>
 	<string id="ui_mm_always_active">
-		<text>   Alt + Tab</text>
+		<text>Не вставать на паузу при переключении на другие окна</text>
 	</string>
-
 	<string id="ui_mm_gamma">
-		<text></text>
+		<text>Гамма</text>
 	</string>
 	<string id="ui_mm_contrast">
-		<text></text>
+		<text>Насыщенность</text>
 	</string>
 	<string id="ui_mm_brightness">
-		<text></text>
+		<text>Яркость</text>
 	</string>
-
 	<string id="ui_mm_fullscreen">
-		<text> </text>
+		<text>Полный экран</text>
 	</string>
 	<string id="ui_mm_advanced">
-		<text></text>
+		<text>Расширенные</text>
 	</string>
 
-	<!--     -->
+	<!-- Окно расширенных настроек видео -->
 
 	<string id="qt_off">
-		<text>.</text>
+		<text>выкл.</text>
 	</string>
 	<string id="qt_low">
-		<text></text>
+		<text>низкое</text>
 	</string>
 	<string id="qt_medium">
-		<text></text>
+		<text>среднее</text>
 	</string>
 	<string id="qt_high">
-		<text></text>
+		<text>высокое</text>
 	</string>
 	<string id="qt_extreme">
-		<text></text>
+		<text>максимальное</text>
 	</string>
 
 	<string id="st_opt_extreme">
-		<text>. </text>
+		<text>макс. высоко</text>
 	</string>
 	<string id="st_opt_ultra">
-		<text> </text>
+		<text>очень высоко</text>
 	</string>
 	<string id="st_opt_high">
-		<text></text>
+		<text>высоко</text>
 	</string>
 	<string id="st_opt_low">
-		<text></text>
+		<text>низко</text>
 	</string>
 	<string id="st_opt_medium">
-		<text></text>
+		<text>средне</text>
 	</string>
 	<string id="st_opt_off">
-		<text></text>
+		<text>отключено</text>
 	</string>
 
 	<string id="default">
-		<text> </text>
+		<text>по умолчанию</text>
 	</string>
 	<string id="disabled">
-		<text></text>
+		<text>Отключено</text>
 	</string>
 
 	<string id="ui_mm_need_restart">
-		<text>       </text>
+		<text>Изменения вступят в силу только после перезагрузки игры</text>
 	</string>
 	<string id="hint_name_text">
-		<text> </text>
+		<text>Описание настроек</text>
 	</string>
 	<string id="hint_caption_text">
-		<text>  '',   ,   OGSR</text>
-	</string>	
+		<text>Нажмите кнопку "Дополнительно" на вкладке видео, чтобы изменить графические настройки, добавленные в OGSR.\n \n
+		Некоторые настройки могут потребовать перезагрузки сохранения для применения.</text>
+	</string>
 	<string id="hint_caption_adv_text">
-		<text>         .         ,     ,   OGSR</text>
+		<text>Наведите курсор мыши на опцию и увидите здесь её описание. Таким образом вы сможете понять смысл незнакомых вам настроек, а так же новых настроек, добавленных в OGSR</text>
 	</string>	
 	<string id="ui_mm_simply">
-		<text></text>
+		<text>Базовые</text>
 	</string>
 	<string id="ui_mm_vis_distance">
-		<text> </text>
+		<text>Дальность видимости</text>
 	</string>
 
 	<string id="ui_mm_ao_mode">
-		<text> AO</text>
+		<text>Тип AO</text>
 	</string>
 	<string id="st_gtao">
 		<text>GTAO</text>
@@ -225,154 +296,89 @@
 	<string id="st_ssdo">
 		<text>SSDO</text>
 	</string>
-	<string id="st_xegtao">
-		<text>XeGTAO</text>
-	</string>
 	<string id="ui_mm_ssao_quality">
-		<text> AO</text>
-	</string>
-	<string id="ui_mm_xegtao_bent_normals">
-		<text>XeGTAO bent normals</text>
+		<text>Качество AO</text>
 	</string>
 
 	<string id="ui_mm_r2_steep_parallax">
 		<text>Steep parallax</text>
 	</string>	
 	<string id="ui_mm_terrain_parallax">
-		<text>Parallax   </text>
+		<text>Parallax на текстурах земли</text>
 	</string>	
 	<string id="ui_mm_mt_texload">
-		<text>  </text>
+		<text>Многопоточная загрузка текстур</text>
 	</string>
 	<string id="ui_mm_dof">
-		<text> </text>
+		<text>Глубина резкости</text>
 	</string>
 	<string id="ui_mm_r2_reload_dof">
-		<text>DOF  </text>
+		<text>DOF при перезарядке</text>
 	</string>
 	<string id="ui_mm_r2_zoom_dof">
-		<text>DOF  </text>
+		<text>DOF при прицеливании</text>
 	</string>
 	<string id="ui_mm_dof_zoom_param">
-		<text> DOF  </text>
+		<text>Интенсивность DOF при прицеливании</text>
 	</string>
 	<string id="ui_mm_dof_zoom_near">
-		<text>  </text>
+		<text>Ближняя граница эффекта</text>
 	</string>
 	<string id="ui_mm_r2_dof_quality">
-		<text>   </text>
+		<text>Качество эффекта фокусировки глаз</text>
 	</string>
 	<string id="ui_mm_geometry_lod">
-		<text>  </text>
+		<text>Детализация объектов</text>
 	</string>
 	<string id="ui_mm_dyn_opt_dist">
-		<text>   </text>
+		<text>Расстояние рендеринга динамических объектов</text>
 	</string>
 	<string id="ui_mm_detail_density">
-		<text> </text>
+		<text>Плотность травы</text>
 	</string>
 	<string id="ui_mm_detail_distance">
-		<text>  </text>
+		<text>Дальность отрисовки травы</text>
 	</string>	
 	<string id="ui_mm_detail_scale">
-		<text> </text>
+		<text>Высота травы</text>
 	</string>	
 	<string id="ui_mm_soft_water">
-		<text> </text>
+		<text>Мягкая вода</text>
 	</string>
 	<string id="ui_mm_texture_quality">
-		<text> </text>
+		<text>Качество текстур</text>
 	</string>
 	<string id="ui_mm_anisotropic">
-		<text> </text>
+		<text>Фильтрация текстур</text>
 	</string>
 	<string id="st_opt_smaa">
 		<text>SMAA</text>
-	</string>
+	</string>	
 	<string id="st_opt_dlss">
 		<text>NVIDIA DLSS</text>
 	</string>
-	<string id="st_opt_fsr3">
-		<text>AMD FSR3</text>
+	<string id="st_opt_fsr2">
+		<text>AMD FSR2</text>
 	</string>
-	<string id="ui_mm_dlss_quality">
-		<text>&#x041A;&#x0430;&#x0447;&#x0435;&#x0441;&#x0442;&#x0432;&#x043E; DLSS</text>
-	</string>
-	<string id="ui_mm_dlss_preset">
-		<text>&#x041F;&#x0440;&#x0435;&#x0441;&#x0435;&#x0442; DLSS</text>
-	</string>
-	<string id="ui_mm_fsr3_quality">
-		<text>&#x041A;&#x0430;&#x0447;&#x0435;&#x0441;&#x0442;&#x0432;&#x043E; FSR 3</text>
-	</string>
-	<string id="st_opt_dlaa">
-		<text>DLAA</text>
-	</string>
-	<string id="st_opt_dlss_default">
-		<text>Default</text>
-	</string>
-	<string id="st_opt_dlss_f">
-		<text>F (CNN)</text>
-	</string>
-	<string id="st_opt_dlss_j">
-		<text>J (Transformer)</text>
-	</string>
-	<string id="st_opt_dlss_k">
-		<text>K (Transformer)</text>
-	</string>
-	<string id="st_opt_dlss_l">
-		<text>L (Transformer)</text>
-	</string>
-	<string id="st_opt_dlss_m">
-		<text>M (Transformer)</text>
-	</string>
-	<string id="st_opt_dlss_quality">
-		<text>&#x041A;&#x0430;&#x0447;&#x0435;&#x0441;&#x0442;&#x0432;&#x043E;</text>
-	</string>
-	<string id="st_opt_dlss_balanced">
-		<text>&#x0411;&#x0430;&#x043B;&#x0430;&#x043D;&#x0441;</text>
-	</string>
-	<string id="st_opt_dlss_performance">
-		<text>&#x041F;&#x0440;&#x043E;&#x0438;&#x0437;&#x0432;&#x043E;&#x0434;&#x0438;&#x0442;&#x0435;&#x043B;&#x044C;&#x043D;&#x043E;&#x0441;&#x0442;&#x044C;</text>
-	</string>
-	<string id="st_opt_dlss_ultra_performance">
-		<text>&#x0423;&#x043B;&#x044C;&#x0442;&#x0440;&#x0430;&#x043F;&#x0440;&#x043E;&#x0438;&#x0437;&#x0432;&#x043E;&#x0434;&#x0438;&#x0442;&#x0435;&#x043B;&#x044C;&#x043D;&#x043E;&#x0441;&#x0442;&#x044C;</text>
-	</string>
-	<string id="st_opt_fsr3_native_aa">
-		<text>&#x0421;&#x0433;&#x043B;&#x0430;&#x0436;&#x0438;&#x0432;&#x0430;&#x043D;&#x0438;&#x0435; &#x0432; &#x043D;&#x0430;&#x0442;&#x0438;&#x0432;&#x043D;&#x043E;&#x043C; &#x0440;&#x0430;&#x0437;&#x0440;&#x0435;&#x0448;&#x0435;&#x043D;&#x0438;&#x0438;</text>
-	</string>
-	<string id="st_opt_fsr3_quality">
-		<text>&#x041A;&#x0430;&#x0447;&#x0435;&#x0441;&#x0442;&#x0432;&#x043E;</text>
-	</string>
-	<string id="st_opt_fsr3_balanced">
-		<text>&#x0411;&#x0430;&#x043B;&#x0430;&#x043D;&#x0441;</text>
-	</string>
-	<string id="st_opt_fsr3_performance">
-		<text>&#x041F;&#x0440;&#x043E;&#x0438;&#x0437;&#x0432;&#x043E;&#x0434;&#x0438;&#x0442;&#x0435;&#x043B;&#x044C;&#x043D;&#x043E;&#x0441;&#x0442;&#x044C;</text>
-	</string>
-	<string id="st_opt_fsr3_ultra_performance">
-		<text>&#x0423;&#x043B;&#x044C;&#x0442;&#x0440;&#x0430;&#x043F;&#x0440;&#x043E;&#x0438;&#x0437;&#x0432;&#x043E;&#x0434;&#x0438;&#x0442;&#x0435;&#x043B;&#x044C;&#x043D;&#x043E;&#x0441;&#x0442;&#x044C;</text>
-	</string>
-	<string id="st_opt_taa">
-		<text>TAA</text>
-	</string>
+	
 	<string id="ui_mm_r2_sun">
-		<text>  </text>
+		<text>Тень от солнца</text>
 	</string>
 	<string id="ui_mm_r2_sun_details">
-		<text>  </text>
+		<text>Тень от травы</text>
 	</string>
 	<string id="ui_mm_r1_detail_textures">
-		<text>  (R1)</text>
+		<text>Детальные текстуры (R1)</text>
 	</string>
 	<string id="ui_mm_r2_detail_bump">
-		<text> </text>
+		<text>Детальный рельеф</text>
 	</string>		
 	<string id="ui_mm_r2_sunshafts">
-		<text> </text>
+		<text>Объёмные лучи</text>
 	</string>
 
 	<string id="ui_mm_r2_sunshafts_mode">
-		<text>  </text>
+		<text>Тип солнечных лучей</text>
 	</string>
 	<string id="volumetric">
 		<text>Volumetric</text>
@@ -391,751 +397,737 @@
 	</string>
 
 	<string id="ui_mm_light_distance">
-		<text> </text>
+		<text>Дальность освещения</text>
 	</string>
 	<string id="ui_mm_npc_torch">
-		<text>   NPC</text>
+		<text>Объёмный свет фонариков NPC</text>
 	</string>
 	<string id="ui_mm_sun_quality">
-		<text> </text>
+		<text>Качество теней</text>
 	</string>
 	<string id="ui_mm_vsync">
-		<text>. </text>
+		<text>Верт. синхронизация</text>
 	</string>
 	<string id="ui_mm_60_hz">
-		<text> 60</text>
+		<text>Частота 60Гц</text>
 	</string>
 	<string id="ui_mm_r2_sun_near">
-		<text>  </text>
+		<text>Дальность отрисовки теней</text>
 	</string>
 	<string id="ui_mm_r2_tf_mipbias">
-		<text>   </text>
+		<text>Отчетливость текстур на расстоянии</text>
 	</string>
 	<string id="ui_mm_r2_gloss_factor">
-		<text> </text>
+		<text>Глянцевость поверхностей</text>
 	</string>
 	<string id="ui_mm_r2_true_sun_shadows">
-		<text> </text>
+		<text>Правильные тени</text>
 	</string>	
 	<string id="ui_mm_r2_soft_shadows">
-		<text>  </text>
+		<text>Мягкие края теней</text>
 	</string>
 	<string id="ui_mm_r2_lights_shadow_fade">
-		<text>  </text>
+		<text>Мягкие тени ламп</text>
 	</string>	
 	<string id="ui_mm_r2_tonemap">
-		<text>  HDR</text>
+		<text>Тональное отображение HDR</text>
 	</string>
 	<string id="ui_mm_r2_tonemap_middlegray">
-		<text> HDR</text>
+		<text>Интенсивность HDR</text>
 	</string>
 	<string id="ui_mm_r2_sun_lumscale_amb">
-		<text> </text>
+		<text>Фоновая освещенность</text>
 	</string>
 	<string id="ui_mm_r2_sun_lumscale_hemi">
-		<text>Hemi </text>
+		<text>Hemi освещенность</text>
 	</string>
 	<string id="ui_mm_cam_inert">
-		<text> </text>
+		<text>Инерция камеры</text>
 	</string>
 	<string id="ui_mm_r2_lens_flare">
-		<text>  </text>
+		<text>Флары от ламп</text>
 	</string>
 	<string id="ui_mm_r2_lens_dirt">
-		<text>  </text>
+		<text>Грязь на линзе</text>
 	</string>
 	<string id="ui_mm_r2_rain_drops">
-		<text>  </text>
+		<text>Капли на стекле</text>
 	</string>
 	<string id="ui_mm_r2_mask">
-		<text></text>
+		<text>Шлем</text>
 	</string>
 	<string id="ui_mm_r2_visor_refl">
-		<text>  </text>
+		<text>Отражения в шлеме</text>
 	</string>	
 	<string id="ui_mm_lens_flare">
-		<text>  </text>
+		<text>Флары от солнца</text>
+	</string>
+	<string id="ui_mm_r2_puddles">
+		<text>Лужи</text>
 	</string>
 	<string id="ui_mm_r3_dynamic_wet_surfaces">
-		<text> </text>
+		<text>Намокание поверхностей</text>
 	</string>
 	<string id="ui_mm_volumetric_light">
-		<text> </text>
+		<text>Объёмный свет</text>
 	</string>
 	<string id="ui_mm_r2_reflections">
-		<text></text>
+		<text>Отражения</text>
 	</string>
 	<string id="ui_mm_r2_reflections_mode">
-		<text> </text>
+		<text>Режим отражений</text>
 	</string>
 	<string id="water">
-		<text> </text>
+		<text>на воде</text>
 	</string>
 	<string id="ground">
-		<text> </text>
+		<text>на асфальте</text>
 	</string>
 	<string id="both">
-		<text>   </text>
+		<text>на воде и асфальте</text>
 	</string>
 	<string id="ui_mm_r2_image_sharpening">
-		<text> </text>
+		<text>Резкость изображения</text>
 	</string>
 	<string id="ui_mm_r3_volumetric_smoke">
-		<text> </text>
+		<text>Объёмный дым</text>
 	</string>
 	<string id="ui_mm_r4_enable_tessellation">
-		<text></text>
+		<text>Тесселяция</text>
 	</string>
-	<string id="ui_mm_mblur">
-		<text>  </text>
-	</string>
-	<string id="ui_mm_mblur_param">
-		<text>   </text>
+	
+	<string id="ui_mm_r__bloodmarks">
+		<text>Блудмарки</text>
 	</string>	
 	<string id="ui_mm_r2_details_opt">
-		<text> </text>
+		<text>Оптимизация травы</text>
 	</string>
 	<string id="ui_mm_r2_gbuffer_opt">
-		<text> </text>
+		<text>Оптимизация шейдеров</text>
 	</string>
 	<string id="ui_mm_msaa">
 		<text>MSAA</text>
 	</string>
 	<string id="ui_mm_switch_torch">
-		<text>  AI</text>
+		<text>Использование фонариков AI</text>
 	</string>
 	<string id="ui_mm_r2_sun_near_border">
-		<text>  </text>
+		<text>Угол отрисовки теней</text>
 	</string>
 		<string id="ui_mm_r2_sun_lumscale">
-		<text>  </text>
+		<text>Яркость света солнца</text>
 	</string>
 	<string id="ui_mm_r_aa_mode">
-		<text></text>
+		<text>Сглаживание</text>
 	</string>	
 	<string id="ui_mm_cas">
-		<text>CAS (  )</text>
+		<text>Резкость после сглаживания</text>
 	</string>	
 	<string id="ui_mm_r2_gi">
-		<text>  ()</text>
+		<text>Глобальное освещение (экспериментально)</text>
 	</string>
 	<string id="ui_mm_particles_distance">
-		<text> </text>
+		<text>Дальность партиклов</text>
 	</string>
 	<string id="ui_mm_sun_shafts">
-		<text> </text>
+		<text>Солнечные лучи</text>
 	</string>
 	<string id="ui_mm_r2_float32">
-		<text> -</text>
+		<text>Освещение Кука-Торренса</text>
 	</string>
 	<string id="ui_mm_r2_dof">
-		<text>   </text>
+		<text>Динамическая глубина поля зрения</text>
 	</string>
 
 	<string id="nofpslock">
-		<text> </text>
+		<text>Без ограничения</text>
 	</string>
 	<string id="fpslock60">
-		<text>60 </text>
+		<text>60 кадров</text>
 	</string>
 	<string id="fpslock120">
-		<text>120 </text>
+		<text>120 кадров</text>
 	</string>
 	<string id="fpslock144">
-		<text>144 </text>
+		<text>144 кадра</text>
 	</string>
 	<string id="fpslock240">
-		<text>240 </text>
+		<text>240 кадров</text>
 	</string>
 
 	<string id="ui_mm_renderer">
-		<text> </text>
+		<text>Тип рендера</text>
 	</string>
 	<string id="renderer_r1">
-		<text> </text>
+		<text>Статичное освещение</text>
 	</string>
 	<string id="renderer_r2">
-		<text>  </text>
+		<text>Полное динамическое освещение</text>
 	</string>
 	<string id="renderer_r2.5">
-		<text>  </text>
+		<text>Улучшенное полное освещение</text>
 	</string>
 	<string id="renderer_r2a">
-		<text>.  </text>
+		<text>Динам. освещение объектов</text>
 	</string>
 	<string id="renderer_r3">
-		<text>.   (DX10)</text>
+		<text>Ул. полное освещение (DX10)</text>
 	</string>
 	<string id="renderer_r4">
-		<text>.   (DX11)</text>
+		<text>Ул. полное освещение (DX11)</text>
 	</string>
 
 	<string id="ui_mm_r2_actor_shadow">
-		<text>   </text>
+		<text>Тень от главного героя</text>
 	</string>
 
 	<string id="ui_mm_r2_glows_use">
-		<text>Glow- </text>
+		<text>Glow-еффект ламп</text>
 	</string>
 
 	<string id="ui_mm_r2_sun_limit">
-		<text>  </text>
+		<text>Дальность действия солнца</text>
 	</string>
 
 	<string id="ui_mm_r__smap_size">
-		<text>  </text>
+		<text>Разрешение карт теней</text>
 	</string>
 
 	<string id="r_sslr_enable">
-		<text>    </text>
+		<text>Отражения в воде и лужах</text>
 	</string>
 
 	<string id="ui_mm_3d_scopes_fps_factor">
-		<text>FPS  3D </text>
+		<text>FPS в 3D Прицелах</text>
 	</string>
 
 	<string id="ui_mm_fov">
-		<text>  (fov)</text>
+		<text>Угол обзора (fov)</text>
 	</string>
 
 	<string id="ui_mm_hud_fov">
-		<text>   (hud_fov)</text>
+		<text>Угол обзора ГГ (hud_fov)</text>
 	</string>
-
+	
 	<string id="ui_mm_3dss_scale_factor">
-		<text>   3D </text>
+		<text>Апскейлинг изображения в 3D прицелах</text>
 	</string>
 
 	<string id="ui_mm_ambient">
-		<text>  </text>
+		<text>Включить музыкальный эмбиент</text>
 	</string>
 
 	<string id="ui_mm_ammunition_on_belt">
-		<text>     </text>
+		<text>Включить использование патронов только с пояса</text>
 	</string>
 
-	<!--  "" -->
+	<!-- Окно "Звук" -->
 	<string id="ui_mm_sound">
-		<text></text>
+		<text>Звук и текст</text>
 	</string>
 	<string id="ui_mm_music_volume">
-		<text> </text>
+		<text>Громкость музыки</text>
 	</string>
 	<string id="ui_mm_master_volume">
-		<text></text>
+		<text>Громкость</text>
 	</string>
 	<string id="ui_mm_snd_device">
-		<text> </text>
+		<text>Звуковое устройство</text>
 	</string>
 	<string id="ui_mm_eax">
 		<text>EAX</text>
 	</string>
-	<!--    -->
+	<!-- неактивные настройки звука -->
 	<string id="ui_mm_sound_quality">
-		<text> </text>
+		<text>Качество звука</text>
 	</string>
-	<!--  "" -->
+	<!-- Окно "Игра" -->
 	<string id="ui_mm_gameplay">
-		<text></text>
+		<text>Игра</text>
 	</string>
 	<string id="ui_mm_difficulty">
-		<text></text>
+		<text>Сложность</text>
 	</string>
 	<string id="gd_novice">
-		<text></text>
+		<text>Новичок</text>
 	</string>
 	<string id="gd_stalker">
-		<text></text>
+		<text>Опытный</text>
 	</string>
 	<string id="gd_veteran">
-		<text></text>
+		<text>Ветеран</text>
 	</string>
 	<string id="gd_master">
-		<text></text>
+		<text>Мастер</text>
 	</string>
 	<string id="ui_mm_keypress_on_start">
-		<text>   </text>
+		<text>Пауза после загрузки сейва</text>
 	</string>
 	<string id="ui_mm_show_crosshair">
-		<text> </text>
+		<text>Показывать прицел</text>
 	</string>
 	<string id="ui_mm_dyn_crosshair">
-		<text> </text>
+		<text>Динамический прицел</text>
 	</string>
-	<string id="ui_mm_lock_reload">
-		<text>    </text>
+	<string id="ui_mm_show_weapon">
+		<text>Показывать оружие</text>
 	</string>
 	<string id="ui_mm_crosshair_distance">
-		<text>  </text>
+		<text>Дистанция до цели</text>
 	</string>
 	<string id="ui_mm_tips">
-		<text> </text>
+		<text>Распознавание НПС</text>
 	</string>
 	<string id="ui_mm_build_crosshair">
-		<text> ,   </text>
+		<text>Круглый курсор, как в билдах</text>
 	</string>
 	<string id="ui_mm_small_font">
-		<text>  (  )</text>
+		<text>Уменьшенный шрифт (требуется перезапуск игры)</text>
 	</string>
+	
 	<string id="ui_mm_3d_pda">
-		<text>3D PDA</text>
+		<text>3D КПК</text>
 	</string>
-	<string id="ui_mm_3d_scopes">
-		<text>3D </text>
-	</string>
-	<string id="ui_mm_aim_toggle">
-		<text> \</text>
-	</string>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+		
 	<string id="ui_mm_switch_slot">
-		<text>   </text>
+		<text>Переключение слота с помощью колесика мыши</text>
 	</string>
 	<string id="ui_mm_font_scale_x">
-		<text> </text>
+		<text>Ширина шрифтов</text>
 	</string>
 	<string id="ui_mm_font_scale_y">
-		<text> </text>
+		<text>Высота шрифтов</text>
 	</string>
-	<string id="ui_mm_exclusive_input">
-		<text>Exclusive Input (   Windows)</text>
-	</string>
-	<string id="ui_st_weapon_bobbing">
-		<text> </text>
-	</string>
-
-	<!--  "" -->
+	<!-- Окно "Управление" -->
 	<string id="ui_mm_controls">
-		<text></text>
+		<text>Управление</text>
 	</string>
 	<string id="ui_mm_mouse_sense">
-		<text> </text>
+		<text>Чувствительность мыши</text>
 	</string>
 	<string id="ui_mm_invert_mouse">
-		<text> </text>
+		<text>Инвертировать мышь</text>
 	</string>
 	<string id="ui_mm_keyboard_setup">
-		<text> </text>
+		<text>Настройка клавиатуры</text>
 	</string>
 	<string id="ui_mm_action">
-		<text></text>
+		<text>Действие</text>
 	</string>
 	<string id="ui_mm_key">
-		<text></text>
+		<text>Кнопка</text>
 	</string>
 	<string id="ui_mm_default">
-		<text> </text>
+		<text>По умолчанию</text>
 	</string>
 
-
+	<string id="ui_mm_mblur">
+		<text>Размытие в движении</text>
+	</string>
+	<string id="ui_mm_mblur_param">
+		<text>Интенсивность размытия в движении</text>
+	</string>
 	<string id="video_settings_name_1">
-		<text>   - r2_mblur_enable</text>
+		<text>Размытие в движении - r2_mblur_enable</text>
 	</string>
 	<string id="video_settings_name_2">
-		<text>  - rs_vis_distance</text>
+		<text>Дальность видимости - rs_vis_distance</text>
 	</string>
 	<string id="video_settings_name_3">
-		<text>   - r__geometry_lod</text>
+		<text>Детализация далёких объектов - r__geometry_lod</text>
 	</string>
 	<string id="video_settings_name_4">
-		<text>  - r__detail_density</text>
+		<text>Плотность травы - r__detail_density</text>
 	</string>
 	<string id="video_settings_name_5">
-		<text>   - r__detail_radius</text>
+		<text>Дальность отрисовки травы - r__detail_radius</text>
 	</string>
 	<string id="video_settings_name_6">
-		<text>   - r2_details_opt</text>
+		<text>Оптимизация рендеринга травы - r2_details_opt</text>
 	</string>
 	<string id="video_settings_name_7">
-		<text>  - texture_lod</text>
+		<text>Качество текстур - texture_lod</text>
 	</string>
 	<string id="video_settings_name_8">
-		<text>  - r__tf_aniso</text>
+		<text>Фильтрация текстур - r__tf_aniso</text>
 	</string>
 	<string id="video_settings_name_9">
-		<text>     - r__bloodmarks</text>
+		<text>Следы от пуль на телах - r__bloodmarks</text>
 	</string>
 	<string id="video_settings_name_11">
-		<text>   - r2_sun</text>
+		<text>Тень от солнца - r2_sun</text>
 	</string>
 	<string id="video_settings_name_12">
-		<text>  - r2_sun_details</text>
+		<text>Тени травы - r2_sun_details</text>
 	</string>
 	<string id="video_settings_name_13">
-		<text>  - r2_slight_fade</text>
+		<text>Дальность освещения - r2_slight_fade</text>
 	</string>
 	<string id="video_settings_name_14">
-		<text>   NPC - ai_use_torch_dynamic_lights</text>
+		<text>Объёмный свет фонариков NPC - ai_use_torch_dynamic_lights</text>
 	</string>
 	<string id="video_settings_name_15">
-		<text>  - r2_ls_squality</text>
+		<text>Качество теней - r2_ls_squality</text>
 	</string>
 	<string id="video_settings_name_16">
-		<text>.  - rs_v_sync</text>
+		<text>Верт. синхронизация - rs_v_sync</text>
 	</string>
 	<string id="video_settings_name_17">
-		<text> 60 - rs_refresh_60hz</text>
+		<text>Частота 60Гц - rs_refresh_60hz</text>
 	</string>
 	<string id="video_settings_name_19">
-		<text>  - r_aa_mode</text>
+		<text>Тип сглаживания - r_aa_mode</text>
 	</string>
 	<string id="video_settings_name_20">
-		<text>   - r_aa_cas</text>
+		<text>Резкость после сглаживания - r_aa_cas</text>
 	</string>
 	<string id="video_settings_name_21">
-		<text>  - r2_gloss_factor</text>
+		<text>Глянцевость поверхностей - r2_gloss_factor</text>
 	</string>
 	<string id="video_settings_name_22">
-		<text>     - r2_sun_near</text>
+		<text>Дальность отрисовки теней высокого качества - r2_sun_near</text>
 	</string>
 	<string id="video_settings_name_23">
-		<text>   - r2_sun_near_border</text>
+		<text>Угол отрисовки теней - r2_sun_near_border</text>
 	</string>
 	<string id="video_settings_name_24">
-		<text>Parallax    - r_terrain_parallax_enable</text>
+		<text>Parallax на текстурах земли - r_terrain_parallax_enable</text>
 	</string>
 	<string id="video_settings_name_25">
-		<text>  HDR - r2_tonemap</text>
+		<text>Тональное отображение HDR - r2_tonemap</text>
 	</string>
 	<string id="video_settings_name_26">
-		<text> HDR - r2_tonemap_middlegray</text>
+		<text>Интенсивность HDR - r2_tonemap_middlegray</text>
 	</string>
 	<string id="video_settings_name_27">
-		<text>   - r2_sun_lumscale</text>
+		<text>Яркость света солнца - r2_sun_lumscale</text>
 	</string>
 	<string id="video_settings_name_28">
-		<text>  - r2_sun_lumscale_amb</text>
+		<text>Фоновая освещенность - r2_sun_lumscale_amb</text>
 	</string>
 	<string id="video_settings_name_29">
-		<text>   - r_sunshafts_mode</text>
+		<text>Тип солнечных лучей - r_sunshafts_mode</text>
 	</string>
 	<string id="ui_mm_r2_sun_quality">
-		<text>   </text>
+		<text>Мягкие тени от солнца</text>
 	</string>
 	<string id="video_settings_name_31">
-		<text>    - r2_mblur</text>
+		<text>Интенсивность размытия в движении - r2_mblur</text>
 	</string>
 	<string id="video_settings_name_32">
-		<text>  - r2_soft_particles</text>
+		<text>Мягкие частицы - r2_soft_particles</text>
 	</string>
 	<string id="video_settings_name_33">
-		<text>   - r2_soft_shadows</text>
+		<text>Мягкие края теней - r2_soft_shadows</text>
 	</string>
 	<string id="video_settings_name_34">
-		<text>   - r2_lights_shadow_fade</text>
+		<text>Мягкие тени ламп - r2_lights_shadow_fade</text>
 	</string>
 	<string id="video_settings_name_35">
-		<text>   - r2_ao</text>
+		<text>Предпросчитанное глобальное освещение - r2_ao</text>
 	</string>
 	<string id="video_settings_name_36">
-		<text>    - r2_ao_intensity</text>
+		<text>Интенсивность предпросчитанного глобального освещения - r2_ao_intensity</text>
 	</string>
 	<string id="video_settings_name_37">
-		<text> AO - r2_ssao</text>
+		<text>Качество AO - r2_ssao</text>
 	</string>
 	<string id="video_settings_name_38">
-		<text> AO - r_ao_mode</text>
+		<text>Тип AO - r_ao_mode</text>
 	</string>
 	<string id="video_settings_name_39">
-		<text>   - r2_steep_parallax</text>
+		<text>Улучшенная рельефность поверхностей - r2_steep_parallax</text>
 	</string>
 	<string id="video_settings_name_40">
-		<text>   - r2_dof_enable</text>
+		<text>Эффект фокусировки глаз - r2_dof_enable</text>
 	</string>
 	<string id="video_settings_name_41">
-		<text>     - g_dof_reload</text>
+		<text>Эффект глубины сцены при перезарядке - g_dof_reload</text>
 	</string>
 	<string id="video_settings_name_42">
-		<text>     - g_dof_zoom</text>
+		<text>Эффект глубины сцены при прицеливании - g_dof_zoom</text>
 	</string>
 	<string id="video_settings_name_43">
-		<text>    - r2_dof_quality</text>
+		<text>Качество эффекта фокусировки глаз - r2_dof_quality</text>
 	</string>
 	<string id="video_settings_name_44">
-		<text>  - r2_detail_bump</text>
+		<text>Детальный рельеф - r2_detail_bump</text>
 	</string>
 	<string id="video_settings_name_45">
-		<text>   - r2_lens_flare</text>
+		<text>Флары от ламп - r2_lens_flare</text>
 	</string>
 	<string id="video_settings_name_46">
-		<text>   - r2_lens_dirt</text>
+		<text>Грязь на линзе - r2_lens_dirt</text>
 	</string>
 	<string id="video_settings_name_47">
-		<text>   - r2_rain_drops</text>
+		<text>Капли на стекле - r2_rain_drops</text>
+	</string>
+	<string id="video_settings_name_48">
+		<text>Динамические лужи - r2_puddles</text>
 	</string>
 	<string id="video_settings_name_49">
-		<text>  - r3_dynamic_wet_surfaces</text>
+		<text>Намокание поверхностей - r3_dynamic_wet_surfaces</text>
 	</string>
 	<string id="video_settings_name_50">
-		<text>  - r2_volumetric_lights</text>
+		<text>Объемный свет - r2_volumetric_lights</text>
 	</string>
 	<string id="video_settings_name_51">
-		<text>     - r_sslr_enable</text>
+		<text>Отражения в воде и лужах - r_sslr_enable</text>
 	</string>
 	<string id="video_settings_name_52">
-		<text> - r4_enable_tessellation</text>
+		<text>Тесселяция - r4_enable_tessellation</text>
 	</string>
 	<string id="video_settings_name_53">
-		<text>  - r2_gbuffer_opt</text>
+		<text>Оптимизация шейдеров - r2_gbuffer_opt</text>
 	</string>
 	<string id="video_settings_name_54">
-		<text>  - r2_image_sharpening</text>
+		<text>Резкость изображения - r2_image_sharpening</text>
 	</string>
 	<string id="video_settings_name_55">
-		<text>  - r3_volumetric_smoke</text>
+		<text>Объёмный дым - r3_volumetric_smoke</text>
 	</string>
 	<string id="video_settings_name_56">
-		<text>    - r__actor_shadow</text>
+		<text>Тень от главного героя - r__actor_shadow</text>
 	</string>
 	<string id="video_settings_name_57">
-		<text>Glow-  - r_glows_use</text>
+		<text>Glow-еффект ламп - r_glows_use</text>
 	</string>
 	<string id="video_settings_name_58">
-		<text>   - r2_sun_far</text>
+		<text>Дальность действия солнца - r2_sun_far</text>
 	</string>
 	<string id="video_settings_name_59">
-		<text>   - r__smap_size</text>
+		<text>Разрешение карт теней - r__smap_size</text>
 	</string>
 	<string id="video_settings_name_60">
-		<text>   - r_mt_texload</text>
+		<text>Многопоточная загрузка текстур - r_mt_texload</text>
 	</string>
 	<string id="video_settings_name_61">
-		<text>  - fov</text>
+		<text>Угол обзора - fov</text>
 	</string>
 	<string id="video_settings_name_62">
-		<text>   - hud_fov</text>
+		<text>Угол обзора ГГ - hud_fov</text>
 	</string>
 	<string id="video_settings_name_63">
-		<text>Hemi  - r2_sun_lumscale_hemi</text>
+		<text>Hemi освещенность - r2_sun_lumscale_hemi</text>
 	</string>
 	<string id="video_settings_name_64">
-		<text>FPS  3D  - g_3d_scopes_fps_factor</text>
+		<text>FPS в 3D Прицелах - g_3d_scopes_fps_factor</text>
 	</string>
+
 	<string id="video_settings_name_65">
-		<text>    - r2_visor_refl</text>
+		<text>Отражения по краям шлема - r2_visor_refl</text>
 	</string>
 	<string id="video_settings_name_66">
-		<text>   - r2_mask</text>
+		<text>Шейдерный эффект шлема - r2_mask</text>
 	</string>
 	<string id="video_settings_name_67">
-		<text>   - r_lens_flare</text>
+		<text>Флары от солнца - r_lens_flare</text>
 	</string>
 	<string id="video_settings_name_68">
-		<text>    - r__dyn_opt_dist</text>
+		<text>Дальность рендеринга динамических объектов - r__dyn_opt_dist</text>
 	</string>
 	<string id="video_settings_name_69">
-		<text>   3D  - r_3dss_scale_factor</text>
-	</string>
-	<string id="video_settings_name_70">
-		<text>&#x041A;&#x0430;&#x0447;&#x0435;&#x0441;&#x0442;&#x0432;&#x043E; DLSS &#x2014; r_aa_dlss_quality</text>
-	</string>
-	<string id="video_settings_name_71">
-		<text>&#x041A;&#x0430;&#x0447;&#x0435;&#x0441;&#x0442;&#x0432;&#x043E; FSR 3 &#x2014; r_aa_fsr3_quality</text>
+		<text>Апскейлинг изображения в 3D прицелах - r_3dss_scale_factor</text>
 	</string>
 
-	<string id="video_settings_name_72">
-		<text>&#x041F;&#x0440;&#x0435;&#x0441;&#x0435;&#x0442; DLSS &#x2014; r_aa_dlss_preset</text>
-	</string>
-	<string id="video_settings_name_73">
-		<text>XeGTAO bent normals &#x2014; r_xegtao_bent_normals</text>
-	</string>
 	<string id="video_settings_desc_1">
-		<text>Motion blur -     ,       .</text>
+		<text>Motion blur - размытие изображения при повороте камеры, воспроизведении сцен движения или быстро движущихся объектов.</text>
 	</string>
 	<string id="video_settings_desc_2">
-		<text>   ,      ,     .     -  0.4 ( )  1 ( ). ,      150 .        60 ,    150.</text>
+		<text>Эта настройка регулирует величину, на которую умножается предельное расстояние видимости, установленное в профиле текущей погоды. Диапазон значений этой величины - от 0.4 (минимум ползунка) до 1 (максимум ползунка). Например, в погоде установлена дальность обзора 150 метров. На минимуме ползунка вы будете видеть на 60 метров, на максимуме на 150.</text>
 	</string>
 	<string id="video_settings_desc_3">
-		<text>        ,   ,    .   ,     .</text>
+		<text>Эта настройка регулирует детализацию прорисовки и освещения моделей людей, монстров и оружия, находящихся вдалеке от игрока. Чем дальше ползунок, тем более детализованными они будут.</text>
 	</string>
 	<string id="video_settings_desc_4">
-		<text>         .   ,              . !       ,     ,   ,     .</text>
+		<text>Эта настройка регулирует насколько плотно отрисовываются кустики травы в игре. Чем дальше ползунок, тем ближе друг к другу будут отрисовываться элементы травы и тем гуще она будет. ВНИМАНИЕ! Чрезмерная густота травы приводит к сильным тормозам, если хотите отрегулировать этот параметр, делайте это понемногу, каждый раз проверяя что получилось.</text>
 	</string>
 	<string id="video_settings_desc_5">
-		<text>    ,    .   ,     .        48 ( )  240 . !     ,            . -      150-200  ( ).</text>
+		<text>Эта настройка регулирует максимальное расстояние, на котором отрисовывается трава. Чем дальше ползунок, тем дальше будет край травы. Ползунок позволяет регулировать расстояние в диапазоне от 48 (стандартная дальность) до 240 метров. ВНИМАНИЕ! Алгоритм отрисовки травы игрой такой, что при увеличении радиуса травы нагрузка на видеокарту увеличивается в геометрической прогресии. Более-менее приемлемые величины лежат в пределах 150-200 метров (середина ползунка).</text>
 	</string>
 	<string id="video_settings_desc_6">
-		<text>           ''   .            .</text>
+		<text>Эта настройка позволяет включить оптимизированный режим отрисовки травы за счет ее 'прореживания' на больших дистанциях. Позволяет выиграть несколько фпс при больших значениях дистанции отрисовки и плотности травы.</text>
 	</string>
 	<string id="video_settings_desc_7">
-		<text>      .   ,         .       ,  ,   .</text>
+		<text>Эта настройка регулирует степень детализации текстур игрой. Чем дальше ползунок, тем более отчетливы текстуры и больше они требуют видеопамяти. При снижении этой настройки текстуры будут размыливаться, но соответственно, потреблять меньше памяти.</text>
 	</string>
 	<string id="video_settings_desc_8">
-		<text>      .      ,  - .   ,          .</text>
+		<text>Эта настройка регулирует степень анизотропной фильтрации текстур. Минимальное значение ползунка соответствует однократной фильтрации, максимальное - шестнадцатикратной. Чем оно выше, тем четче будут выглядеть текстуры с увеличением расстояния до них.</text>
 	</string>
 	<string id="video_settings_desc_9">
-		<text>   c     .</text>
+		<text>Эта настройка включает cледы от пулевых попаданий на телах.</text>
 	</string>
 	<string id="video_settings_desc_11">
-		<text>        .           .</text>
+		<text>Эта настройка включает отбрасывание объектами теней от солнечного света. На слабых ПК отключение этой настройки может дать серьезный прирост скорости.</text>
 	</string>
 	<string id="video_settings_desc_12">
-		<text>        </text>
+		<text>Эта настройка включает отбрасывание травой теней от солнечного света и других источников динамического освещения. Теперь эта настройка работает - мы её починили. ВНИМАНИЕ! Настройка просто АДОВО просаживает производительность. Не используйте её с большим радиусом отрисовки травы или высокой плотностью травы!</text>
 	</string>
 	<string id="video_settings_desc_13">
-		<text>           .   ,           .</text>
+		<text>Эта настройка регулирует сохранение аккуратности обсчета освещения с увеличением расстояния до них. Чем она выше, тем детальней будут выглядеть тени от динамических источников света на расстоянии.</text>
 	</string>
 	<string id="video_settings_desc_14">
-		<text>        NPC    .            ,      NPC.</text>
+		<text>Эта настройка разрешает игре обрабатывать объёмный свет фонариков NPC как источники динамического света. На слабых ПК отключение этой настройки может дать серьезный прирост скорости ночью, в лагерях с большим числом NPC.</text>
 	</string>
 	<string id="video_settings_desc_15">
-		<text>       .   ,      .</text>
+		<text>Эта настройка регулирует качество прорисовки теней в игре. Чем она выше, тем глаже будут у теней края.</text>
 	</string>
 	<string id="video_settings_desc_16">
-		<text>     , ..       .             ,     .</text>
+		<text>Эта настройка позволяет включить вертикальную синхронизацию, т.е. синхронизацию частоты кадров с частотой обновления монитора. При включении пропадет эффект небольшого горизонтального смещения частей экрана при резких движениях мышкой, но может немного снизиться производительность.</text>
 	</string>
 	<string id="video_settings_desc_17">
-		<text>           60 .     ,          . ,           .             .</text>
+		<text>Эта настройка заставляет игру всегда использовать видеорежим с частотой обновления экрана 60 Герц. Настройка полезна для обладателей мониторов, у которых игра при запуске неверно определяет частоту обновления экрана. Однако, включать эту настройку рекомендуется только если у вас есть такая проблема. В некоторых редких случаях включение этой настройки может вызывать лаги в полноэкранном режиме.</text>
 	</string>
 	<string id="video_settings_desc_19">
-		<text>    .  NVIDIA DLSS (Deep learning super sampling), AMD FSR3 (FidelityFX Super Resolution 3), TAA (Temporal anti-aliasing), SMAA (Subpixel Morphological AntiAliasing). \n \nNVIDIA DLSS (    ) -        ,            GeForce RTX.            RTX20.    DLSS      MSAA 8x,      . \n \nFSR -        AMD. FSR 3.0    AMD  RX 590   ( Polaris  ),    NVIDIA   GTX 10 (, GTX 1060)  .</text>
+		<text>Эта настройка переключает тип сглаживания. Доступны NVIDIA DLSS (Deep learning super sampling), AMD FSR2 (FidelityFX Super Resolution), TAA (Temporal anti-aliasing), SMAA (Subpixel Morphological AntiAliasing). \n \nNVIDIA DLSS (сглаживание с алгоритмами глубокого обучения) - это революционная технология рендеринга на базе искусственного интеллекта, которая улучшает качество графики благодаря использованию специализированных тензорных ядер в видеокартах GeForce RTX. В десктопных и мобильных видеокартах технология стала доступна с приходом серии RTX20. Сглаживание с использованием DLSS даёт результат превосходящий по качеству MSAA 8x, при этом не вызывает просадок производительности. \n \nFSR - менее требовательный и менее качественный аналог от AMD. FSR 2.0 поддерживают все видеокарты AMD от серии RX 400 и новее, а также видеокарты NVIDIA от 1000 серии.</text>
 	</string>
 	<string id="video_settings_desc_20">
-		<text>Contrast Adaptive Sharpening (CAS)     AMD   FidelityFX.       (, AMD FSR),         .     -       .    ( 0) - CAS   .</text>
+		<text>""</text>
 	</string>
 	<string id="video_settings_desc_21">
-		<text>         ,   , ,   .. !     \" \",      ,   -     -.   ,    ,    -          .</text>
+		<text>Эта настройка регулирует степень отражения света блестящими и матовыми поверхностями, такими как металл, кожа, дерево и т.п. ВНИМАНИЕ! Это настройка из разряда \"на любителя\", и если вы не знаете точно, что делаете - оставьте её на значении по-умолчанию. Чем дальше ползунок, тем сильнее эффект отражения, но не переусердствуйте - на больших значениях поверхности начинают выглядеть как затянутые в пластик.</text>
 	</string>
 	<string id="video_settings_desc_22">
-		<text>   ,        .           ,        .       1  60 .        ( ).    ,          .</text>
+		<text>Эта настройка регулирует расстояние, до которого рисуются динамические тени в полном качестве. Выше этого расстояния они начинают размазываться и качество их отрисовки падает, так как просчет тени переключается на упрощенный режим. Ползунок регулирует значение в диапазоне от 1 до 60 метров. Настраивать парамтер слеждует вместе с разрешением теней (в конфигураторе). Чем больше ставите ползунок, тем больше следует выставлять разрешение карты теней для хорошего качества.</text>
 	</string>
 	<string id="video_settings_desc_23">
-		<text>    ,     .    ,         .     .</text>
+		<text>Эта настройка регулирует угол обзора, в котором нормально отрисовываются тени. Если этот угол недостаточен, по краям экрана будут постоянно видны лишние треугольные тени. Рекомендуется держать настройку на максимуме.</text>
 	</string>
 	<string id="video_settings_desc_24">
-		<text>        . %c[red]        , ,     ssfx_terrain_offset   .  .  OGSR WIKI.</text>
+		<text>Данный эффект не на всех текстурах земли может выглядеть хорошо, потому что требуются правильные карты высот для всех текстур земли.</text>
 	</string>
 	<string id="video_settings_desc_25">
-		<text>    HDR Tone mapping.   ,   ,         -  , ,       .</text>
+		<text>Эта настройка включает эффект HDR Tone mapping. Он улучшает изображение, акцентируя его детали, которые без этого эффекта были бы недостаточно контрастны - мелкие элементы, края, при этом не делая изображение чрезмерно ярким.</text>
 	</string>
 	<string id="video_settings_desc_26">
-		<text>     HDR Tone mapping. !     \" \",      ,   -     -.   ,          ,    .    ,    HDR,  Fallout 3.</text>
+		<text>Эта настройка регулирует интенсивность эффекта HDR Tone mapping. ВНИМАНИЕ! Это настройка из разряда \"на любителя\", и если вы не знаете точно, что делаете - оставьте её на значении по-умолчанию. Регулируйте небольшими шагами, так как на чрезмерных величинах этой настройки изображение становится сюрреалистичным, а освещенные участки пересвечиваются. Задрав её слишком высоко, вы получите эффект HDR, напоминающий Fallout 3.</text>
 	</string>
 	<string id="video_settings_desc_27">
-		<text>     .   ,           .</text>
+		<text>Эта настройка регулирует интенсивность солнечного освещения. Чем выше она, тем светлей будут освещенные солнцем участки и тем глубже будут тени.</text>
 	</string>
 	<string id="video_settings_desc_28">
-		<text>     ,   .   ,        ,        . !     \" \",      ,   -     -. ,            /      .      -    ,    .</text>
+		<text>Эта настройка регулирует интенсивность рассеяного света, независимого от солнца. Чем она выше, тем светлее будут все затененные участки в игре, и тем бледней буду выглядеть тени от солнца. ВНИМАНИЕ! Это настройка из разряда \"на любителя\", и если вы не знаете точно, что делаете - оставьте её на значении по-умолчанию. Повысьте, если в целом игра вам кажется слишком темной и ползунками настройки яркости/контрастности вы не можете достичь желаемого эффекта. Не рекомендуется задирать слишком сильно - изображение потеряет в объемности, станет выглядеть более плоским.</text>
 	</string>
 	<string id="video_settings_desc_29">
-		<text>     .  ,   .</text>
+		<text>Эта настройка переключает тип солнечных лучей. Выберите тот, который больше понравится.</text>
 	</string>
 	<string id="video_settings_desc_31">
-		<text>       .               ,             .</text>
+		<text>Эта настройка включает эффект смягчения края водных поверхностей. При её включении вода у края водоемов будет плавно набирать прозрачность вплоть до полной незаметности, что позволяет устранить эффект резкой и сильно заметной границы между водой и сушей.</text>
 	</string>
 	<string id="video_settings_desc_32">
-		<text>     .          , , ,   ..      .</text>
+		<text>Эта настройка включает эффект мягких частиц. При её включении сильно улучшится вид таких эффектов как огонь, дым, взрывы, искры и т.п. Рекомендуется всегда держать эту настройку включенной.</text>
 	</string>
 	<string id="video_settings_desc_33">
-		<text>        ,      .</text>
+		<text>Эта настройка регулирует эффект смягчения краев теней в игре, с ним тени выглядят более реалистично.</text>
 	</string>
 	<string id="video_settings_desc_34">
-		<text>           .    .</text>
+		<text>Эта настройка регулирует эффект смягчения теней от ламп с удалением от лампы. Тени выглядят более реалистично.</text>
 	</string>
 	<string id="video_settings_desc_35">
-		<text>       .     hemi-,     .         .      ,     ,  ,        - r2_ssao,  .       ,      ,      . ,     ,    ,     .</text>
+		<text>Эта настройка включает предпросчитанное глобальное освещение в игре. При этом используются готовые hemi-лайтмапы, позволяющие приблизить картинку к фотореализму. При включении этой настройки внутренности помещений станут ощутимо темнее. Настройка не оказывает влияния на быстродействие, так как эффект просчитан заранее, однако учитывайте, что эффекты предпросчитанного глобального освещения и динамического - r2_ssao, взаимно накладываются. Соответственно если вы хотите использовать оба эффекта, имеет смысл понизить силу эффекта обоих, чтобы не получить излишне темной картинки. Либо, если для вас важно быстродействие, используйте только предпросчитанное освещение, а динамическое глобальное освещение отключите.</text>
 	</string>
 	<string id="video_settings_desc_36">
-		<text>        .        ,     .</text>
+		<text>Эта настройка регулирует интенсивность предпросчитанного глобального освещения в игре. Более высокие значения позволяют получить более реалистичную картинку, но приводят к затемнению сцены.</text>
 	</string>
 	<string id="video_settings_desc_37">
-		<text>    AO  .  ,  ,       ,         ,         , ,  ,      .</text>
+		<text>Эта настройка регулирует качество AO в игре. Этот эффект, при включении, производит расчет дополнительно затеняемых геометрией моделей областей, делая освещение более похожим на освещение в реальном мире, на моделях появляются полутени и затенения от элементов снаряжения, одежды, деталей машин, травы и других небольших частей геометрии.</text>
 	</string>
 	<string id="video_settings_desc_38">
-		<text>         .    GTAO (Ground Truth-based Ambient Occlusion)  SSDO (ScreenSpace Directional Occlusion)</text>
+		<text>Эта настройка регулирует режим работы эффекта глобального освещения в игре. Доступны для выбора GTAO (Ground Truth-based Ambient Occlusion) и SSDO (ScreenSpace Directional Occlusion)</text>
 	</string>
 	<string id="video_settings_desc_39">
-		<text>          Steep parallax mapping.            ,       .</text>
+		<text>Эта настройка регулирует эффект улучшенной рельефности поверхностей с использованием алгоритма Steep parallax mapping. Этот алгоритм использует для расчета рельефности трассировку лучей в пространтсве карты высот, что дает более реалистичный и качественный эффект.</text>
 	</string>
 	<string id="video_settings_desc_40">
-		<text>        -     .   ,      .</text>
+		<text>Эта настройка включает компонент эффекта глубины поля зрения - фокусировку глаз в реальном времени. Некоторых он раздражает, поэтому мы оставили возможность его выключить.</text>
 	</string>
 	<string id="video_settings_desc_41">
-		<text>        -      .</text>
+		<text>Эта настройка включает компонент эффекта глубины поля зрения - фокусировку глаз на оружии при перезарядке.</text>
 	</string>
 	<string id="video_settings_desc_42">
-		<text>        -     .</text>
+		<text>Эта настройка включает компонент эффекта глубины поля зрения - размытие краев экрана при прицеливании.</text>
 	</string>
 	<string id="video_settings_desc_43">
-		<text>       .</text>
+		<text>Эта настройка регулирует качество эффекта глубины поля зрения.</text>
 	</string>
 	<string id="video_settings_desc_44">
-		<text>     -       .</text>
+		<text>Эта настройка включает Детальный рельеф - отображение мелких деталей и шероховатостей на объектах.</text>
 	</string>
 	<string id="video_settings_desc_45">
-		<text>   .</text>
+		<text>Включение фларов от лампочек.</text>
 	</string>
 	<string id="video_settings_desc_46">
-		<text>   ''    .</text>
+		<text>Настройка включает имитацию 'грязи' на линзе объектива камеры.</text>
 	</string>
 	<string id="video_settings_desc_47">
-		<text>            .</text>
+		<text>Эта настройка включает появление капель на стекле шлемов и противогазов во время дождя.</text>
+	</string>
+	<string id="video_settings_desc_48">
+		<text>Настройка включает динамические лужи, появляющиеся во время дождя.</text>
 	</string>
 	<string id="video_settings_desc_49">
-		<text>      .</text>
+		<text>Настройка включает намокание поверхностей во время дождя.</text>
 	</string>
 	<string id="video_settings_desc_50">
-		<text>      .</text>
+		<text>Настройка включает объемный свет для некоторых ламп.</text>
 	</string>
 	<string id="video_settings_desc_51">
-		<text>         .</text>
+		<text>Настройка включает отражения на воде и в лужах во время дождя.</text>
 	</string>
 	<string id="video_settings_desc_52">
-		<text>     , ,  ,   (  ).     .</text>
+		<text>Тесселяция увеличивает качество низкополигональных моделей НПС, монстров, рук актора, анимированных предметов (бутылок и тп). Угловатые модели становятся более сглаженными.</text>
 	</string>
 	<string id="video_settings_desc_53">
-		<text>    .             .</text>
+		<text>Настройка включает режим оптимизации шейдеров. Позволяет поднять ФПС на видеокартах с узкой шиной или малой проспускной способностью памяти.</text>
 	</string>
 	<string id="video_settings_desc_54">
-		<text>    . !     \" \",      .       .        .</text>
+		<text>Настройка позволяет настроить резкость изображения. ВНИМАНИЕ! Это настройка из разряда \"на любителя\", и В НОРМЕ ДОЛЖНА БЫТЬ ОТКЛЮЧЕНА. Включайте ТОЛЬКО если вы любитель гранулированной картинки. На высоких значениях дает заметный ореол вокруг объектов.</text>
 	</string>
 	<string id="video_settings_desc_55">
-		<text>    .      ,        .</text>
+		<text>Настройка включает технологию объёмного тумана. Он применяется для имитации мутной воды, дымки в низинах и для тому подобных эффектов.</text>
 	</string>
 	<string id="video_settings_desc_57">
-		<text>   !</text>
+		<text>НЕСОВМЕСТИМ С БЬЮЩИМИСЯ ЛАМПОЧКАМИ!</text>
 	</string>
 	<string id="video_settings_desc_58">
-		<text>   .        FPS   .  , ,  .    ,  FPS  .</text>
+		<text>Настраивает дальность действия солнца. С помощью этой настройки можно выиграть немного FPS в солнечную погоду. Можно уменьшить, например, на половину. Картинка не особенно изменится, а FPS станет повыше.</text>
 	</string>
 	<string id="video_settings_desc_59">
-		<text>     -       ( ~15-20    -     ).           -      4096x4096.      .</text>
+		<text>Чем выше разрешение карт теней - тем более чёткие тени будут вдали (более ~15-20 метров от ГГ - за границей ближнего каскада теней). Чтобы не было заметного ухудшения качества теней на этой границе - рекомендуется выставлять разрешение не ниже 4096x4096. Настройка очень сильно влияет на производительность.</text>
 	</string>
 	<string id="video_settings_desc_60">
-		<text>     .         SSD.</text>
+		<text>Активирует одновременную загрузку текстур несколькими потоками. Может немного сократить время загрузки сейва при наличии SSD.</text>
 	</string>
 	<string id="video_settings_desc_61">
-		<text>             .</text>
+		<text>Имеет смысл увеличивать угол обзора для широких мониторов и в зависимости от индвивидуальных предпочтений.</text>
 	</string>
 	<string id="video_settings_desc_62">
-		<text>  .  ,  0.45   (  ),    ,     0.65   (  ),       .            FOV.</text>
+		<text>Угол обзора игрока. Если значение, например 0.45 и меньше (меньше середины ползунка), то оружие будет ближе, если же стоит значение 0.65 и больше (больше середины ползунка), то оружие при игре будет казаться дальше. Имеет смысл индивидуально настраивать для широких мониторов и в зависимости от FOV.</text>
 	</string>
 	<string id="video_settings_desc_63">
-		<text>    hemi .   ,   . !     \" \",      ,   -     -. ,            /      .</text>
+		<text>Эта настройка регулирует интенсивность hemi освещения. Чем она выше, тем будет светлее. ВНИМАНИЕ! Это настройка из разряда \"на любителя\", и если вы не знаете точно, что делаете - оставьте её на значении по-умолчанию. Повысьте, если в целом игра вам кажется слишком темной и ползунками настройки яркости/контрастности вы не можете достичь желаемого эффекта.</text>
 	</string>
 	<string id="video_settings_desc_64">
-		<text>  ,        3D .   -  .    - FPS   ,   FPS  3D .</text>
+		<text>Эта настройка регулирует, какой по очереди кадр будет рендериться в 3D прицел. По умолчанию - каждый второй. Если её увеличить - FPS в игре повысится, но понизится FPS в 3D прицеле.</text>
 	</string>
 	<string id="video_settings_desc_68">
-		<text>      ,   ,   .    -      ,   FPS   .
-		%c[red] \n      250    .      ,          .</text>
+		<text>Эта настройка регулирует дальность рендеринга динамических объектов, за исключением вертолетов, ворон и машин. Чем больше дальность - тем больше объектов будет обрабатываться рендером, и соответственно FPS может быть меньше.
+		%c[red] \nВ большинстве случаев значение по умолчанию 250 метров должно быть оптимальным. Увеличивать его рекомендуется только в случае, если по каким то причинам нужна бОльшая дальность рендеринга объектов.</text>
 	</string>
 	<string id="video_settings_desc_69">
-		<text>  DLSS  FSR,       3D     . %c[yellow] \n  1   . %c[green] \n : 2. %c[red] \n   2    FPS.</text>
-	</string>
-	<string id="video_settings_desc_70">
-		<text>&#x041C;&#x0430;&#x0441;&#x0448;&#x0442;&#x0430;&#x0431; &#x0440;&#x0435;&#x043D;&#x0434;&#x0435;&#x0440;&#x0438;&#x043D;&#x0433;&#x0430; NVIDIA DLSS. DLAA &#x0438;&#x0441;&#x043F;&#x043E;&#x043B;&#x044C;&#x0437;&#x0443;&#x0435;&#x0442; &#x043D;&#x0430;&#x0442;&#x0438;&#x0432;&#x043D;&#x043E;&#x0435; &#x0440;&#x0430;&#x0437;&#x0440;&#x0435;&#x0448;&#x0435;&#x043D;&#x0438;&#x0435;; &#x043E;&#x0441;&#x0442;&#x0430;&#x043B;&#x044C;&#x043D;&#x044B;&#x0435; &#x0440;&#x0435;&#x0436;&#x0438;&#x043C;&#x044B; &#x0441;&#x043D;&#x0438;&#x0436;&#x0430;&#x044E;&#x0442; &#x0432;&#x043D;&#x0443;&#x0442;&#x0440;&#x0435;&#x043D;&#x043D;&#x0435;&#x0435; &#x0440;&#x0430;&#x0437;&#x0440;&#x0435;&#x0448;&#x0435;&#x043D;&#x0438;&#x0435; &#x0434;&#x043B;&#x044F; &#x043F;&#x043E;&#x0432;&#x044B;&#x0448;&#x0435;&#x043D;&#x0438;&#x044F; FPS. &#x0418;&#x0437;&#x043C;&#x0435;&#x043D;&#x0435;&#x043D;&#x0438;&#x0435; &#x043F;&#x0435;&#x0440;&#x0435;&#x0441;&#x043E;&#x0437;&#x0434;&#x0430;&#x0451;&#x0442; &#x0432;&#x0438;&#x0434;&#x0435;&#x043E;&#x0440;&#x0435;&#x0441;&#x0443;&#x0440;&#x0441;&#x044B;.</text>
-	</string>
-	<string id="video_settings_desc_71">
-		<text>&#x041C;&#x0430;&#x0441;&#x0448;&#x0442;&#x0430;&#x0431; &#x0440;&#x0435;&#x043D;&#x0434;&#x0435;&#x0440;&#x0438;&#x043D;&#x0433;&#x0430; AMD FSR 3. &#x041D;&#x0430;&#x0442;&#x0438;&#x0432;&#x043D;&#x043E;&#x0435; &#x0441;&#x0433;&#x043B;&#x0430;&#x0436;&#x0438;&#x0432;&#x0430;&#x043D;&#x0438;&#x0435; &#x0438;&#x0441;&#x043F;&#x043E;&#x043B;&#x044C;&#x0437;&#x0443;&#x0435;&#x0442; &#x043D;&#x0430;&#x0442;&#x0438;&#x0432;&#x043D;&#x043E;&#x0435; &#x0440;&#x0430;&#x0437;&#x0440;&#x0435;&#x0448;&#x0435;&#x043D;&#x0438;&#x0435;; &#x043E;&#x0441;&#x0442;&#x0430;&#x043B;&#x044C;&#x043D;&#x044B;&#x0435; &#x0440;&#x0435;&#x0436;&#x0438;&#x043C;&#x044B; &#x0441;&#x043D;&#x0438;&#x0436;&#x0430;&#x044E;&#x0442; &#x0432;&#x043D;&#x0443;&#x0442;&#x0440;&#x0435;&#x043D;&#x043D;&#x0435;&#x0435; &#x0440;&#x0430;&#x0437;&#x0440;&#x0435;&#x0448;&#x0435;&#x043D;&#x0438;&#x0435; &#x0434;&#x043B;&#x044F; &#x043F;&#x043E;&#x0432;&#x044B;&#x0448;&#x0435;&#x043D;&#x0438;&#x044F; FPS. &#x0418;&#x0437;&#x043C;&#x0435;&#x043D;&#x0438;&#x0435; &#x043F;&#x0435;&#x0440;&#x0435;&#x0441;&#x043E;&#x0437;&#x0434;&#x0430;&#x0451;&#x0442; &#x0432;&#x0438;&#x0434;&#x0435;&#x043E;&#x0440;&#x0435;&#x0441;&#x0443;&#x0440;&#x0441;&#x044B;.</text>
-	</string>
-
-	<string id="video_settings_desc_72">
-		<text>&#x0412;&#x044B;&#x0431;&#x043E;&#x0440; &#x043C;&#x043E;&#x0434;&#x0435;&#x043B;&#x0438; NVIDIA DLSS. &#x041F;&#x0440;&#x0435;&#x0441;&#x0435;&#x0442;&#x044B;, &#x043A;&#x043E;&#x0442;&#x043E;&#x0440;&#x044B;&#x0435; &#x043D;&#x0435; &#x043F;&#x043E;&#x0434;&#x0434;&#x0435;&#x0440;&#x0436;&#x0438;&#x0432;&#x0430;&#x0435;&#x0442; &#x0437;&#x0430;&#x0433;&#x0440;&#x0443;&#x0436;&#x0435;&#x043D;&#x043D;&#x0430;&#x044F; &#x0431;&#x0438;&#x0431;&#x043B;&#x0438;&#x043E;&#x0442;&#x0435;&#x043A;&#x0430; DLSS, &#x043E;&#x0442;&#x043E;&#x0431;&#x0440;&#x0430;&#x0436;&#x0430;&#x044E;&#x0442;&#x0441;&#x044F; &#x0441;&#x0435;&#x0440;&#x044B;&#x043C;.
-%c[yellow] \nCNN:\nF &#x2014; &#x0443;&#x0441;&#x0442;&#x0430;&#x0440;&#x0435;&#x0432;&#x0448;&#x0430;&#x044F; CNN-&#x043C;&#x043E;&#x0434;&#x0435;&#x043B;&#x044C; (deprecated).
-%c[green] \nTransformer:\nJ &#x2014; &#x043C;&#x0435;&#x043D;&#x044C;&#x0448;&#x0435; &#x0448;&#x043B;&#x0435;&#x0439;&#x0444;&#x043E;&#x0432;, &#x0431;&#x043E;&#x043B;&#x044C;&#x0448;&#x0435; &#x043C;&#x0435;&#x0440;&#x0446;&#x0430;&#x043D;&#x0438;&#x044F; (NVIDIA &#x0440;&#x0435;&#x043A;&#x043E;&#x043C;&#x0435;&#x043D;&#x0434;&#x0443;&#x0435;&#x0442; K).\nK &#x2014; &#x0442;&#x0440;&#x0430;&#x043D;&#x0441;&#x0444;&#x043E;&#x0440;&#x043C;&#x0435;&#x0440; 1-&#x0433;&#x043E; &#x043F;&#x043E;&#x043A;&#x043E;&#x043B;&#x0435;&#x043D;&#x0438;&#x044F;, &#x043F;&#x043E; &#x0443;&#x043C;&#x043E;&#x043B;&#x0447;&#x0430;&#x043D;&#x0438;&#x044E; &#x0434;&#x043B;&#x044F; DLAA / Quality / Balanced.\nL &#x2014; &#x0442;&#x0440;&#x0430;&#x043D;&#x0441;&#x0444;&#x043E;&#x0440;&#x043C;&#x0435;&#x0440; 2-&#x0433;&#x043E; &#x043F;&#x043E;&#x043A;&#x043E;&#x043B;&#x0435;&#x043D;&#x0438;&#x044F;, &#x0447;&#x0435;&#x0442;&#x0447;&#x0435; &#x0438; &#x043C;&#x0435;&#x0434;&#x043B;&#x0435;&#x043D;&#x043D;&#x0435;&#x0435;, &#x043F;&#x043E; &#x0443;&#x043C;&#x043E;&#x043B;&#x0447;&#x0430;&#x043D;&#x0438;&#x044E; &#x0434;&#x043B;&#x044F; Ultra Performance (RTX 40+).\nM &#x2014; &#x0442;&#x0440;&#x0430;&#x043D;&#x0441;&#x0444;&#x043E;&#x0440;&#x043C;&#x0435;&#x0440; 2-&#x0433;&#x043E; &#x043F;&#x043E;&#x043A;&#x043E;&#x043B;&#x0435;&#x043D;&#x0438;&#x044F;, &#x043A;&#x0430;&#x0447;&#x0435;&#x0441;&#x0442;&#x0432;&#x043E; &#x043A;&#x0430;&#x043A; &#x0443; L, &#x043D;&#x043E; &#x0431;&#x044B;&#x0441;&#x0442;&#x0440;&#x0435;&#x0435;, &#x043F;&#x043E; &#x0443;&#x043C;&#x043E;&#x043B;&#x0447;&#x0430;&#x043D;&#x0438;&#x044E; &#x0434;&#x043B;&#x044F; Performance (RTX 40+).
-Default &#x0441;&#x043B;&#x0435;&#x0434;&#x0443;&#x0435;&#x0442; &#x0437;&#x0430; NVIDIA / OTA &#x0434;&#x0440;&#x0430;&#x0439;&#x0432;&#x0435;&#x0440;&#x0430;.</text>
-	</string>
-	<string id="video_settings_desc_73">
-		<text>&#x041F;&#x0440;&#x0438; &#x0432;&#x044B;&#x0431;&#x0440;&#x0430;&#x043D;&#x043D;&#x043E;&#x043C; XeGTAO &#x0432;&#x043A;&#x043B;&#x044E;&#x0447;&#x0430;&#x0435;&#x0442; bent normals &#x0434;&#x043B;&#x044F; &#x0431;&#x043E;&#x043B;&#x0435;&#x0435; &#x0442;&#x043E;&#x0447;&#x043D;&#x043E;&#x0433;&#x043E; diffuse AO. &#x0422;&#x0440;&#x0435;&#x0431;&#x0443;&#x0435;&#x0442; &#x043F;&#x0435;&#x0440;&#x0435;&#x0437;&#x0430;&#x043F;&#x0443;&#x0441;&#x043A;&#x0430; &#x0432;&#x0438;&#x0434;&#x0435;&#x043E; (vid_restart).</text>
+		<text>Если включен DLSS или FSR, эта настройка регулирует масштабирование изображения в 3D прицеле для улучшения его чёткости. %c[yellow] \nПри значении 1 изображение не масштабируется. %c[green] \nОптимальное значение: 2. %c[red] \nПри значениях больше 2 может заметно падать FPS.</text>
 	</string>
 
 </string_table>

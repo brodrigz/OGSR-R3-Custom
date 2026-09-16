@@ -1,60 +1,140 @@
 <?xml version="1.0" encoding="windows-1251" ?>
+
 <string_table>
-	<!-- MAIN MENU -->
-	<!-- First screen (game not loaded) -->
-	<string id="ui_mm_newgame">
-		<text>New game</text>
+	<string id="rus">
+		<text>Russian (русский)</text>
 	</string>
-	<string id="ui_mm_load_game">
-		<text>Load game</text>
+	<string id="eng">
+		<text>English</text>
 	</string>
-	<string id="ui_mm_last_save">
-		<text>Last save</text>
+	
+	
+	
+	
+	<string id="econ_1">
+		<text>Tourist</text>
 	</string>
-	<string id="ui_mm_options_n">
-		<text>Options</text>
+	<string id="econ_2">
+		<text>Explorer</text>
 	</string>
-	<string id="ui_mm_credits">
-		<text>Credits</text>
+	<string id="econ_3">
+		<text>Scavenger</text>
 	</string>
-	<string id="ui_mm_quit2windows">
-		<text>Exit to Windows</text>
+	<string id="econ_4">
+		<text>Survivalist</text>
 	</string>
-	<string id="ui_st_want_to_leave_game_q">
-		<text>Do you really want to leave the ZONE?</text>
+	
+	<string id="gdiff_1">
+		<text>Easy</text>
 	</string>
-	<!-- ќќќќќќ ќќќќќ (ќќќќ ќќќќќќќќќ, ќќќќќќќќќќќ ќќќќќќ) -->
-	<string id="ui_mm_return_game">
-		<text>Return to game</text>
+	<string id="gdiff_2">
+		<text>Medium</text>
 	</string>
-	<string id="ui_mm_quit_game">
-		<text>Quit game</text>
+	<string id="gdiff_3">
+		<text>Tough</text>
 	</string>
-	<!-- ќќќќќќ ќќќќќ (ќќќќќ ќќќќќќ, ќќќќќќќќќќќ ќќќќќќ) -->
-	<string id="st_game_over_press_jump">
-		<text>Press ($$ACTION_JUMP$$) to go to the main menu</text>
+	<string id="gdiff_4">
+		<text>Hardcore</text>
 	</string>
-	<!-- ќќќќ ќќќќќќ ќќќќќќќќќ -->
+	
+	<!-- Difficulty screen -->
 	<string id="ui_mm_novice">
-		<text>Novice</text>
+		<text>[Easy | Tourist]</text>
 	</string>
 	<string id="ui_mm_stalker">
-		<text>Stalker</text>
+		<text>[Medium | Explorer]</text>
 	</string>
 	<string id="ui_mm_veteran">
-		<text>Veteran</text>
+		<text>[Tough | Scavenger]</text>
 	</string>
 	<string id="ui_mm_master">
-		<text>Master</text>
+		<text>[Hardcore | Survivalist]</text>
 	</string>
 	<string id="ui_mm_back">
-		<text>Back</text>
+		<text>BACK</text>
 	</string>
-	<!-- ќќќќ ќќќќќќќќ -->
+	
+	<string id="kb_weapon8">
+		<text>Detector</text>
+	</string>	
+	<string id="quick_use_str_1">
+		<text>$$ACTION_QUICK_SLOT_1$$</text>
+	</string>
+	<string id="quick_use_str_2">
+		<text>$$ACTION_QUICK_SLOT_2$$</text>
+	</string>
+	<string id="quick_use_str_3">
+		<text>$$ACTION_QUICK_SLOT_3$$</text>
+	</string>
+	<string id="quick_use_str_4">
+		<text>$$ACTION_QUICK_SLOT_4$$</text>
+	</string>
+	
+	<string id="kb_quick_slot_1">
+		<text>Quick Slot 1</text>
+	</string>
+	<string id="kb_quick_slot_2">
+		<text>Quick Slot 2</text>
+	</string>
+	<string id="kb_quick_slot_3">
+		<text>Quick Slot 3</text>
+	</string>
+	<string id="kb_quick_slot_4">
+		<text>Quick Slot 4</text>
+	</string>
+
+	<!-- MAIN MENU -->
+	<!-- Initial screen (game not loaded) -->
+	<string id="start_new_game">
+		<text>Do you wish to start a new game?</text>
+	</string>
+	<string id="ui_mm_newgame">
+		<text>NEW GAME</text>
+	</string>
+	<string id="ui_mm_load_game">
+		<text>LOAD GAME</text>
+	</string>
+	<string id="ui_mm_last_save">
+		<text>LAST SAVE</text>
+	</string>
+	<string id="ui_mm_options_n">
+		<text>OPTIONS</text>
+	</string>
+	<string id="ui_mm_legal">
+		<text>LEGAL INFO</text>
+	</string>
+	<string id="ui_mm_legal_statement">
+		<text>Radiophobia 3 is a fan-created modification for S.T.A.L.K.E.R. games, developed and wholly owned by GSC Game World. Radiophobia 3 is not an official product of GSC Game World and is a derivative work based on their S.T.A.L.K.E.R. games. \n \n You can buy the original games here:</text>
+	</string>
+	<string id="ui_mm_credits">
+		<text>CREDITS</text>
+	</string>
+	<string id="ui_mm_quit2windows">
+		<text>EXIT TO WINDOWS</text>
+	</string>
+	<string id="ui_st_want_to_leave_game_q">
+		<text>Do you wish to leave the Zone?</text>
+	</string>
+
+	<!-- Initial screen (game loaded, missing strings) -->
+	<string id="ui_mm_return_game">
+		<text>CONTINUE GAME</text>
+	</string>
+	<string id="ui_mm_quit_game">
+		<text>QUIT GAME</text>
+	</string>
+
+	<!-- Initial screen (after dying, missing strings) -->
+	<string id="st_game_over_press_jump">
+		<text>RETURN TO MENU ($$ACTION_JUMP$$)</text>
+	</string>
+
+	<!-- Loading screen -->
 	<string id="ui_mm_load">
-		<text>Load</text>
+		<text>SELECT</text>
 	</string>
-	<!-- ќќќќќќќќ ќќќќќќ -->
+
+	<!-- misc. loading stuff -->
 	<string id="ui_st_load_game_confirm">
 		<text>Loading the game will result in the loss of unsaved data. Would you like to continue?</text>
 	</string>
@@ -62,51 +142,55 @@
 		<text>The version of the saved game does not match or the saved game is corrupted.</text>
 	</string>	
 	<string id="ui_mm_delete_existing_file_q">
-		<text>Do you really want to delete the file?</text>
+		<text>Do you really wish to delete the file?</text>
 	</string>
 	<string id="ui_load_press_any_key_to_start">
-		<text>Press any key to go to the game</text>
+		<text>PRESS ANY KEY</text>
 	</string>
-	<!-- ќќќќ ќќќќќќќќќќ -->
+
+	<!-- Save menu -->
 	<string id="ui_mm_save_game">
-		<text>Save game</text>
+		<text>SAVE</text>
 	</string>
 	<string id="ui_mm_save">
-		<text>Save</text>
+		<text>SAVE</text>
 	</string>
 	<string id="ui_st_file_exist_owerwrite_q">
-		<text>A file with this name already exists. Overwrite it?</text>
+		<text>A file with this name already exists. Overwrite?</text>
 	</string>
 	<string id="ui_st_file_name_is_empty">
-		<text>The file name is empty</text>
+		<text>File name is empty.</text>
 	</string>
-	<!-- ќќќќќќ ќќ ќќќќќќќќќќ ќќќќ -->
+
+	<!-- Confirmation when aborting game -->
 	<string id="ui_mm_quit_game_message">
 		<text>Are you sure you want to quit the game?</text>
 	</string>
-	<!-- ќќќќќќ ќќ ќќќќќ ќ Windows -->
+
+	<!-- Confirmation when exiting to Windows -->
 	<string id="ui_mm_quit_windows_message">
-		<text>Are you sure you want to exit to Windows?</text>
+		<text>Leave the Zone?</text>
 	</string>
-	<!-- ќќќќќ -->
+
+	<!-- General -->
 	<string id="ui_mm_cancel">
-		<text>Cancel</text>
+		<text>CANCEL</text>
 	</string>
 	<string id="ui_mm_apply">
-		<text>Apply</text>
+		<text>APPLY</text>
 	</string>
 	<string id="ui_mm_delete">
-		<text>Delete</text>
+		<text>DELETE</text>
 	</string>
-	<!-- ќќќќ ќќќќќќќќ -->
+	<!-- Options menu -->
 	<string id="ui_mm_options">
 		<text>OPTIONS</text>
 	</string>
-	<!-- ќќќќќ "ќќќќќ" -->
+	<!-- Video menu -->
 	<string id="ui_mm_video">
 		<text>Video</text>
 	</string>
-	<!-- ќќќќќќќ -->
+	<!-- Presets -->
 	<string id="Minimum">
 		<text>Minimum</text>
 	</string>
@@ -122,9 +206,9 @@
 	<string id="Extreme">
 		<text>Maximum</text>
 	</string>
-	<!-- ќќќќќќќ ќќќќќќќќќ ќќќќќ -->
+	<!-- basic video settings -->
 	<string id="ui_mm_quality_presets">
-		<text>Quality settings</text>
+		<text>Quality Settings</text>
 	</string>
 	<string id="ui_mm_resolution">
 		<text>Resolution</text>
@@ -135,7 +219,6 @@
 	<string id="ui_mm_always_active">
 		<text>Disable pause on Alt + Tab</text>
 	</string>
-
 	<string id="ui_mm_gamma">
 		<text>Gamma</text>
 	</string>
@@ -145,15 +228,14 @@
 	<string id="ui_mm_brightness">
 		<text>Exposure</text>
 	</string>
-
 	<string id="ui_mm_fullscreen">
-		<text>Full screen</text>
+		<text>Full Screen</text>
 	</string>
 	<string id="ui_mm_advanced">
 		<text>Advanced</text>
 	</string>
 
-	<!-- ќќќќ ќќќќќќќќќќќ ќќќќќќќќ ќќќќќ -->
+	<!-- Advanced video option menu -->
 
 	<string id="qt_off">
 		<text>Off</text>
@@ -172,10 +254,10 @@
 	</string>
 
 	<string id="st_opt_extreme">
-		<text>Max. high</text>
+		<text>Maximum</text>
 	</string>
 	<string id="st_opt_ultra">
-		<text>Ultra high</text>
+		<text>Very High</text>
 	</string>
 	<string id="st_opt_high">
 		<text>High</text>
@@ -187,7 +269,7 @@
 		<text>Medium</text>
 	</string>
 	<string id="st_opt_off">
-		<text>disabled</text>
+		<text>Disabled</text>
 	</string>
 
 	<string id="default">
@@ -198,24 +280,24 @@
 	</string>
 
 	<string id="ui_mm_need_restart">
-		<text>Changes will take effect only after game restart</text>
+		<text>Changes will take effect only after game restart.</text>
 	</string>
 	<string id="hint_name_text">
-		<text>Description of settings</text>
+		<text>Option Description</text>
 	</string>
 	<string id="hint_caption_text">
-		<text>Click the 'Advanced' button to change the settings added to OGSR</text>
+		<text>Click the "Advanced" button in the video tab to edit graphical options added in OGSR.\n \n
+		Some settings may require a save reload to take effect.\n \n</text>
 	</string>	
 	<string id="hint_caption_adv_text">
-		<text>Hover your mouse over the option and see its description here. This way you will be able to understand the meaning of unfamiliar settings, as well as new settings added to OGSR</text>
+		<text>Hover the mouse over any option and a description will appear here, providing information on settings as well as new settings added in OGSR.</text>
 	</string>	
 	<string id="ui_mm_simply">
 		<text>Basic</text>
 	</string>
 	<string id="ui_mm_vis_distance">
-		<text>Vision distance</text>
+		<text>Vision Distance</text>
 	</string>
-
 	<string id="ui_mm_ao_mode">
 		<text>AO Mode</text>
 	</string>
@@ -225,66 +307,60 @@
 	<string id="st_ssdo">
 		<text>SSDO</text>
 	</string>
-	<string id="st_xegtao">
-		<text>XeGTAO</text>
-	</string>
 	<string id="ui_mm_ssao_quality">
 		<text>AO Quality</text>
 	</string>
-	<string id="ui_mm_xegtao_bent_normals">
-		<text>XeGTAO bent normals</text>
-	</string>
 
 	<string id="ui_mm_r2_steep_parallax">
-		<text>Steep parallax</text>
+		<text>Steep Parallax</text>
 	</string>	
 	<string id="ui_mm_terrain_parallax">
-		<text>Parallax on terrain textures</text>
+		<text>Terrain Textures Parrallax</text>
 	</string>	
 	<string id="ui_mm_mt_texload">
-		<text>Multi-threaded texture loading</text>
-	</string>
+		<text>Multi-threaded Texture Loading</text>
+	</string>	
 	<string id="ui_mm_dof">
-		<text>Depth of field</text>
+		<text>Depth of Field</text>
 	</string>
 	<string id="ui_mm_r2_reload_dof">
-		<text>The effect of dof when reloading</text>
+		<text>Depth of Field (While Reloading)</text>
 	</string>
 	<string id="ui_mm_r2_zoom_dof">
-		<text>The effect of dof when aiming</text>
+		<text>Depth of Field (While Aiming)</text>
 	</string>
 	<string id="ui_mm_dof_zoom_param">
-		<text>DOF intensity when aiming</text>
+		<text>DOF Intensity (While Aiming)</text>
 	</string>
 	<string id="ui_mm_dof_zoom_far">
-		<text>Far edge dof effect</text>
+		<text>Farthest DOF Distance</text>
 	</string>
 	<string id="ui_mm_dof_zoom_near">
-		<text>Near border dof effect</text>
+		<text>Nearest DOF Distance</text>
 	</string>
 	<string id="ui_mm_r2_dof_quality">
-		<text>Quality of eye focus effect (r2 dof)</text>
+		<text>Quality of Eye Focus Effect</text>
 	</string>
 	<string id="ui_mm_geometry_lod">
-		<text>Detailing of distant objects</text>
+		<text>Object Detail</text>
 	</string>
 	<string id="ui_mm_dyn_opt_dist">
-		<text>Rendering distance of dynamic objects</text>
+		<text>Rendering distance of dynamic Objects</text>
 	</string>
 	<string id="ui_mm_detail_density">
 		<text>Grass Density</text>
 	</string>
 	<string id="ui_mm_detail_distance">
-		<text>Grass draw distance</text>
+		<text>Grass Render Distance</text>
 	</string>	
 	<string id="ui_mm_detail_scale">
-		<text>Grass height</text>
-	</string>	
+		<text>Grass Height</text>
+	</string>
 	<string id="ui_mm_soft_water">
-		<text>Soft water</text>
+		<text>Soft Water</text>
 	</string>
 	<string id="ui_mm_texture_quality">
-		<text>Textures detail</text>
+		<text>Texture Detail</text>
 	</string>
 	<string id="ui_mm_anisotropic">
 		<text>Anisotropic filtering</text>
@@ -295,306 +371,242 @@
 	<string id="st_opt_dlss">
 		<text>NVIDIA DLSS</text>
 	</string>
-	<string id="st_opt_fsr3">
-		<text>AMD FSR3</text>
+	<string id="st_opt_fsr2">
+		<text>AMD FSR2</text>
 	</string>
-	<string id="st_opt_taa">
-		<text>TAA</text>
-	</string>
-	<string id="ui_mm_dlss_quality">
-		<text>DLSS quality</text>
-	</string>
-	<string id="ui_mm_dlss_preset">
-		<text>DLSS preset</text>
-	</string>
-	<string id="ui_mm_fsr3_quality">
-		<text>FSR3 quality</text>
-	</string>
-	<string id="st_opt_dlaa">
-		<text>DLAA</text>
-	</string>
-	<string id="st_opt_dlss_default">
-		<text>Default</text>
-	</string>
-	<string id="st_opt_dlss_f">
-		<text>F (CNN)</text>
-	</string>
-	<string id="st_opt_dlss_j">
-		<text>J (Transformer)</text>
-	</string>
-	<string id="st_opt_dlss_k">
-		<text>K (Transformer)</text>
-	</string>
-	<string id="st_opt_dlss_l">
-		<text>L (Transformer)</text>
-	</string>
-	<string id="st_opt_dlss_m">
-		<text>M (Transformer)</text>
-	</string>
-	<string id="st_opt_dlss_quality">
-		<text>Quality</text>
-	</string>
-	<string id="st_opt_dlss_balanced">
-		<text>Balanced</text>
-	</string>
-	<string id="st_opt_dlss_performance">
-		<text>Performance</text>
-	</string>
-	<string id="st_opt_dlss_ultra_performance">
-		<text>Ultra Performance</text>
-	</string>
-	<string id="st_opt_fsr3_native_aa">
-		<text>Native AA</text>
-	</string>
-	<string id="st_opt_fsr3_quality">
-		<text>Quality</text>
-	</string>
-	<string id="st_opt_fsr3_balanced">
-		<text>Balanced</text>
-	</string>
-	<string id="st_opt_fsr3_performance">
-		<text>Performance</text>
-	</string>
-	<string id="st_opt_fsr3_ultra_performance">
-		<text>Ultra Performance</text>
-	</string>
+	
 	<string id="ui_mm_r2_aa_mode">
-		<text>Antialiasing mode (R2)</text>
-	</string>	
+		<text>Antialiasing Mode</text>
+	</string>
 	<string id="ui_mm_r2_sun">
-		<text>Sun Shadow</text>
+		<text>Sun Shadows</text>
 	</string>
 	<string id="ui_mm_r2_sun_details">
-		<text>Grass Shadow</text>
+		<text>Grass Shadows</text>
 	</string>
 	<string id="ui_mm_r1_detail_textures">
 		<text>Detailed Textures (R1)</text>
 	</string>
 	<string id="ui_mm_r2_detail_bump">
-		<text>Detail bump</text>
+		<text>Detail Bump</text>
 	</string>		
 	<string id="ui_mm_r2_sunshafts">
-		<text>Sun shafts</text>
+		<text>Sun Shafts</text>
 	</string>
 
 	<string id="ui_mm_r2_sunshafts_mode">
-		<text>Sun shafts mode</text>
+		<text>Sunshaft Mode</text>
 	</string>
 	<string id="volumetric">
 		<text>Volumetric</text>
 	</string>
 	<string id="ss_ogse">
-		<text>Screen space (OGSE)</text>
+		<text>Screen Space (OGSE)</text>
 	</string>
 	<string id="ss_manowar">
-		<text>Screen space (Mrmnwar)</text>
+		<text>Screen Space (Mrmnwar)</text>
 	</string>
 	<string id="combined_ogse">
-		<text>Volumetric + Screen space (OGSE)</text>
+		<text>Volumetric + Screen Space (OGSE)</text>
 	</string>
 	<string id="combined_manowar">
-		<text>Volumetric + Screen space (Mrmnwar)</text>
+		<text>Volumetric + Screen Space (Mrmnwar)</text>
 	</string>
 
 	<string id="ui_mm_light_distance">
-		<text>Lighting distance</text>
+		<text>Lighting Distance</text>
 	</string>
 	<string id="ui_mm_npc_torch">
-		<text>NPC volumetric flashlights</text>
+		<text>NPC Volumetric Flashlights</text>
 	</string>
 	<string id="ui_mm_sun_quality">
-		<text>Shadows quality</text>
+		<text>Shadow Quality</text>
 	</string>
 	<string id="ui_mm_vsync">
-		<text>Vertical sync</text>
+		<text>Vertical Sync</text>
 	</string>
 	<string id="ui_mm_60_hz">
-		<text>Frequency 60Hz</text>
+		<text>60Hz Frequency</text>
 	</string>
 	<string id="ui_mm_r2_sun_near">
-		<text>Range of detailed shadows</text>
+		<text>Range of Detailed Shadows</text>
 	</string>
 	<string id="ui_mm_r2_tf_mipbias">
-		<text>Clarity of textures in range</text>
+		<text>Mipmap Bias</text>
 	</string>
 	<string id="ui_mm_r2_gloss_factor">
-		<text>Gloss factor</text>
+		<text>Gloss Factor</text>
 	</string>
 	<string id="ui_mm_r2_true_sun_shadows">
-		<text>r2 True sun shadows</text>
+		<text>Sun Shadows</text>
 	</string>	
 	<string id="ui_mm_r2_soft_shadows">
-		<text>Soft shadow edges</text>
+		<text>Soft Shadow Edges</text>
 	</string>
 	<string id="ui_mm_r2_lights_shadow_fade">
-		<text>Soft lamp shadows</text>
+		<text>Soft Lamp Shadows</text>
 	</string>	
 	<string id="ui_mm_r2_tonemap">
-		<text>High Dynamic Range</text>
+		<text>HDR Tone Mapping</text>
 	</string>
 	<string id="ui_mm_r2_tonemap_middlegray">
-		<text>HDR intensity</text>
+		<text>HDR Intensity</text>
 	</string>
 	<string id="ui_mm_r2_sun_lumscale_amb">
-		<text>Ambient luminosity</text>
+		<text>Ambient Luminosity</text>
 	</string>
 	<string id="ui_mm_r2_sun_lumscale_hemi">
-		<text>Hemi illumination</text>
+		<text>Hemi Illumination</text>
 	</string>
 	<string id="ui_mm_cam_inert">
-		<text>Camera inertion</text>
+		<text>Camera Intertia</text>
 	</string>
 	<string id="ui_mm_r2_lens_flare">
-		<text>Lens flares</text>
+		<text>Lens Flares</text>
 	</string>
 	<string id="ui_mm_r2_lens_dirt">
-		<text>Lens dirt</text>
+		<text>Lens Dirt</text>
 	</string>
 	<string id="ui_mm_r2_rain_drops">
-		<text>Drops on glass</text>
+		<text>Raindrops on Mask</text>
 	</string>	
 	<string id="ui_mm_r2_mask">
-		<text>Helmet</text>
+		<text>Helmet Overlay</text>
 	</string>
 	<string id="ui_mm_r2_visor_refl">
-		<text>Reflections in the helmet</text>
+		<text>Reflections on Helmet</text>
 	</string>	
 	<string id="ui_mm_lens_flare">
-		<text>Lens flares</text>
+		<text>Lens Flares</text>
+	</string>
+	<string id="ui_mm_r2_puddles">
+		<text>Puddles</text>
 	</string>
 	<string id="ui_mm_r3_dynamic_wet_surfaces">
-		<text>Wet surfaces</text>
+		<text>Wet Surfaces</text>
 	</string>
 	<string id="ui_mm_volumetric_light">
-		<text>Volumetric light</text>
+		<text>Volumetric Light</text>
 	</string>
 	<string id="ui_mm_r2_reflections">
 		<text>Reflections</text>
 	</string>
 	<string id="ui_mm_r2_reflections_mode">
-		<text>Reflections mode</text>
+		<text>Reflections Mode</text>
 	</string>
 	<string id="water">
-		<text>on water</text>
+		<text>on Water</text>
 	</string>
 	<string id="ground">
-		<text>on asphalt</text>
+		<text>on Asphalt</text>
 	</string>
 	<string id="both">
-		<text>both water and asphalt</text>
+		<text>Both Water and Asphalt</text>
 	</string>
 	<string id="ui_mm_r2_image_sharpening">
-		<text>Image sharpening</text>
+		<text>Image Sharpening</text>
 	</string>
 	<string id="ui_mm_r3_volumetric_smoke">
-		<text>Volumetric smoke</text>
+		<text>Volumetric Smoke</text>
 	</string>
 	<string id="ui_mm_r4_enable_tessellation">
 		<text>Tessellation</text>
 	</string>
-	<string id="ui_mm_mblur">
-		<text>Motion blur</text>
-	</string>
-	<string id="ui_mm_mblur_param">
-		<text>Motion blur intensity</text>
+	
+	<string id="ui_mm_r__bloodmarks">
+		<text>Блудмарки</text>
 	</string>	
 	<string id="ui_mm_r2_details_opt">
-		<text>Details optimization</text>
+		<text>Оптимизация травы</text>
 	</string>
 	<string id="ui_mm_r2_gbuffer_opt">
-		<text>Shader optimization</text>
+		<text>Оптимизация шейдеров</text>
 	</string>
-	<string id="ui_mm_ssample">
-		<text>Anti-aliasing on static lighting</text>
-	</string>	
 	<string id="ui_mm_msaa">
 		<text>MSAA</text>
 	</string>
-	<string id="ui_mm_fxaa">
-		<text>FXAA</text>
-	</string>
 	<string id="ui_mm_switch_torch">
-		<text>AI uses flashlights</text>
+		<text>Использование фонариков AI</text>
 	</string>
 	<string id="ui_mm_r2_sun_near_border">
-		<text>Angle of shadow rendering</text>
+		<text>Угол отрисовки теней</text>
 	</string>
 		<string id="ui_mm_r2_sun_lumscale">
-		<text>Sunlight luminosity</text>
+		<text>Sun Brightness</text>
 	</string>
 	<string id="ui_mm_r_aa_mode">
-		<text>Anti-aliasing</text>
+		<text>Anti-Aliasing</text>
 	</string>
 	<string id="ui_mm_cas">
-		<text>CAS (Sharpness after AA)</text>
+		<text>Sharpness After Anti-Aliasing</text>
 	</string>
 	<string id="ui_mm_r2_aa">
 		<text>Antialiasing (R2)</text>
 	</string>	
 	<string id="ui_mm_r2_gi">
-		<text>Global illumination</text>
+		<text>Глобальное освещение (экспериментально)</text>
 	</string>
 	<string id="ui_mm_particles_distance">
-		<text>Particles distance</text>
+		<text>Дальность партиклов</text>
 	</string>
 	<string id="ui_mm_sun_shafts">
-		<text>The sun's rays</text>
+		<text>Солнечные лучи</text>
 	</string>
 	<string id="ui_mm_r2_float32">
-		<text>Brightness of fire pixels</text>
+		<text>Освещение Кука-Торренса</text>
 	</string>
 	<string id="ui_mm_r2_dof">
-		<text>r2 Dynamic dof</text>
+		<text>Динамическая глубина поля зрения</text>
 	</string>
 
 	<string id="nofpslock">
-		<text>No fps limit</text>
+		<text>Unlimited</text>
 	</string>
 	<string id="fpslock60">
-		<text>60 fps limit</text>
+		<text>60 FPS</text>
 	</string>
 	<string id="fpslock120">
-		<text>120 fps limit</text>
+		<text>120 FPS</text>
 	</string>
 	<string id="fpslock144">
-		<text>144 fps limit</text>
+		<text>144 FPS</text>
 	</string>
 	<string id="fpslock240">
-		<text>240 fps limit</text>
+		<text>240 FPS</text>
 	</string>
 
 	<string id="ui_mm_renderer">
-		<text>Render</text>
+		<text>Renderer</text>
 	</string>
 	<string id="renderer_r1">
-		<text>Static lighting</text>
+		<text>Static Lighting</text>
 	</string>
 	<string id="renderer_r2">
-		<text>Full dynamic lighting r2</text>
+		<text>Full Dynamic Lighting</text>
 	</string>
 	<string id="renderer_r2.5">
-		<text>Improved full dynamic lighting r2.5</text>
+		<text>Enhanced Full Dynamic Lighting</text>
 	</string>
 	<string id="renderer_r2a">
-		<text>Objects dynamic lighting r2a</text>
+		<text>Objects Dynamic Lighting</text>
 	</string>
 	<string id="renderer_r3">
-		<text>Enhanced Full Dynamic Lighting (DX10)</text>
+		<text>Enhanced full Dyn. Lighting (DX10)</text>
 	</string>
 	<string id="renderer_r4">
-		<text>Enhanced Full Dynamic Lighting (DX11)</text>
+		<text>Enhanced Full Dyn. Lighting (DX11)</text>
 	</string>
 
 	<string id="ui_mm_r2_actor_shadow">
-		<text>Player Shadow</text>
+		<text>Actor Shadow</text>
 	</string>
 
 	<string id="ui_mm_r2_glows_use">
-		<text>Glow-effect of lamps</text>
+		<text>Glow-еффект ламп</text>
 	</string>
 
 	<string id="ui_mm_r2_sun_limit">
-		<text>Range of the sun</text>
+		<text>Дальность действия солнца</text>
 	</string>
 
 	<string id="ui_mm_r__smap_size">
@@ -602,43 +614,44 @@
 	</string>
 
 	<string id="r_sslr_enable">
-		<text>Puddles and reflections</text>
+		<text>Water &amp; Puddle Reflections</text>
 	</string>
 
 	<string id="ui_mm_rs_mt_texload">
-		<text>Multithreaded texture loading</text>
+		<text>Multi-threaded Texture Loading</text>
 	</string>
 
 	<string id="ui_mm_3d_scopes_fps_factor">
-		<text>FPS in 3D Scopes</text>
+		<text>3D Scopes FPS</text>
 	</string>
 
 	<string id="ui_mm_fov">
-		<text>Field of View (FOV)</text>
+		<text>Field of View</text>
 	</string>
 
 	<string id="ui_mm_hud_fov">
-		<text>HUD Field of View (HudFOV)</text>
+		<text>Field of View (HUD)</text>
 	</string>
 
 	<string id="ui_mm_3dss_scale_factor">
-		<text>Image upscaling in 3D scopes</text>
+		<text>Image Upscaling in 3D Scopes</text>
 	</string>
 
 	<string id="ui_mm_ambient">
+		<!-- <text>Activate ambient music (requires re-entering level)</text> -->
 		<text>Ambient Music</text>
 	</string>
 
 	<string id="ui_mm_ammunition_on_belt">
-		<text>Ammunition on belt (not recommended)</text>
+		<text>Activate ammo usage from belt only</text>
 	</string>
 
-	<!-- ќќќќ "ќќќќ" -->
+	<!-- Sound menu -->
 	<string id="ui_mm_sound">
-		<text>Sound</text>
+		<text>Sound &amp; Text</text>
 	</string>
 	<string id="ui_mm_music_volume">
-		<text>Music volume</text>
+		<text>Music Volume</text>
 	</string>
 	<string id="ui_mm_master_volume">
 		<text>SFX Volume</text>
@@ -649,11 +662,11 @@
 	<string id="ui_mm_eax">
 		<text>EAX</text>
 	</string>
-	<!-- ќќќќќќќќќќ ќќќќќќќќќ ќќќќќ -->
+	<!-- inactive sound options -->
 	<string id="ui_mm_sound_quality">
 		<text>Sound quality</text>
 	</string>
-	<!-- ќќќќ "ќќќќ" -->
+	<!-- Game menu -->
 	<string id="ui_mm_gameplay">
 		<text>Game</text>
 	</string>
@@ -670,81 +683,91 @@
 		<text>Veteran</text>
 	</string>
 	<string id="gd_master">
-		<text>Master</text>
+		<text>Legend</text>
 	</string>
 	<string id="ui_mm_keypress_on_start">
-		<text>Require key press upon loading the game</text>
+		<text>Keypress After Loading Save</text>
 	</string>
 	<string id="ui_mm_show_crosshair">
-		<text>Show crosshair</text>
+		<text>Show Crosshair</text>
 	</string>
 	<string id="ui_mm_dyn_crosshair">
-		<text>Dynamic crosshair</text>
+		<text>Dynamic Crosshair</text>
 	</string>
-	<string id="ui_mm_lock_reload">
-		<text>Ban on overloading while running</text>
+	<string id="ui_mm_show_weapon">
+		<text>Show Weapon</text>
 	</string>
 	<string id="ui_mm_crosshair_distance">
-		<text>Crosshair target distance</text>
+		<text>Crosshair Target Distance</text>
 	</string>
 	<string id="ui_mm_tips">
 		<text>NPC Identification</text>
 	</string>
 	<string id="ui_mm_build_crosshair">
-		<text>Build crosshair (round)</text>
+		<text>Round Build-style Cursor</text>
 	</string>
 	<string id="ui_mm_small_font">
-		<text>Reduced font size (requires game restart)</text>
+		<text>Small Font (requires restart)</text>
 	</string>
+	
 	<string id="ui_mm_3d_pda">
 		<text>3D PDA</text>
 	</string>
 	<string id="ui_mm_3d_scopes">
 		<text>3D Scopes</text>
-	</string>	
-	<string id="ui_mm_aim_toggle">
-		<text>Aiming by pressing/holding</text>
-	</string>	
+	</string>
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+		
 	<string id="ui_mm_switch_slot">
-		<text>Switching the slot using the mouse wheel</text>
+		<text>Slot Switch Using Mouse Wheel</text>
 	</string>
 	<string id="ui_mm_font_scale_x">
-		<text>Fonts width</text>
+		<text>Fonts Width</text>
 	</string>
 	<string id="ui_mm_font_scale_y">
-		<text>Fonts height</text>
+		<text>Fonts Height</text>
 	</string>
-	<string id="ui_mm_exclusive_input">
-		<text>Exclusive Input (blocks Windows hotkeys)</text>
-	</string>
-	<string id="ui_st_weapon_bobbing">
-		<text>Weapon bobbing</text>
-	</string>
+	
 
-	<!-- ќќќќ "ќќќќќќќќќќ" -->
+	<!-- Controls menu -->
 	<string id="ui_mm_controls">
 		<text>Controls</text>
 	</string>
 	<string id="ui_mm_mouse_sense">
-		<text>Mouse sensitivity</text>
+		<text>Mouse Sensitivity</text>
 	</string>
 	<string id="ui_mm_invert_mouse">
-		<text>Invert mouse</text>
+		<text>Invert Mouse</text>
 	</string>
 	<string id="ui_mm_keyboard_setup">
-		<text>Keyboard setup</text>
+		<text>Keyboard Setup</text>
 	</string>
 	<string id="ui_mm_action">
-		<text>Action</text>
+		<text>action</text>
 	</string>
 	<string id="ui_mm_key">
-		<text>Button</text>
+		<text>button</text>
 	</string>
 	<string id="ui_mm_default">
-		<text>By default</text>
+		<text>Default</text>
 	</string>
 
-
+	<string id="ui_mm_mblur">
+		<text>Motion blur</text>
+	</string>
+	<string id="ui_mm_mblur_param">
+		<text>Motion blur intensity</text>
+	</string>
 	<string id="video_settings_name_1">
 		<text>Motion blur - r2_mblur_enable</text>
 	</string>
@@ -752,7 +775,7 @@
 		<text>Visibility range-rs_vis_distance</text>
 	</string>
 	<string id="video_settings_name_3">
-		<text>Detailing of distant objects - r__geometry_lod</text>
+		<text>Object detail - r__geometry_lod</text>
 	</string>
 	<string id="video_settings_name_4">
 		<text>The density of the grass - r__detail_density</text>
@@ -830,7 +853,7 @@
 		<text>Volume beams - r2_sun_shafts</text>
 	</string>
 	<string id="ui_mm_r2_sun_quality">
-		<text>Soft shadows from the sun</text>
+		<text>Soft Sun Shadows</text>
 	</string>
 	<string id="video_settings_name_30">
 		<text>Volume ray type - r2_sunshafts_mode</text>
@@ -886,6 +909,9 @@
 	<string id="video_settings_name_47">
 		<text>Drops on glass - r2_rain_drops</text>
 	</string>
+	<string id="video_settings_name_48">
+		<text>Dynamic puddles - r2_puddles</text>
+	</string>
 	<string id="video_settings_name_49">
 		<text>Wet surfaces - r3_dynamic_wet_surfaces</text>
 	</string>
@@ -893,7 +919,7 @@
 		<text>Surround light - r2_volumetric_lights</text>
 	</string>
 	<string id="video_settings_name_51">
-		<text>Puddles and reflections - r_sslr_enable</text>
+		<text>Reflections in water and puddles - r_sslr_enable</text>
 	</string>
 	<string id="video_settings_name_52">
 		<text>Tesselation - r4_enable_tessellation</text>
@@ -934,6 +960,7 @@
 	<string id="video_settings_name_64">
 		<text>FPS in 3D Scopes - g_3d_scopes_fps_factor</text>
 	</string>
+
 	<string id="video_settings_name_65">
 		<text>Reflections on the edges of the helmet - r2_visor_refl</text>
 	</string>
@@ -948,18 +975,6 @@
 	</string>
 	<string id="video_settings_name_69">
 		<text>Image upscaling in 3D scopes - r_3dss_scale_factor</text>
-	</string>
-	<string id="video_settings_name_70">
-		<text>DLSS quality - r_aa_dlss_quality</text>
-	</string>
-	<string id="video_settings_name_71">
-		<text>FSR3 quality - r_aa_fsr3_quality</text>
-	</string>
-	<string id="video_settings_name_72">
-		<text>DLSS preset - r_aa_dlss_preset</text>
-	</string>
-	<string id="video_settings_name_73">
-		<text>XeGTAO bent normals - r_xegtao_bent_normals</text>
 	</string>
 
 	<string id="video_settings_desc_1">
@@ -996,7 +1011,7 @@
 		<text>This setting enables objects to cast shadows from sunlight. On weak PCs, disabling this setting can give a serious speed boost.</text>
 	</string>
 	<string id="video_settings_desc_12">
-		<text>This setting enables the grass to cast shadows from sunlight and other dynamic lighting sources.</text>
+		<text>This setting enables the grass to cast shadows from sunlight and other dynamic lighting sources. Now this setting works - we fixed it. ATTENTION! Setting up just sucks the hell out of performance. Don't use it with a large grass rendering radius or high grass density!</text>
 	</string>
 	<string id="video_settings_desc_13">
 		<text>This setting adjusts the accuracy of the lighting calculation as the distance to them increases. The higher it is, the more detailed the shadows from dynamic light sources will look at a distance.</text>
@@ -1017,10 +1032,10 @@
 		<text>This setting enables shader smoothing on dynamic lighting.</text>
 	</string>
 	<string id="video_settings_desc_19">
-        <text>This setting switches the anti-aliasing type. Available options are NVIDIA DLSS (Deep learning super sampling), AMD FSR3 (FidelityFX Super Resolution 3), TAA (Temporal anti-aliasing), SMAA (Subpixel Morphological AntiAliasing). \n \nNVIDIA DLSS (Deep Learning Super Sampling) is a revolutionary AI-powered rendering technology that improves graphics quality by using specialized tensor cores in GeForce RTX graphics cards. The technology became available in desktop and mobile graphics cards with the arrival of the RTX20 series. Anti-aliasing using DLSS produces results superior in quality to MSAA 8x, without causing performance drops. \n \nFSR is a less demanding and lower quality analogue from AMD. FSR 3.0 is supported by all AMD graphics cards from the RX 590 and newer (Polaris architecture and above), as well as NVIDIA graphics cards from the GTX 10 series (e.g. GTX 1060) and newer.</text>
+        <text>This setting switches the anti-aliasing type. Available options are NVIDIA DLSS (Deep learning super sampling), AMD FSR2 (FidelityFX Super Resolution 2), TAA (Temporal anti-aliasing), SMAA (Subpixel Morphological AntiAliasing). \n \nNVIDIA DLSS (Deep Learning Super Sampling) is a revolutionary AI-powered rendering technology that improves graphics quality by using specialized tensor cores in GeForce RTX graphics cards. The technology became available in desktop and mobile graphics cards with the arrival of the RTX20 series. Anti-aliasing using DLSS produces results superior in quality to MSAA 8x, without causing performance drops. \n \nFSR is a less demanding and lower quality analogue from AMD. FSR 2.0 is supported by all AMD video cards from the RX 400 series and newer, as well as NVIDIA video cards from the 1000 series.</text>
 	</string>
 	<string id="video_settings_desc_20">
-		<text>Contrast Adaptive Sharpening (CAS) is an AMD technology from the FidelityFX SDK. It's often used in conjunction with uscaling technologies (such as AMD FSR) to compensate for the slight blurring that occurs when rendering at low resolutions. The higher the slider value, the sharper the anti-aliasing will be. At the minimum slider value (0), CAS is not applied at all.</text>
+		<text>""</text>
 	</string>
 	<string id="video_settings_desc_21">
 		<text>This setting adjusts the degree of reflection of light on shiny and matte surfaces such as metal, leather, wood, etc. This is an"amateur" setting, and if you don't know exactly what you're doing, leave it at the default value. The further the slider is, the stronger the reflection effect, but do not overdo it - at large values, the surfaces begin to look like they are covered in plastic.</text>
@@ -1032,7 +1047,7 @@
 		<text>This setting adjusts the viewing angle at which shadows are normally drawn. If this angle is not sufficient, extra triangular shadows will be constantly visible at the edges of the screen. It is recommended to keep the setting at maximum.</text>
 	</string>
 	<string id="video_settings_desc_24">
-		<text>Enables the parallax effect on terrain with puddles in depressions. %c[red] For proper work, you'll need to adjust the terrain settings, textures, and their bumps, and adjust the ssfx_terrain_offset for each texture. For details, see the OGSR WIKI.</text>
+		<text>This effect may not look good on all ground textures because correct heightmaps are required for all ground textures.</text>
 	</string>
 	<string id="video_settings_desc_25">
 		<text>This setting enables the HDR Tone mapping effect. It improves the image by accentuating details that would not be sufficiently contrasting without this effect - small elements, edges, while not making the image excessively bright.</text>
@@ -1103,6 +1118,9 @@
 	<string id="video_settings_desc_47">
 		<text>This setting includes the appearance of drops on the glass of helmets and gas masks during rain.</text>
 	</string>
+	<string id="video_settings_desc_48">
+		<text>The setting includes dynamic puddles that appear during rain.</text>
+	</string>
 	<string id="video_settings_desc_49">
 		<text>The setting enables surfaces to get wet when it rains.</text>
 	</string>
@@ -1110,7 +1128,7 @@
 		<text>The setting includes surround light for some lamps.</text>
 	</string>
 	<string id="video_settings_desc_51">
-		<text>This setting enables puddles and reflections in puddles during rain.</text>
+		<text>This setting enables reflections on the water and in puddles during rain.</text>
 	</string>
 	<string id="video_settings_desc_52">
 		<text>Tessellation increases the quality of low-polygonal models of NPS, monsters, hands of the actor, animated objects (bottles, etc.). The angular models become more smoothed.</text>
@@ -1153,22 +1171,7 @@
 		%c[red] \nIn most cases, the default value of 250 meters should be optimal. It is recommended to increase it only if for some reason a greater rendering range of objects is needed.</text>
 	</string>
 	<string id="video_settings_desc_69">
-		<text>If DLSS or FSR is enabled, this setting adjusts the scaling of the image in the 3D scopes to improve its clarity. %c[yellow] \nWhen set to 1, the image is not scaled. %c[green] \nOptimal value: 2. %c[red] \nValues ??greater than 2 may noticeably reduce FPS.</text>
-	</string>
-	<string id="video_settings_desc_70">
-		<text>Sets the NVIDIA DLSS internal render scale. DLAA renders at native resolution for maximum image quality. Quality, Balanced, Performance and Ultra Performance render at progressively lower internal resolutions to gain FPS. Apply video settings or run vid_restart after changing this option.</text>
-	</string>
-	<string id="video_settings_desc_71">
-		<text>Sets the AMD FSR3 internal render scale. Native AA renders at native resolution for maximum image quality. Quality, Balanced, Performance and Ultra Performance render at progressively lower internal resolutions to gain FPS. Apply video settings or run vid_restart after changing this option.</text>
-	</string>
-	<string id="video_settings_desc_72">
-		<text>Selects the NVIDIA DLSS model. Presets not supported by the loaded DLSS library are grayed out.
-%c[yellow] \nCNN:\nF - legacy CNN model (deprecated).
-%c[green] \nTransformer:\nJ - less ghosting, more flicker (NVIDIA recommends K).\nK - 1st-gen transformer, default for DLAA / Quality / Balanced.\nL - 2nd-gen transformer, sharper and slower, default for Ultra Performance (RTX 40+).\nM - 2nd-gen transformer, similar to L but faster, default for Performance (RTX 40+).
-Default follows NVIDIA / driver OTA.</text>
-	</string>
-	<string id="video_settings_desc_73">
-		<text>When XeGTAO is selected, enables bent normals for more accurate diffuse ambient occlusion shading. Requires a video restart (vid_restart).</text>
+		<text>If DLSS or FSR is enabled, this setting adjusts the scaling of the image in the 3D scopes to improve its clarity. %c[yellow] \nWhen set to 1, the image is not scaled. %c[green] \nOptimal value: 2. %c[red] \nValues greater than 2 may noticeably reduce FPS.</text>
 	</string>
 
 </string_table>

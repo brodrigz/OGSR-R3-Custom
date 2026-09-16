@@ -1,0 +1,702 @@
+-- -*- mode: lua; coding: windows-1251-dos -*-
+-- Horizontal heading compass. Styles: 0=Stalker 2, 1=Classic.
+-- Position: 0=bottom, 1=top, 2=off. Markers come from minimap spots.
+
+local SCREEN_CENTER = 512
+local SCREEN_WIDTH = 1024
+
+local STYLES = {
+	[0] = {
+		node = "compass_s2",
+		has_degrees = false,
+		compass_width = 720,
+		compass_inset = 0,
+		default_y = 721,
+		top_y = -6,
+		marker_offset = 18,
+	},
+	[1] = {
+		node = "compass_legacy",
+		has_degrees = true,
+		compass_width = 600,
+		compass_inset = 5,
+		default_y = 691,
+		top_y = -10,
+		marker_offset = 25,
+	},
+}
+
+local CARDINAL_TEX_W = 4096
+local VISIBLE_DEGREES = 240
+local PX_PER_DEG = CARDINAL_TEX_W / (360 + VISIBLE_DEGREES)
+local CARDINAL_W = VISIBLE_DEGREES * PX_PER_DEG
+local CARDINAL_H = 100
+local RAD_TO_PX = (180 / math.pi) * PX_PER_DEG
+local FULL_TURN = 360 * PX_PER_DEG
+
+local COMPASS_BASE_WIDTH = 360
+local MARKER_SPREAD = 220
+local MARKER_CLAMP = 300
+local MARKER_LERP = 0.1
+local MARKER_LERP_FAST = 0.5
+local MARKER_JUMP = 100
+local LOOK_TOLERANCE = 10
+
+local TICK_VISIBILITY = 250
+local TICK_MARKERS = 200
+local CREATE_BUDGET = 6
+local FADE_DISTANCE = 10
+local DEFAULT_RANGE = 150
+
+local SHADOW_ALPHA = 140
+local SHADOW_OFF = 0.5
+
+local HUD_DRAW = 16 -- HUD_Flags::HUD_DRAW
+
+local abs, atan2, floor, min, max = math.abs, math.atan2, math.floor, math.min, math.max
+
+local compass_wnd = nil
+local applied_style = 0
+local applied_pos = 2
+local applied_scale = 1
+local next_sync = 0
+
+local spread = MARKER_SPREAD
+local clamp_px = MARKER_CLAMP
+local look = LOOK_TOLERANCE
+
+local scratch_dir = vector()
+local scratch_cross = vector()
+
+local function lerp(a, b, t)
+	return a + (b - a) * t
+end
+
+local function set_scale(k)
+	spread = MARKER_SPREAD * k
+	clamp_px = MARKER_CLAMP * k
+	look = LOOK_TOLERANCE * k
+end
+
+local function calc_position(world_pos, actor_pos, actor_dir, prev_x)
+	scratch_dir:set(world_pos.x, actor_pos.y, world_pos.z)
+	scratch_dir:sub(actor_pos)
+
+	if scratch_dir:magnitude() < 0.001 then
+		return prev_x or SCREEN_CENTER
+	end
+
+	scratch_dir:normalize()
+
+	local dot = scratch_dir:dotproduct(actor_dir)
+	scratch_cross:crossproduct(scratch_dir, actor_dir)
+
+	local side = (scratch_cross.y < 0) and 1 or -1
+	local x = SCREEN_CENTER + side * (1 - dot) * spread
+
+	local factor = MARKER_LERP
+	if prev_x and abs(x - prev_x) > MARKER_JUMP then
+		factor = MARKER_LERP_FAST
+	end
+
+	x = lerp(prev_x or SCREEN_CENTER, x, factor)
+
+	if x < SCREEN_CENTER - clamp_px then return SCREEN_CENTER - clamp_px end
+	if x > SCREEN_CENTER + clamp_px then return SCREEN_CENTER + clamp_px end
+	return x
+end
+
+local function is_looking_at(x)
+	return x and abs(x - SCREEN_CENTER) <= look
+end
+
+-- CCC_Token is not readable via get_integer (that always returns 0).
+local TOKEN_STYLES = {
+	st_compass_stalker2 = 0,
+	st_compass_classic = 1,
+}
+
+local TOKEN_POS = {
+	st_compass_pos_bottom = 0,
+	st_compass_pos_top = 1,
+	st_compass_off = 2,
+}
+
+local function current_style()
+	local ok, tok = pcall(function()
+		return get_console():get_token("g_tactical_compass")
+	end)
+	if not ok or tok == nil or tok == "" then
+		return 1
+	end
+	if tok == "st_compass_off" then
+		return 0
+	end
+	local id = TOKEN_STYLES[tok]
+	if id ~= nil then return id end
+	id = tonumber(tok)
+	if id == 0 or id == 1 then return id end
+	return 1
+end
+
+local function current_pos()
+	local ok, tok = pcall(function()
+		return get_console():get_token("g_tactical_compass_pos")
+	end)
+	if not ok or tok == nil or tok == "" then
+		-- Old style cvar stored Off as the third token.
+		local sok, stok = pcall(function()
+			return get_console():get_token("g_tactical_compass")
+		end)
+		if sok and stok == "st_compass_off" then
+			return 2
+		end
+		return 0
+	end
+	local id = TOKEN_POS[tok]
+	if id ~= nil then return id end
+	id = tonumber(tok)
+	if id == 0 or id == 1 or id == 2 then return id end
+	return 0
+end
+
+local function current_float(cmd, fallback)
+	local ok, v = pcall(function()
+		return get_console():get_float(cmd)
+	end)
+	if not ok or v == nil then
+		return fallback
+	end
+	return v
+end
+
+local function current_range()
+	return current_float("g_tactical_compass_range", DEFAULT_RANGE)
+end
+
+local function current_hud_scale()
+	local v = current_float("g_tactical_compass_scale", 1)
+	if v < 0.5 then return 0.5 end
+	if v > 2 then return 2 end
+	return v
+end
+
+local function current_hud_x()
+	return current_float("g_tactical_compass_x", 0)
+end
+
+local function current_hud_y()
+	return current_float("g_tactical_compass_y", 0)
+end
+
+local function scale_child(widget, k)
+	if not widget then return end
+	local pos = widget:GetWndPos()
+	widget:SetWndSize(widget:GetWidth() * k, widget:GetHeight() * k)
+	widget:SetWndPos(pos.x * k, pos.y * k)
+end
+
+local function skip_spot_type(t)
+	if not t then return true end
+	t = tostring(t)
+	if t == "level_changer" then return true end
+	if string.find(t, "level_changer", 1, true) then return true end
+	if string.find(t, "lchanger_", 1, true) then return true end
+	-- Minimap hides hostiles with 0x0 pips; keep them off the compass too.
+	if t == "enemy_location" or t == "enemy_wounded_location" then return true end
+	return false
+end
+
+-- Relation spots are nested auto_statics (3–4px ui_minimap_point). The parent
+-- has no texture for the compass to copy, and stretching those dots (or the
+-- ui\ui_common atlas) is unusable. Use the HUD intdot and tint by relation.
+local NPC_ICON = "ui_catsy_marker_intdot"
+local NPC_SIZE = 12
+local NPC_TINT = {
+	friend_location = {50, 255, 0},
+	neutral_location = {255, 200, 0},
+	deadbody_location = {168, 168, 168},
+	friend_wounded_location = {50, 255, 0},
+	neutral_wounded_location = {255, 200, 0},
+}
+
+local function apply_npc_icon(entry, spot)
+	local rgb = NPC_TINT[tostring(spot.type)]
+	if not rgb then
+		entry.rgb = nil
+		entry.draw_texture = nil
+		return
+	end
+	entry.rgb = rgb
+	entry.draw_texture = NPC_ICON
+	entry.draw_w = NPC_SIZE
+	entry.draw_h = NPC_SIZE
+end
+
+local function marker_alpha(distance, range)
+	if distance <= range then return 255 end
+	if distance >= range + FADE_DISTANCE then return 0 end
+	return floor(255 - ((distance - range) / FADE_DISTANCE) * 255)
+end
+
+local function hud_shown()
+	if not level or not level.present or not level.present() then
+		return false
+	end
+	if device():is_paused() then
+		return false
+	end
+	if not level.game_indicators_shown() then
+		return false
+	end
+	local ok, flags = pcall(level.get_hud_flags)
+	if not ok or not flags then
+		return true
+	end
+	return flags:test(HUD_DRAW)
+end
+
+class "TCHud" (CUIScriptWnd)
+
+function TCHud:__init(style_id)
+	super()
+	self.style_id = style_id
+	self:InitControls()
+end
+
+function TCHud:InitControls()
+	self:SetAutoDelete(true)
+
+	local style = STYLES[self.style_id]
+	self.style = style
+	self.size_k = current_hud_scale()
+	self.compass_width = style.compass_width * self.size_k
+	self.marker_offset = style.marker_offset * self.size_k
+	self.compass_x = SCREEN_CENTER - (style.compass_inset * self.size_k + self.compass_width / 2) + current_hud_x()
+	self.compass_y = ((current_pos() == 1) and style.top_y or style.default_y) + current_hud_y()
+
+	set_scale(self.compass_width / COMPASS_BASE_WIDTH)
+
+	self.tmr_visibility = 0
+	self.tmr_markers = 0
+	self.visible = nil
+	self.last_px = nil
+	self.last_degrees = nil
+
+	self.dir = vector()
+	self.wpos = vector()
+
+	self.pool = {}
+	self.active = {}
+	self.active_count = 0
+	self.active_max = 0
+
+	self.xml = CScriptXmlInit()
+	self.xml:ParseFile("ui_compass.xml")
+
+	local node = style.node
+	self.compass = self.xml:InitStatic(node, self)
+
+	if style.has_degrees then
+		self.degrees_outline = self:InitTextOutline(node .. ":line_compass_radian")
+		self.degrees = self.xml:InitStatic(node .. ":line_compass_radian", self.compass)
+	end
+
+	self.cardinal_shadow = self:InitShadow(node .. ":cardinal_dir")
+	self.cardinal_dir = self.xml:InitStatic(node .. ":cardinal_dir", self.compass)
+
+	self.frame_shadow = self:InitShadow(node .. ":static_frame")
+	self.static_frame = self.xml:InitStatic(node .. ":static_frame", self.compass)
+
+	-- heading="1" is for map-spot rotation. On 16:9 it squashes the strip even at 0°.
+	self:DisableHeading(self.compass)
+	self:DisableHeading(self.cardinal_shadow)
+	self:DisableHeading(self.cardinal_dir)
+	self:DisableHeading(self.frame_shadow)
+	self:DisableHeading(self.static_frame)
+	if self.degrees then
+		self:DisableHeading(self.degrees)
+	end
+	if self.degrees_outline then
+		for i = 1, #self.degrees_outline do
+			self:DisableHeading(self.degrees_outline[i])
+		end
+	end
+
+	if abs(self.size_k - 1) > 0.001 then
+		self.compass:SetWndSize(self.compass:GetWidth() * self.size_k, self.compass:GetHeight() * self.size_k)
+		if self.degrees_outline then
+			for i = 1, #self.degrees_outline do
+				scale_child(self.degrees_outline[i], self.size_k)
+			end
+		end
+		scale_child(self.degrees, self.size_k)
+		scale_child(self.cardinal_shadow, self.size_k)
+		scale_child(self.cardinal_dir, self.size_k)
+		scale_child(self.frame_shadow, self.size_k)
+		scale_child(self.static_frame, self.size_k)
+	end
+
+	self.markers = CUIStatic()
+	self.markers:SetAutoDelete(true)
+	self.markers:Init(0, 0, SCREEN_WIDTH, 768)
+	self:AttachChild(self.markers)
+
+	local band = self.compass_width * 0.75
+	local margin = (SCREEN_WIDTH - band) / 2
+	self.band_left = margin + band
+	self.band_right = margin
+
+	self.compass:SetWndPos(self.compass_x, self.compass_y)
+end
+
+function TCHud:ApplyLayout()
+	local x = SCREEN_CENTER - (self.style.compass_inset * self.size_k + self.compass_width / 2) + current_hud_x()
+	local y = ((current_pos() == 1) and self.style.top_y or self.style.default_y) + current_hud_y()
+	if x == self.compass_x and y == self.compass_y then return end
+	self.compass_x = x
+	self.compass_y = y
+	self.compass:SetWndPos(x, y)
+end
+
+function TCHud:DisableHeading(widget)
+	if widget and widget.EnableHeading then
+		widget:EnableHeading(false)
+	end
+end
+
+function TCHud:InitTextOutline(path)
+	local offsets = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}, {-1, -1}, {1, -1}, {-1, 1}, {1, 1}}
+	local copies = {}
+	for i = 1, #offsets do
+		local shadow = self.xml:InitStatic(path, self.compass)
+		if shadow then
+			local pos = shadow:GetWndPos()
+			shadow:SetWndPos(pos.x + offsets[i][1], pos.y + offsets[i][2])
+			shadow:SetTextColor(255, 0, 0, 0)
+			copies[#copies + 1] = shadow
+		end
+	end
+	return copies
+end
+
+function TCHud:InitShadow(path)
+	local shadow = self.xml:InitStatic(path, self.compass)
+	if not shadow then return nil end
+
+	local pos = shadow:GetWndPos()
+	shadow:SetWndPos(pos.x + SHADOW_OFF, pos.y + SHADOW_OFF)
+	shadow:SetColor(GetARGB(SHADOW_ALPHA, 0, 0, 0))
+	return shadow
+end
+
+function TCHud:Update()
+	CUIScriptWnd.Update(self)
+
+	local tg = time_global()
+	if tg >= self.tmr_visibility then
+		self.tmr_visibility = tg + TICK_VISIBILITY
+		local visible = hud_shown()
+		if visible ~= self.visible then
+			self.visible = visible
+			self.compass:Show(visible)
+			self.markers:Show(visible)
+		end
+	end
+
+	if not self.visible then return end
+
+	self:ApplyLayout()
+
+	local dev = device()
+	self:UpdateCompass(dev.cam_dir)
+
+	if tg >= self.tmr_markers then
+		self.tmr_markers = tg + TICK_MARKERS
+		self:RefreshMarkerState(dev.cam_pos)
+	end
+
+	self:RefreshMarkerPositions(dev.cam_pos, dev.cam_dir)
+end
+
+function TCHud:UpdateCompass(cam_dir)
+	local px = atan2(cam_dir.x, cam_dir.z) * RAD_TO_PX
+	if px < 0 then px = px + FULL_TURN end
+
+	if self.last_px and abs(px - self.last_px) < 0.5 then return end
+	self.last_px = px
+
+	self.cardinal_shadow:SetOriginalRect(px, 0, CARDINAL_W, CARDINAL_H)
+	self.cardinal_dir:SetOriginalRect(px, 0, CARDINAL_W, CARDINAL_H)
+
+	if self.degrees then
+		local degrees = floor(px / PX_PER_DEG + 0.5)
+		if degrees ~= self.last_degrees then
+			self.last_degrees = degrees
+			local text = tostring(degrees)
+			self.degrees:SetText(text)
+			if self.degrees_outline then
+				for i = 1, #self.degrees_outline do
+					self.degrees_outline[i]:SetText(text)
+				end
+			end
+		end
+	end
+end
+
+function TCHud:CreateMarker(entry)
+	local ui = CUIStatic()
+	ui:SetAutoDelete(true)
+	self.markers:AttachChild(ui)
+
+	local w = max(10, min(18, entry.draw_w or entry.w or 12))
+	local h = max(10, min(18, entry.draw_h or entry.h or 12))
+	ui:SetWndSize(w, h)
+	ui:SetStretchTexture(true)
+	ui:SetText("")
+	ui:SetTextAlign(2) -- CGameFont::alCenter
+	ui:SetTextY(-11)
+	ui:Show(false)
+
+	local tex = entry.draw_texture or entry.texture
+	if tex and tex ~= "" then
+		pcall(function() ui:InitTexture(tex) end)
+		if not entry.draw_texture then
+			local tw = tonumber(entry.tw) or 0
+			local th = tonumber(entry.th) or 0
+			if tw > 0 and th > 0 and ui.SetOriginalRect then
+				pcall(function()
+					ui:SetOriginalRect(entry.tx or 0, entry.ty or 0, tw, th)
+				end)
+			end
+		end
+	end
+	if entry.rgb then
+		ui:SetColor(GetARGB(255, entry.rgb[1], entry.rgb[2], entry.rgb[3]))
+	end
+
+	entry.ui = ui
+	entry.w = w
+	entry.h = h
+	entry.half_width = w / 2
+	entry.edge = w * 0.75 / 2
+	entry.shown = false
+	entry.applied_text = ""
+	entry.applied_alpha = -1
+	return ui
+end
+
+function TCHud:ReleaseMarker(entry)
+	if not entry.ui then return end
+	self.markers:DetachChild(entry.ui)
+	entry.ui = nil
+	entry.shown = false
+	entry.x = nil
+end
+
+function TCHud:HideMarker(entry)
+	if entry.shown then
+		entry.shown = false
+		if entry.ui then entry.ui:Show(false) end
+	end
+	return false
+end
+
+function TCHud:RefreshMarkerState(cam_pos)
+	self.create_budget = CREATE_BUDGET
+	self.range = current_range()
+	local y_marker = self.compass_y + self.marker_offset
+	local seen = {}
+	local active = self.active
+	local count = 0
+
+	local spots = level.map_minimap_spots()
+	if spots then
+		for i = 1, 512 do
+			local spot = spots[i]
+			if not spot then break end
+			if not skip_spot_type(spot.type) then
+				local key = tostring(spot.type) .. ":" .. tostring(spot.id)
+				seen[key] = true
+
+				local entry = self.pool[key]
+				if not entry then
+					entry = {
+						key = key,
+						texture = spot.texture,
+						w = spot.w,
+						h = spot.h,
+						tx = spot.tx,
+						ty = spot.ty,
+						tw = spot.tw,
+						th = spot.th,
+					}
+					apply_npc_icon(entry, spot)
+					self.pool[key] = entry
+				elseif entry.texture ~= spot.texture or entry.tw ~= spot.tw or entry.th ~= spot.th or entry.tx ~= spot.tx or entry.ty ~= spot.ty then
+					self:ReleaseMarker(entry)
+					entry.texture = spot.texture
+					entry.w = spot.w
+					entry.h = spot.h
+					entry.tx = spot.tx
+					entry.ty = spot.ty
+					entry.tw = spot.tw
+					entry.th = spot.th
+					apply_npc_icon(entry, spot)
+				end
+
+				self.wpos:set(spot.x, spot.y, spot.z)
+				if self:RefreshMarker(entry, cam_pos, y_marker, spot) then
+					count = count + 1
+					active[count] = entry
+				end
+			end
+		end
+	end
+
+	for key, entry in pairs(self.pool) do
+		if not seen[key] then
+			self:ReleaseMarker(entry)
+			self.pool[key] = nil
+		end
+	end
+
+	for i = count + 1, self.active_max do
+		active[i] = nil
+	end
+	self.active_count = count
+	self.active_max = count
+end
+
+function TCHud:RefreshMarker(entry, cam_pos, y_marker, spot)
+	self.wpos:set(spot.x, spot.y, spot.z)
+	local distance = floor(self.wpos:distance_to(cam_pos))
+	if distance ~= entry.distance then
+		entry.distance = distance
+		entry.distance_str = tostring(distance)
+	end
+
+	local alpha = marker_alpha(distance, self.range or DEFAULT_RANGE)
+	if alpha <= 0 then
+		return self:HideMarker(entry)
+	end
+
+	local ui = entry.ui
+	if not ui then
+		if self.create_budget <= 0 then return false end
+		self.create_budget = self.create_budget - 1
+		ui = self:CreateMarker(entry)
+	end
+	if not ui then return false end
+
+	entry.wpos_x = spot.x
+	entry.wpos_y = spot.y
+	entry.wpos_z = spot.z
+	entry.y = y_marker
+
+	if alpha ~= entry.applied_alpha then
+		entry.applied_alpha = alpha
+		if entry.rgb then
+			ui:SetColor(GetARGB(alpha, entry.rgb[1], entry.rgb[2], entry.rgb[3]))
+		else
+			ui:SetColorA(alpha)
+		end
+	end
+
+	return true
+end
+
+function TCHud:RefreshMarkerPositions(cam_pos, cam_dir)
+	local count = self.active_count
+	local dir = self.dir:set(cam_dir.x, 0, cam_dir.z)
+
+	if count == 0 or dir:magnitude() < 0.001 then
+		return
+	end
+
+	dir:normalize()
+
+	local band_left, band_right = self.band_left, self.band_right
+	local active = self.active
+
+	for i = 1, count do
+		local entry = active[i]
+		if entry.ui then
+			self.wpos:set(entry.wpos_x, entry.wpos_y, entry.wpos_z)
+			local x = calc_position(self.wpos, cam_pos, dir, entry.x)
+			entry.x = x
+
+			if x < band_left - entry.edge and x > band_right + entry.edge then
+				if not entry.shown then
+					entry.shown = true
+					entry.ui:Show(true)
+				end
+				entry.ui:SetWndPos(x - entry.half_width, entry.y)
+
+				local text = is_looking_at(x) and entry.distance_str or ""
+				if text ~= entry.applied_text then
+					entry.applied_text = text
+					entry.ui:SetText(text)
+				end
+			elseif entry.shown then
+				entry.shown = false
+				entry.ui:Show(false)
+			end
+		end
+	end
+end
+
+function TCHud:__finalize()
+end
+
+function activate(style_id)
+	if compass_wnd then return end
+	if not STYLES[style_id] then return end
+
+	compass_wnd = TCHud(style_id)
+	compass_wnd:Enable(true)
+	get_hud():AddDialogToRender(compass_wnd)
+end
+
+function deactivate()
+	if not compass_wnd then return end
+	get_hud():RemoveDialogToRender(compass_wnd)
+	compass_wnd = nil
+end
+
+function sync_style()
+	local style = current_style()
+	local pos = current_pos()
+	local scale = current_hud_scale()
+	local hidden = (pos == 2)
+	if style == applied_style and pos == applied_pos and abs(scale - applied_scale) < 0.001 and (hidden == (compass_wnd == nil)) then
+		return
+	end
+
+	-- Top/bottom can be applied in-place; Off still needs a rebuild.
+	if compass_wnd and not hidden and applied_pos ~= 2 and style == applied_style and abs(scale - applied_scale) < 0.001 then
+		applied_pos = pos
+		return
+	end
+
+	deactivate()
+	applied_style = style
+	applied_pos = pos
+	applied_scale = scale
+	if not hidden and STYLES[style] then
+		activate(style)
+	end
+end
+
+function on_update()
+	local tg = time_global()
+	if tg < next_sync then return end
+	next_sync = tg + TICK_VISIBILITY
+	sync_style()
+end
+
+function attach(sm)
+	sm:subscribe({ signal = "on_first_update", fun = this.sync_style })
+	sm:subscribe({ signal = "on_update", fun = this.on_update })
+	sm:subscribe({ signal = "on_destroy", fun = this.deactivate })
+end

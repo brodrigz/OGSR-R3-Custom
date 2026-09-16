@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="windows-1251"?>
+<window>
+	<!-- Stalker 2 strip. Cardinal letters stretched ~20% taller; frame half as wide. -->
+	<compass_s2 x="0" y="0" width="720" height="56" stretch="1">
+		<static_frame x="180" y="38" width="360" height="44" stretch="1">
+			<texture>compass_static_frame</texture>
+		</static_frame>
+
+		<cardinal_dir x="0" y="6" width="720" height="34" stretch="1">
+			<texture>compass_cardinal_dir</texture>
+		</cardinal_dir>
+	</compass_s2>
+
+	<!-- Classic strip (HypeR). Background texture is omitted; the addon DDS was never shipped. -->
+	<compass_legacy x="0" y="0" width="610" height="85" stretch="1">
+		<static_frame x="5" y="51" width="600" height="32" stretch="1">
+			<texture>compass_flat</texture>
+		</static_frame>
+
+		<cardinal_dir x="5" y="27" width="600" height="32" stretch="1">
+			<texture>compass_hyper_directions</texture>
+		</cardinal_dir>
+
+		<line_compass_radian x="290" y="63" width="30" height="20">
+			<text font="medium" align="c" complex_mode="1"/>
+		</line_compass_radian>
+	</compass_legacy>
+</window>

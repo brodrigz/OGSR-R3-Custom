@@ -1,0 +1,417 @@
+-- Adapted for Radiophobia 3.
+-- seaz5150 31/05/2024
+
+function attach( sm )
+  --sm:subscribe({ signal = "on_death", fun = this.actor_on_before_death }) -- screen blacks out anyway
+  sm:subscribe({ signal = "on_update", fun = this.actor_on_update })
+  sm:subscribe({ signal = "on_footstep", fun = this.actor_on_footstep })
+  sm:subscribe({ signal = "on_monster_death", fun = this.on_death_callback })
+  sm:subscribe({ signal = "on_npc_death", fun = this.on_death_callback })
+  sm:subscribe({ signal = "on_npc_spawn", fun = this.on_npc_spawn })
+  sm:subscribe({ signal = "on_npc_death", fun = this.on_death     })
+end
+
+function on_npc_spawn( obj, binder )
+  if not obj:alive() then return end
+
+  local s = {
+    [ "signal" ] = "on_npc_update." .. obj:id(),
+    [ "fun"    ] = this.npc_on_update,
+    [ "queued" ] = true,
+  }
+  binder[ script_name() .. ".subscribed" ] = s
+  ogse_signals.get_mgr():subscribe( s )
+end
+
+function on_death( obj )
+  local binder = obj:binded_object()
+  local s      = binder[ script_name() .. ".subscribed" ]
+  if s then
+    ogse_signals.get_mgr():unsubscribe( s )
+    binder[ script_name() .. ".subscribed" ] = nil
+  end
+end
+
+local settings = {
+		["max_pool_size"] = 0.85,
+		["num_of_updates"] = 1000,
+		["update_freq"] = 25,
+		["pool_lifetime"] = 500000,
+}
+
+-- UTILS
+local function vecSimilar(v1, v2, eps)
+	eps = eps or 0.4
+	local abs = math.abs
+	return abs(v1.x - v2.x) < eps and abs(v1.y - v2.y) < eps and abs(v1.z - v2.z) < eps 
+end
+
+local enable_debug = false
+local function printf(...)
+	if enable_debug then
+		_G.printf(...)
+	end
+end
+
+pool_starts_in = 5000
+blood_textures_amount = 24
+pool_size_mult = {
+	-- clsid
+	-- [clsid.boar_s] 					= boar,
+	-- [clsid.flesh_s] 				= flesh,
+	-- [clsid.burer_s] 				= burer,
+	-- [clsid.chimera_s] 				= chimera,
+	-- [clsid.script_stalker]			= human,
+	-- [clsid.bloodsucker_s] 			= sucker,
+	-- [clsid.dog_s] 					= dog,
+	-- [clsid.pseudodog_s] 			= dog,
+	-- [clsid.psy_dog_s] 				= dog,
+	-- [clsid.psy_dog_phantom_s] 		= dog,
+	-- [clsid.cat_s] 					= cat,
+	-- [clsid.rat] 					= rat,
+	-- [clsid.rat_s]					= rat,
+	-- [clsid.controller_s] 			= controller,
+	-- [clsid.fracture_s] 				= fracture,
+	-- [clsid.poltergeist_s] 			= poltergeist,
+	-- [clsid.gigant_s] 				= gigant,
+	-- [clsid.zombie_s] 				= zombie,
+	-- [clsid.snork_s] 				= snork,
+	-- [clsid.tushkano_s] 				= tushkano,
+	-- [136]							= karlik,
+	-- [120]							= sucker, -- psysucker
+	-- [124]							= chimera, -- lurker
+
+	-- string find these patterns
+	bloodsucker = 1.2,
+	psysucker = 1.2,
+	boar = 1.5,
+	dog = 1.0,
+	flesh = 1.25, 
+	burer = 1.25,
+	cat = 0.8,
+	rat = 0.3,
+	chimera = 2.0,
+	bibliotekar = 2.5,
+	lurker = 1.25, 
+	karlik = 0.8,
+	controller = 1.0,
+	fracture = 1.1,
+	gigant = 2.0,
+	giant = 2.0,
+	zombi = 1.0,
+	snork = 1.0,
+	tushkan = 0.5,
+}
+
+boneList = {
+	"bip01_spine",
+	"bip01_spine1",
+	"spine",
+	"spine1",
+}
+
+local AC_ID = 0
+
+function safe_bone_pos(obj,bone)
+	local bone_id = obj:get_bone_id(bone)
+	return obj:bone_position(bone_id == 65535 and "" or bone)
+end
+
+function getBloodPoolPos(obj)
+	for i, v in ipairs(boneList) do
+		if obj:get_bone_id(v) ~= 65535 then
+			-- printf("found bone %s for obj %s", v, obj:section())
+			return safe_bone_pos(obj, v)
+		end
+	end
+	return obj:position():add(vector():set(0, 0.5, 0))
+end
+
+-- saved_pool stores information about npc which can leak blood pool
+-- alreadyLeakedPools stores information about leaked pools grouped by npc
+saved_pool = {}
+alreadyLeakedPools = {}
+
+-- on npc death -> time event and after 3 sec save npc bone position
+function start_blood_pool(id)
+	local obj = level.object_by_id(id)
+	if not obj then return end
+
+	local pos = getBloodPoolPos(obj)
+	saved_pool[id] = {}
+	saved_pool[id].pos = pos
+	saved_pool[id].texture = "blood_pool_texture_" .. math.random(1, blood_textures_amount)
+	saved_pool[id].moved = false
+	saved_pool[id].size_mult = 1
+	if IsMonster(obj) then
+		for k, v in pairs(pool_size_mult) do
+			if obj:section():find(k) then
+				saved_pool[id].size_mult = v
+				break
+			end
+		end
+	end
+
+	local ttl = settings.pool_lifetime
+	local function draw_pool(size, npc_id, i, size_i)
+
+		-- if npc with this id doesnt exist delete key
+		-- or size reached max - delete key before drawing the last decal
+		local npc = level.object_by_id(npc_id)
+
+		if 
+		not npc
+		or i >= settings.num_of_updates
+		then
+			saved_pool[npc_id] = nil
+			-- parameter maybe useless
+			dsh.timeout(ttl, function()
+				alreadyLeakedPools[npc_id] = nil
+				return true
+			end)
+			return true
+		end
+
+		-- if key is nil then dont do anything
+		if not saved_pool[npc_id] then
+			return true
+		end
+
+		local function genNextEvent()
+			-- reduce lifetime of current decal for the entire pool to disappear together
+			ttl = ttl - settings.update_freq
+			
+			-- Generate next time event
+			size_i = size_i + 1
+			i = i + 1
+			dsh.timeout(settings.update_freq, draw_pool, size, id, i, size_i)
+		end
+
+		local function delayRemoveCurrentPool()
+			dsh.timeout(ttl, function(p)
+				printf("removing pool %s, %s", npc_id, p)
+				if alreadyLeakedPools[npc_id] then
+					if alreadyLeakedPools[npc_id][p] then
+						printf("found vec to remove %s, %s", npc_id, p)
+					end
+					alreadyLeakedPools[npc_id][p] = nil
+				end
+				return true
+			end, saved_pool[npc_id].pos)
+		end
+
+		-- if pos changed then refresh size
+		local pos = getBloodPoolPos(npc)
+		if saved_pool[npc_id].moved then
+			saved_pool[npc_id].texture = "blood_pool_texture_" .. math.random(1, blood_textures_amount)
+			if vecSimilar(saved_pool[npc_id].pos, pos, 0.01) then
+				printf("body %s settled", npc_id)
+				saved_pool[npc_id].moved = false
+				saved_pool[npc_id].pos = pos
+				size_i = 1
+			else
+				printf("body %s still moving", npc_id)
+				size_i = settings.num_of_updates * 0.08
+				saved_pool[npc_id].pos = pos
+				delayRemoveCurrentPool()
+
+				-- Uncomment to prevent blood trails from dragging
+				saved_pool[npc_id].pos = pos
+				saved_pool[npc_id].texture = "blood_pool_texture_" .. math.random(1, blood_textures_amount)
+				genNextEvent()
+				return true
+			end
+		else
+			if not vecSimilar(saved_pool[npc_id].pos, pos) then
+				printf("body %s is moved", npc_id)
+				saved_pool[npc_id].moved = true
+
+				delayRemoveCurrentPool()
+
+				saved_pool[npc_id].pos = pos
+				genNextEvent()
+				return true
+			end
+		end
+
+		-- draw decal
+		local vec_pos = vector():set(
+			saved_pool[npc_id].pos.x,
+			saved_pool[npc_id].pos.y + 1,
+			saved_pool[npc_id].pos.z
+		)
+		local vec_dir = vector():set(0, -0.5, 0)
+		size = (size_i / settings.num_of_updates) * saved_pool[npc_id].size_mult * settings.max_pool_size
+		wallmarks_manager():place(vec_dir, vec_pos, 8, size, saved_pool[npc_id].texture, npc, ttl / 1000, false)
+
+		-- Save leaked pool
+		alreadyLeakedPools[npc_id] = alreadyLeakedPools[npc_id] or {}
+		alreadyLeakedPools[npc_id][saved_pool[npc_id].pos] = size
+
+		genNextEvent()
+		return true
+	end
+
+	-- i is overall loop counter to draw a pool, size_i is used to determine pool size and can be resetted to 1 if body is moved
+	local i = 1
+	local size_i = 1
+	local size = (size_i / settings.num_of_updates) * settings.max_pool_size
+	dsh.timeout(pool_starts_in, draw_pool, size, id, i, size_i)
+	return true
+end
+
+function on_death_callback(npc)
+	-- give body 2 sec to drop and save pos after
+	dsh.timeout(2000, start_blood_pool, npc:id())
+end
+
+function actor_on_before_death()
+	dsh.timeout(1000, function()
+		if db.actor and not db.actor:alive() then
+			printf("actor died, spawn pool")
+			on_death_callback(db.actor)
+		end
+		return true
+	end)
+end
+
+-- Blood steps
+local stepCount = {}
+local flipFlops = {}
+
+stepMaxCount = 10
+size = 0.17
+triggerDistance = 0.7^2
+texture = "blood_step_"
+
+function checkNearBloodPool(obj)
+	local pos = obj:position()
+	for npc_id, t in pairs(alreadyLeakedPools) do
+		for poolPos, size in pairs(t) do
+			if poolPos:distance_to_sqr(pos) < triggerDistance and size > 0.3 then
+				stepCount[obj:id()] = stepMaxCount
+				--log3("%s near blood pool", obj:name())
+				return true
+			end
+		end
+	end
+end
+
+function npc_on_update(npc)
+	checkNearBloodPool(npc)
+end
+
+function actor_on_update()
+	checkNearBloodPool(db.actor)
+end
+
+function getHeading(dir)
+	local heading = dir:getH() * 57.2958
+
+	-- Fix East -90deg to 270deg
+	if heading < 0 then
+		heading = 360 + heading
+	end
+
+	-- Clamp
+	heading = math.clamp(math.floor(heading), 0, 359)
+
+	-- Count only certain headings: 0, 2, 4, 6...
+	heading = math.floor(heading / 2) * 2
+
+	printf("heading %s", heading)
+
+	return heading
+end
+
+function placeBloodStep(id)
+	local obj = level.object_by_id(id)
+	if not obj then return end
+
+	if not (stepCount[id] and stepCount[id] > 0) then return end
+	
+	flipFlops[id] = not flipFlops[id]
+	local pos = id == AC_ID and device().cam_pos or safe_bone_pos(obj, flipFlops[id] and "bip01_r_foot" or "bip01_l_foot")
+	local dir = id == AC_ID and device().cam_dir or obj:direction()
+	
+	local heading = getHeading(dir)
+
+	if id == AC_ID then
+		local v = vector():set(0, 0, 1)
+		dir = vector_rotate_y(v, heading)
+		local distanceBetweenSteps = 0.13
+		pos = pos:mad(vector_rotate_y(dir, flipFlops[id] and -90 or 90), distanceBetweenSteps)
+	end
+
+	-- Rotate 90 degrees left to align with textures
+	heading = (heading + 90) % 360
+
+	stepCount[id] = stepCount[id] - 1
+	--log3("placing bloodstep for %s", obj:name())
+	wallmarks_manager():place(vector():set(0, -0.7, 0), pos, 100, size, texture .. (flipFlops[id] and "r_" or "l_") .. heading, obj, settings.pool_lifetime / 1000, false)
+end
+
+function actor_on_footstep()
+	placeBloodStep(AC_ID)
+end
+
+function npc_on_foot_step(obj,power,b_play,b_on_ground)
+    placeBloodStep(obj:id())
+end
+
+if z_npc_footsteps then
+	-- 1.5.2 check
+	if AddScriptCallback then
+		RegisterScriptCallback("npc_on_foot_step", npc_on_foot_step)
+	end
+	og_npc_on_foot_step = z_npc_footsteps.npc_on_foot_step
+	z_npc_footsteps.npc_on_foot_step = function(binder,obj,power,b_play,b_on_ground)
+		if og_npc_on_foot_step then og_npc_on_foot_step(binder,obj,power,b_play,b_on_ground) end
+		npc_on_foot_step(obj,power,b_play,b_on_ground)
+	end
+else
+	net_spawn = xr_motivator.motivator_binder.net_spawn
+
+	xr_motivator.motivator_binder.net_spawn = function(self, se_abstract)
+		if not object_binder.net_spawn(self, se_abstract) then
+			return false
+		end
+		
+		local se_obj = alife():object(self.object:id())
+
+		if not (se_obj) then 
+			return false 
+		end
+		
+		local npc = self.object
+
+		if npc:alive() then
+			npc:set_callback(callback.on_footstep, self.npc_on_foot_step, self)
+		end
+		
+		return net_spawn(self, se_abstract)
+	end
+
+	net_destroy = xr_motivator.motivator_binder.net_destroy
+
+	xr_motivator.motivator_binder.net_destroy = function(self)
+	    self.object:set_callback(callback.on_footstep,nil)
+		
+		net_destroy(self)
+	end
+
+	-- 1.5.2 check
+	if AddScriptCallback then
+		AddScriptCallback("npc_on_foot_step")
+		RegisterScriptCallback("npc_on_foot_step", npc_on_foot_step)
+	end
+
+	function xr_motivator.motivator_binder:npc_on_foot_step(obj,power,b_play,b_on_ground)
+		-- 1.5.2 check
+		if AddScriptCallback then
+			SendScriptCallback("npc_on_foot_step", obj,power,b_play,b_on_ground)
+		else
+			npc_on_foot_step(obj,power,b_play,b_on_ground)
+		end
+	end
+end

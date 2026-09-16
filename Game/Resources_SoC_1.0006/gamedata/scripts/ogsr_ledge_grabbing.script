@@ -1,0 +1,1102 @@
+-- Radiophobia/OGSR adaptation of Demonized's ledge detector.
+-- Radiophobia/OGSR ledge-grabbing controller. The live target is activated only
+-- after the staged overlay passes its integration and deployment gates.
+
+local M = this
+local ray_api = ogsr_geometry_ray
+local adapter = ogsr_ledge_adapter
+
+local STATE_IDLE = "IDLE"
+local STATE_CANDIDATE = "CANDIDATE_FOUND"
+local STATE_STARTING = "STARTING"
+local STATE_MANTLING = "MANTLING"
+local STATE_RECOVERY = "RECOVERY"
+local EPSILON = 0.00001
+local UI_WIDTH = 1024
+local UI_HEIGHT = 768
+
+local state = {
+    name = STATE_IDLE,
+    candidate = nil,
+    actor_id = nil,
+    camera_height = nil,
+    last_actor_position = nil,
+    last_actor_direction = nil,
+    last_scan_time = 0,
+    generation = 0,
+    permissions = nil,
+    safe_position = nil,
+    safe_heading = nil,
+    motion = nil,
+    equipment = nil,
+    camera_owned = false,
+    hud_motion_owned = false,
+    sounds = {},
+    cancelling = false,
+    last_cancel_reason = nil,
+}
+
+local settings = nil
+local pressed_at = nil
+local attached_signal_manager = nil
+local update_heartbeat_logged = false
+local controller_faulted = false
+local debug_lines = {}
+local next_debug_id = 60000
+local debug_cursor = 0
+
+local function copy_vector(value)
+    return value and vector():set(value) or nil
+end
+
+local function clamp_value(value, minimum, maximum)
+    return math.max(minimum, math.min(maximum, value))
+end
+
+local function random_float_range(minimum, maximum)
+    return minimum + (maximum - minimum) * math.random()
+end
+
+local function read_bool(ini, section, name, default)
+    if ini:line_exist(section, name) then return ini:r_bool(section, name) end
+    return default
+end
+
+local function read_float(ini, section, name, default)
+    if ini:line_exist(section, name) then return ini:r_float(section, name) end
+    return default
+end
+
+local function read_u32(ini, section, name, default)
+    if ini:line_exist(section, name) then return ini:r_u32(section, name) end
+    return default
+end
+
+local function load_settings()
+    local ini = ini_file("misc\\ledge_grabbing.ltx")
+    local section = "ledge_grabbing"
+    settings = {
+        enabled = read_bool(ini, section, "enabled", true),
+        input_method = ini:line_exist(section, "input_method") and ini:r_string(section, "input_method") or "both",
+        key_action = ini:line_exist(section, "key_action") and ini:r_string(section, "key_action") or "jump",
+        hold_time_ms = read_float(ini, section, "hold_time", 0.15) * 1000,
+        min_height = read_float(ini, section, "min_height", 1.40),
+        max_height = read_float(ini, section, "max_height", 2.53),
+        climb_trigger_distance = read_float(ini, section, "climb_trigger_distance", 1.30),
+        ray_steps = math.max(1, read_u32(ini, section, "ray_steps", 15)),
+        throttle_check_ms = read_u32(ini, section, "throttle_check_ms", 0),
+        alternative_detection = read_bool(ini, section, "alternative_detection", true),
+        player_width_check = read_bool(ini, section, "player_width_check", true),
+        animation_speed = read_float(ini, section, "animation_speed", 1.0),
+        animation_randomization = read_float(ini, section, "animation_randomization", 1.0),
+        stamina_enabled = read_bool(ini, section, "stamina_enabled", true),
+        stamina_multiplier = read_float(ini, section, "stamina_multiplier", 1.0),
+        sound_volume = read_float(ini, section, "sound_volume", 1.0),
+        grunt_volume = read_float(ini, section, "grunt_volume", 1.0),
+        grunt_probability = read_float(ini, section, "grunt_probability", 0.5),
+        unstuck_check = read_bool(ini, section, "unstuck_check", true),
+        debug = read_bool(ini, section, "debug", false),
+    }
+end
+
+local function menu_enabled()
+    local ok, value = pcall(function()
+        return ui_data.load("rad3_ledge_grab")
+    end)
+    if not ok or value == nil then
+        return true
+    end
+    return value == true
+end
+
+local function feature_enabled()
+    if not settings then load_settings() end
+    if settings.enabled == false then return false end
+    return menu_enabled()
+end
+
+local function release_debug()
+    for _, entry in ipairs(debug_lines) do
+        if entry.id then pcall(debug_render.remove_object, entry.id) end
+    end
+    debug_lines = {}
+    debug_cursor = 0
+end
+
+local function hide_debug()
+    debug_cursor = 0
+    for _, entry in ipairs(debug_lines) do
+        entry.object.visible = false
+    end
+end
+
+local function allocate_debug_line()
+    while debug_render.get_object(next_debug_id) do
+        next_debug_id = next_debug_id + 1
+    end
+    local id = next_debug_id
+    next_debug_id = next_debug_id + 1
+    local object = debug_render.add_object(id, DBG_ScriptObject.line):cast_dbg_line()
+    local entry = {id = id, object = object}
+    table.insert(debug_lines, entry)
+    return entry
+end
+
+local function draw_line(from, to, red, green, blue)
+    if not settings or not settings.debug then return end
+    debug_cursor = debug_cursor + 1
+    local entry = debug_lines[debug_cursor] or allocate_debug_line()
+    entry.object.point_a = from
+    entry.object.point_b = to
+    entry.object.color = fcolor():set(red, green, blue, 1)
+    entry.object.visible = true
+end
+
+local function reset_candidate()
+    state.name = STATE_IDLE
+    state.candidate = nil
+end
+
+local function point_is_on_screen(position)
+    local ui = game.world2ui(position)
+    return ui.x >= 0 and ui.x <= UI_WIDTH and ui.y >= 0 and ui.y <= UI_HEIGHT
+end
+
+local function get_down_vector()
+    local direction = copy_vector(device().cam_dir)
+    direction.y = 0
+    if direction:magnitude() <= EPSILON then
+        direction = copy_vector(db.actor:direction())
+        direction.y = 0
+    end
+    if direction:magnitude() <= EPSILON then direction:set(0, 0, 1) end
+    direction:normalize()
+    direction.y = -100
+    return direction:normalize()
+end
+
+local function is_flat(position, direction, initial_ray)
+    local normal = ray_api.get_surface_normal(position, direction, {
+        flags = 2,
+        ignore_object = db.actor,
+    }, initial_ray)
+    if not normal then return false, nil end
+    local angle = math.abs(math.deg(math.acos(clamp_value(normal.y, -1, 1))))
+    return angle < 30, normal
+end
+
+local function material_is_rejected(result)
+    if not result or not result.material_name then return false end
+    local name = string.lower(result.material_name)
+    return string.find(name, "bush", 1, true) ~= nil
+        or string.find(name, "water", 1, true) ~= nil
+end
+
+local function has_head_clearance(position)
+    local ray = ray_api.new({
+        ray_range = state.camera_height,
+        flags = 2,
+        ignore_object = db.actor,
+    })
+    return not ray:get(position, vector():set(0, 1, 0)).success
+end
+
+local function cubic_bezier(p1, p2, p3, p4, t)
+    local inv = 1 - t
+    return vector():set(
+        inv^3*p1.x + 3*inv^2*t*p2.x + 3*inv*t^2*p3.x + t^3*p4.x,
+        inv^3*p1.y + 3*inv^2*t*p2.y + 3*inv*t^2*p3.y + t^3*p4.y,
+        inv^3*p1.z + 3*inv^2*t*p2.z + 3*inv*t^2*p3.z + t^3*p4.z
+    )
+end
+
+local function cubic_bezier_2d(p1, p2, p3, p4, t)
+    local inv = 1 - t
+    return vector():set(
+        inv^3*p1.x + 3*inv^2*t*p2.x + 3*inv*t^2*p3.x + t^3*p4.x,
+        inv^3*p1.y + 3*inv^2*t*p2.y + 3*inv*t^2*p3.y + t^3*p4.y,
+        0
+    )
+end
+
+local function vector_lerp(first, second, factor)
+    return vector():set(
+        first.x + factor * (second.x - first.x),
+        first.y + factor * (second.y - first.y),
+        first.z + factor * (second.z - first.z)
+    )
+end
+
+local function curve_keys(curve)
+    local keys = {}
+    for key in pairs(curve) do table.insert(keys, key) end
+    table.sort(keys)
+    return keys
+end
+
+local function curve_value(curve, time, speed)
+    local sample_time = time * (speed or 1)
+    local keys = curve_keys(curve)
+    if sample_time <= keys[1] then
+        local points = curve[keys[1]]
+        return cubic_bezier_2d(points[1], points[2], points[3], points[4], 0).y
+    end
+    if sample_time >= keys[#keys] then
+        local points = curve[keys[#keys]]
+        return cubic_bezier_2d(points[1], points[2], points[3], points[4], 1).y
+    end
+
+    local lower = keys[1]
+    local upper = keys[#keys]
+    for index = 2, #keys do
+        if sample_time <= keys[index] then
+            lower = keys[index - 1]
+            upper = keys[index]
+            break
+        end
+    end
+    local factor = (sample_time - lower) / (upper - lower)
+    local points = curve[lower]
+    return cubic_bezier_2d(points[1], points[2], points[3], points[4], factor).y
+end
+
+local function rotate_y(value, angle_degrees)
+    local angle = math.rad(angle_degrees)
+    local cosine = math.cos(angle)
+    local sine = math.sin(angle)
+    return vector():set(
+        value.x * cosine - value.z * sine,
+        value.y,
+        value.x * sine + value.z * cosine
+    )
+end
+
+local CLIMB_SOUNDS = {
+    naked = {
+        [[ledge_grabbing\vaulting\naked\naked1]],
+        [[ledge_grabbing\vaulting\naked\naked2]],
+    },
+    light = {
+        [[ledge_grabbing\vaulting\light\light1]],
+        [[ledge_grabbing\vaulting\light\light2]],
+        [[ledge_grabbing\vaulting\light\light3]],
+    },
+    medium = {
+        [[ledge_grabbing\vaulting\medium\medium1]],
+        [[ledge_grabbing\vaulting\medium\medium2]],
+        [[ledge_grabbing\vaulting\medium\medium3]],
+    },
+    heavy = {
+        [[ledge_grabbing\vaulting\heavy\heavy1]],
+        [[ledge_grabbing\vaulting\heavy\heavy2]],
+        [[ledge_grabbing\vaulting\heavy\heavy3]],
+    },
+    exo = {
+        [[ledge_grabbing\vaulting\exo\exo1]],
+        [[ledge_grabbing\vaulting\exo\exo2]],
+        [[ledge_grabbing\vaulting\exo\exo3]],
+    },
+}
+
+local GRUNT_SOUNDS = {
+    naked = {
+        [[ledge_grabbing\grunts\naked\Grunt1]],
+        [[ledge_grabbing\grunts\naked\Grunt2]],
+        [[ledge_grabbing\grunts\naked\Grunt3]],
+    },
+    mask = {
+        [[ledge_grabbing\grunts\mask\Grunt1_mask]],
+        [[ledge_grabbing\grunts\mask\Grunt2_mask]],
+        [[ledge_grabbing\grunts\mask\Grunt3_mask]],
+    },
+}
+
+local function random_entry(values)
+    return values[math.random(1, #values)]
+end
+
+local function gameplay_profile()
+    local max_weight = math.max(60, adapter.get_max_weight())
+    local min_weight = max_weight / 2
+    local load = clamp_value((adapter.get_actor_weight() - min_weight) / math.max(max_weight - min_weight, EPSILON), 0, 1)
+    local stamina_factor = 0.87 + clamp_value(adapter.get_stamina() / 0.66, 0, 1) * 0.13
+    local outfit_class = adapter.get_outfit_class()
+    local outfit_speed = outfit_class == "exo" and 0.85 or outfit_class == "heavy" and 0.92 or 1
+    local speed_modifier = (1 - load * 0.33) * stamina_factor * outfit_speed
+    speed_modifier = speed_modifier * (1 + random_float_range(0, 0.12) * settings.animation_randomization)
+
+    return {
+        outfit_class = outfit_class,
+        masked = adapter.outfit_has_mask(),
+        speed_modifier = speed_modifier,
+        stamina_drain = settings.stamina_enabled and math.max(0.1, (0.1 + load * 0.45) * settings.stamina_multiplier) or 0,
+        satiety_drain = 0.001 + load * 0.0035,
+    }
+end
+
+local function stop_owned_sounds()
+    for _, sound in ipairs(state.sounds) do
+        pcall(function() sound:stop() end)
+    end
+    state.sounds = {}
+end
+
+local function create_owned_sound(path)
+    local sound = xr_sound.get_safe_sound_object(path)
+    if sound then table.insert(state.sounds, sound) end
+    return sound
+end
+
+local function start_owned_sounds(motion)
+    local climb = create_owned_sound(random_entry(CLIMB_SOUNDS[motion.outfit_class] or CLIMB_SOUNDS.medium))
+    if climb then
+        climb:play(db.actor, 0, sound_object.s2d)
+        climb.volume = settings.sound_volume
+        climb.frequency = motion.speed_modifier + random_float_range(-0.07, 0.07)
+    end
+
+    if math.random() < settings.grunt_probability then
+        local group = motion.masked and GRUNT_SOUNDS.mask or GRUNT_SOUNDS.naked
+        motion.grunt_sound = create_owned_sound(random_entry(group))
+    end
+end
+
+local function get_path_points(actor_position, collision_position, intermediate_position, climb_position)
+    local p1 = copy_vector(actor_position)
+    local p2 = vector():set(intermediate_position.x, actor_position.y, intermediate_position.z)
+    local p3 = vector():set(
+        actor_position.x + 0.25 * (climb_position.x - actor_position.x),
+        intermediate_position.y,
+        actor_position.z + 0.25 * (climb_position.z - actor_position.z)
+    )
+    return p1, p2, p3, copy_vector(climb_position)
+end
+
+local function draw_candidate_path(candidate, valid)
+    if not settings.debug then return end
+    local p1, p2, p3, p4 = get_path_points(
+        candidate.actor_position,
+        candidate.collision_position,
+        candidate.intermediate_position,
+        candidate.climb_position
+    )
+    local previous = p1
+    for index = 1, 20 do
+        local current = cubic_bezier(p1, p2, p3, p4, index / 20)
+        if valid then
+            draw_line(previous, current, 0, 1, 0)
+        else
+            draw_line(previous, current, 1, 0, 0)
+        end
+        previous = current
+    end
+end
+
+local function path_is_clear(actor_position, intermediate_position, climb_position)
+    local adjusted_actor = copy_vector(actor_position)
+    adjusted_actor.y = adjusted_actor.y + 0.02
+
+    local first_vector = copy_vector(intermediate_position):sub(adjusted_actor)
+    local first_range = first_vector:magnitude()
+    if first_range <= EPSILON then return false end
+    local first_direction = copy_vector(first_vector):normalize()
+    local first_ray = ray_api.new({ray_range = first_range, flags = 2, ignore_object = db.actor})
+    local first_result = first_ray:get(adjusted_actor, first_direction)
+    draw_line(adjusted_actor, first_result.position, first_result.success and 1 or 0, first_result.success and 0 or 1, 0)
+    if first_result.success then return false end
+
+    local target = vector():set(
+        climb_position.x,
+        math.max(intermediate_position.y, climb_position.y + 0.05),
+        climb_position.z
+    )
+    local second_vector = target:sub(intermediate_position)
+    local second_range = second_vector:magnitude()
+    if second_range <= EPSILON then return false end
+    local second_direction = copy_vector(second_vector):normalize()
+    local second_ray = ray_api.new({ray_range = second_range, flags = 2, ignore_object = db.actor})
+    local second_result = second_ray:get(intermediate_position, second_direction)
+    draw_line(intermediate_position, second_result.position, second_result.success and 1 or 0, second_result.success and 0 or 1, 0)
+    return not second_result.success
+end
+
+local function actor_can_scan()
+    if not db.actor or not db.actor:alive() then return false end
+    if level.main_input_receiver() then return false end
+    if IsMoveState("mcClimb") then return false end
+    return true
+end
+
+local function detector_update()
+    if not settings then load_settings() end
+    if state.name == STATE_STARTING or state.name == STATE_MANTLING or state.name == STATE_RECOVERY then return end
+    if settings.debug then hide_debug() end
+    if not feature_enabled() or not actor_can_scan() then
+        reset_candidate()
+        return
+    end
+
+    local actor_position = vector():set(device().cam_pos.x, db.actor:position().y, device().cam_pos.z)
+    local actor_direction = copy_vector(device().cam_dir)
+    local real_position = copy_vector(db.actor:position())
+    local real_direction = copy_vector(db.actor:direction())
+
+    if not settings.alternative_detection
+       and state.last_actor_position
+       and ray_api.vector_similar(real_position, state.last_actor_position, 0.02)
+       and ray_api.vector_similar(real_direction, state.last_actor_direction, 0.02)
+    then
+        return
+    end
+    state.last_actor_position = real_position
+    state.last_actor_direction = real_direction
+
+    local now = time_global()
+    if now - state.last_scan_time < settings.throttle_check_ms then return end
+    state.last_scan_time = math.max(now, state.last_scan_time + settings.throttle_check_ms)
+
+    local max_y = actor_position.y + settings.max_height
+    local min_y = actor_position.y + settings.min_height
+    if settings.alternative_detection then
+        local maximum = max_y
+        local pitch = device().cam_dir:getP()
+        if pitch < 0 then
+            max_y = actor_position.y + state.camera_height
+        else
+            local projected_range = settings.climb_trigger_distance / math.max(math.cos(pitch), EPSILON)
+            max_y = vector():mad(device().cam_pos, device().cam_dir, projected_range).y
+        end
+        max_y = clamp_value(max_y, min_y, maximum)
+    end
+
+    local ray_range = max_y - min_y
+    if ray_range <= EPSILON then
+        reset_candidate()
+        return
+    end
+
+    local down = get_down_vector()
+    local results = {
+        [0] = {
+            vector():set(actor_position.x, max_y, actor_position.z):mad(down, ray_range),
+            copy_vector(down):invert(),
+        }
+    }
+    local collision_position = nil
+    local climb_position = nil
+    local climb_normal = nil
+    local valid_collision = false
+    local step_distance = settings.climb_trigger_distance / settings.ray_steps
+
+    for index = 1, settings.ray_steps do
+        local distance = step_distance * index
+        local start = vector():mad(actor_position, actor_direction, distance)
+        start.y = max_y
+        local ray = ray_api.new({ray_range = ray_range, flags = 2, ignore_object = db.actor})
+        local result = ray:get(start, down)
+        draw_line(start, result.position, result.success and 1 or 0, result.success and 1 or 0, 0)
+
+        if result.success then
+            local flat, normal = is_flat(start, down, result)
+            if normal then
+                if not collision_position then collision_position = copy_vector(results[index - 1][1]) end
+                if flat then
+                    local width_valid = true
+                    if settings.player_width_check then
+                        local width_start = vector():mad(result.position, actor_direction, 0.08)
+                        width_start.y = max_y
+                        local width_ray = ray_api.new({ray_range = ray_range, flags = 2, ignore_object = db.actor})
+                        local width_result = width_ray:get(width_start, down)
+                        width_valid = not width_result.success
+                            or ray_api.similar(result.position.y, width_result.position.y, 0.1)
+                    end
+
+                    if width_valid then
+                        local valid = has_head_clearance(result.position) and not material_is_rejected(result)
+                        valid_collision = valid
+                        climb_position = copy_vector(result.position)
+                        climb_normal = copy_vector(normal)
+                        if not valid then break end
+
+                        for _, extra in ipairs({0.05, 0.025}) do
+                            local advanced_start = vector():mad(actor_position, actor_direction, distance + extra)
+                            advanced_start.y = max_y
+                            local advanced_ray = ray_api.new({ray_range = ray_range, flags = 2, ignore_object = db.actor})
+                            local advanced = advanced_ray:get(advanced_start, down)
+                            if advanced.success then
+                                local advanced_flat, advanced_normal = is_flat(advanced_start, down, advanced)
+                                if advanced_flat and advanced_normal and has_head_clearance(advanced.position)
+                                   and not material_is_rejected(advanced)
+                                then
+                                    climb_position = copy_vector(advanced.position)
+                                    climb_normal = copy_vector(advanced_normal)
+                                    break
+                                end
+                            end
+                        end
+                        break
+                    end
+                end
+            end
+            results[index] = {copy_vector(result.position), copy_vector(down):invert()}
+        else
+            collision_position = nil
+            valid_collision = false
+            results[index] = {vector():mad(start, down, ray_range), copy_vector(down):invert()}
+        end
+    end
+
+    if not collision_position or not valid_collision or not climb_position then
+        reset_candidate()
+        return
+    end
+
+    local intermediate_position = vector():set(
+        collision_position.x,
+        climb_position.y + 0.15,
+        collision_position.z
+    )
+    if not point_is_on_screen(climb_position) and not point_is_on_screen(intermediate_position) then
+        reset_candidate()
+        return
+    end
+
+    local candidate = {
+        actor_position = copy_vector(actor_position),
+        collision_position = copy_vector(collision_position),
+        intermediate_position = copy_vector(intermediate_position),
+        climb_position = copy_vector(climb_position),
+        climb_normal = copy_vector(climb_normal),
+        detected_at = now,
+    }
+    local clear = path_is_clear(actor_position, intermediate_position, climb_position)
+    draw_candidate_path(candidate, clear)
+    if not clear then
+        reset_candidate()
+        return
+    end
+
+    draw_line(climb_position, vector():mad(climb_position, climb_normal, 1), 0, 1, 0)
+    if settings.debug and state.name ~= STATE_CANDIDATE then
+        log3("[ledge-grabbing] candidate detected: height=%.3f distance=%.3f", climb_position.y - actor_position.y, climb_position:distance_to(actor_position))
+    end
+    state.name = STATE_CANDIDATE
+    state.candidate = candidate
+end
+
+local function candidate_is_triggerable(candidate)
+    if not candidate then return false end
+    if candidate.climb_position.y <= device().cam_pos.y + 0.35 then return true end
+
+    local climb_ui = game.world2ui(candidate.climb_position)
+    local intermediate_ui = game.world2ui(candidate.intermediate_position)
+    local function central(point)
+        return point.x >= UI_WIDTH / 3 and point.x <= UI_WIDTH * 2 / 3
+           and point.y >= UI_HEIGHT / 3 and point.y <= UI_HEIGHT * 2 / 3
+    end
+    return central(climb_ui) or central(intermediate_ui)
+end
+
+local function clear_owned_state()
+    state.permissions = nil
+    state.safe_position = nil
+    state.safe_heading = nil
+    state.motion = nil
+    state.camera_owned = false
+    state.hud_motion_owned = false
+end
+
+local function restore_permissions()
+    adapter.restore_permissions(state.permissions)
+    state.permissions = nil
+end
+
+local function finish_cleanup()
+    clear_owned_state()
+    state.equipment = nil
+    state.candidate = nil
+    state.last_actor_position = nil
+    state.last_actor_direction = nil
+    state.name = STATE_IDLE
+end
+
+local function cancel(reason, restore_position)
+    if state.cancelling then return end
+    state.cancelling = true
+    state.generation = state.generation + 1
+    state.last_cancel_reason = reason
+    if settings and settings.debug then
+        log3("[ledge-grabbing] cancelled: reason=%s restore_position=%s state=%s", tostring(reason), tostring(restore_position == true), state.name)
+    end
+
+    if state.camera_owned then
+        level.remove_cam_custom_position_direction()
+        state.camera_owned = false
+    end
+    if state.hud_motion_owned then
+        game.stop_hud_motion()
+        state.hud_motion_owned = false
+    end
+    stop_owned_sounds()
+
+    if restore_position and db.actor and state.safe_position then
+        db.actor:set_actor_position(state.safe_position, false)
+        if state.safe_heading then db.actor:set_actor_direction(state.safe_heading) end
+    end
+
+    restore_permissions()
+    finish_cleanup()
+    state.cancelling = false
+end
+
+local function complete_mantle()
+    local motion = state.motion
+    if not motion or not db.actor then
+        cancel("completion without actor or motion", true)
+        return
+    end
+
+    state.name = STATE_RECOVERY
+    if state.camera_owned then
+        level.remove_cam_custom_position_direction()
+        state.camera_owned = false
+    end
+    if state.hud_motion_owned then
+        game.stop_hud_motion()
+        state.hud_motion_owned = false
+    end
+    stop_owned_sounds()
+    local final_position = cubic_bezier(motion.p1, motion.p2, motion.p3, motion.p4, 1)
+    final_position.y = final_position.y + 0.07
+
+    local function standing_volume_clear(position)
+        local clearance_ray = ray_api.new({
+            ray_range = state.camera_height,
+            flags = 2,
+            ignore_object = db.actor,
+        })
+        local clearance_start = copy_vector(position)
+        clearance_start.y = clearance_start.y + 0.02
+        return not clearance_ray:get(clearance_start, vector():set(0, 1, 0)).success
+    end
+
+    if not standing_volume_clear(final_position) and settings.unstuck_check then
+        local correction_start = copy_vector(final_position)
+        correction_start.y = correction_start.y + state.camera_height + 0.1
+        local correction_ray = ray_api.new({
+            ray_range = settings.max_height,
+            flags = 2,
+            ignore_object = db.actor,
+        })
+        local correction = correction_ray:get(correction_start, vector():set(0, -1, 0))
+        if correction.success then
+            local corrected_position = copy_vector(correction.position)
+            corrected_position.y = corrected_position.y + 0.07
+            if standing_volume_clear(corrected_position) then final_position = corrected_position end
+        end
+    end
+
+    if not standing_volume_clear(final_position) then
+        cancel("final standing volume blocked", true)
+        return
+    end
+
+    db.actor:set_actor_position(final_position, false)
+    db.actor:set_actor_direction(motion.heading)
+    if settings.debug then
+        log3("[ledge-grabbing] mantle completed: final_height=%.3f", final_position.y)
+    end
+    restore_permissions()
+    finish_cleanup()
+end
+
+local function start_mantle()
+    if state.name ~= STATE_CANDIDATE or not candidate_is_triggerable(state.candidate) then return false end
+    local allowed, reason = adapter.can_mantle()
+    if not allowed then
+        state.last_cancel_reason = reason
+        return false
+    end
+
+    local candidate = state.candidate
+    state.name = STATE_STARTING
+    state.generation = state.generation + 1
+    state.permissions = adapter.snapshot_permissions()
+    state.equipment = adapter.snapshot_active_equipment()
+    state.safe_position = copy_vector(db.actor:position())
+    state.safe_heading = -device().cam_dir:getH()
+
+    local p1, p2, p3, p4 = get_path_points(
+        state.safe_position,
+        candidate.collision_position,
+        candidate.intermediate_position,
+        candidate.climb_position
+    )
+    local animation_data = demonized_ledge_grabbing_animation_data.data
+    local base_speed = animation_data.animationSpeed or 0.8
+    local camera_height = state.camera_height
+    local adjusted_actor = copy_vector(state.safe_position):add(vector():set(0, camera_height, 0))
+    local adjusted_collision = copy_vector(candidate.collision_position):add(vector():set(0, camera_height, 0))
+    local adjusted_intermediate = copy_vector(candidate.intermediate_position):add(vector():set(0, camera_height, 0))
+    local adjusted_climb = copy_vector(candidate.climb_position):add(vector():set(0, camera_height, 0))
+    local camera_p1, camera_p2, camera_p3, camera_p4 = get_path_points(
+        adjusted_actor,
+        adjusted_collision,
+        adjusted_intermediate,
+        adjusted_climb
+    )
+
+    local wall_direction = copy_vector(candidate.collision_position):sub(candidate.climb_position)
+    wall_direction.y = 0
+    if wall_direction:magnitude() <= EPSILON then
+        wall_direction = copy_vector(device().cam_dir):invert()
+        wall_direction.y = 0
+    end
+    wall_direction:normalize()
+
+    local player_position = vector():set(
+        candidate.collision_position.x,
+        candidate.climb_position.y - camera_height,
+        candidate.collision_position.z
+    )
+    player_position:mad(wall_direction, 0.037):add(vector():set(0, -0.024, 0))
+
+    local camera_anchor = copy_vector(player_position)
+    camera_anchor.y = camera_anchor.y + camera_height
+    local start_camera_position = vector():mad(camera_anchor, wall_direction, 0.4)
+    start_camera_position:add(vector():set(0, -0.5, 0))
+
+    local camera_direction = copy_vector(device().cam_dir)
+    local camera_hpb = vector():set(camera_direction:getH(), camera_direction:getP(), 0)
+    local profile = gameplay_profile()
+    local speed = base_speed * settings.animation_speed * profile.speed_modifier
+    state.motion = {
+        p1 = p1,
+        p2 = p2,
+        p3 = p3,
+        p4 = p4,
+        heading = state.safe_heading,
+        elapsed_ms = 0,
+        duration_ms = animation_data.calculatedTime * 1000 / math.max(speed, EPSILON),
+        speed = speed,
+        camera_p1 = camera_p1,
+        camera_p2 = camera_p2,
+        camera_p3 = camera_p3,
+        camera_p4 = camera_p4,
+        intermediate_position = copy_vector(candidate.intermediate_position),
+        climb_position = copy_vector(candidate.climb_position),
+        player_position = player_position,
+        start_camera_position = start_camera_position,
+        camera_hpb = camera_hpb,
+        anim_in_time = animation_data.animInFrame / animation_data.originalFps,
+        anim_out_time = animation_data.animOutFrame / animation_data.originalFps,
+        animation_end_time = animation_data.calculatedTime,
+        rotation_modifier = animation_data.rotationModifier,
+        hud_motion_speed = animation_data.hudMotionSpeed,
+        outfit_class = profile.outfit_class,
+        masked = profile.masked,
+        speed_modifier = profile.speed_modifier,
+        stamina_drain = profile.stamina_drain,
+        satiety_drain = profile.satiety_drain,
+        grunt_time = animation_data.gruntSoundFrame / animation_data.originalFps,
+        grunt_sound = nil,
+        grunt_played = false,
+        random_position_offset = random_float_range(-15, 15) * settings.animation_randomization,
+        random_rotation_x = 1 + random_float_range(-0.15, 0.25) * settings.animation_randomization,
+        random_rotation_y = 1 + random_float_range(-0.15, 0.25) * settings.animation_randomization,
+        random_rotation_z = 1 + random_float_range(-0.15, 0.25) * settings.animation_randomization,
+        first_update = true,
+        hud_duration_ms = 0,
+    }
+    local motion = state.motion
+
+    adapter.apply_mantle_permissions()
+    db.actor:set_actor_position(state.safe_position, true)
+    db.actor:set_actor_direction(state.safe_heading)
+    if settings.debug then
+        log3(
+            "[ledge-grabbing] mantle starting: active_slot=%s active_item=%s detector_active=%s",
+            tostring(state.equipment and state.equipment.active_slot),
+            tostring(state.equipment and state.equipment.active_item_id),
+            tostring(state.equipment and state.equipment.detector_was_active == true)
+        )
+    end
+
+    motion.hud_duration_ms = game.play_hud_motion(
+        2,
+        "item_anm_ledge_grabbing",
+        "anm_climb",
+        true,
+        motion.speed * motion.hud_motion_speed,
+        true
+    )
+    if motion.hud_duration_ms <= 0 then
+        cancel("HUD hands animation failed to start", true)
+        return false
+    end
+    state.hud_motion_owned = true
+    start_owned_sounds(motion)
+    state.name = STATE_MANTLING
+    if settings.debug then
+        log3("[ledge-grabbing] mantle motion started immediately; equipment override=true")
+    end
+    return true
+end
+
+local function mantle_update(delta)
+    if state.name ~= STATE_STARTING and state.name ~= STATE_MANTLING then return end
+    if not db.actor or not db.actor:alive() or db.actor:id() ~= state.actor_id then
+        cancel("actor unavailable", false)
+        return
+    end
+    if level.main_input_receiver() or db.actor:get_current_holder() or adapter.is_on_ladder() then
+        cancel("external state interrupted mantle", true)
+        return
+    end
+    if device():is_paused() then return end
+
+    local motion = state.motion
+    local previous_elapsed_ms = motion.elapsed_ms
+    motion.elapsed_ms = motion.elapsed_ms + math.max(delta or 0, 0)
+    local charged_ms = math.max(0, math.min(motion.elapsed_ms, motion.duration_ms) - math.min(previous_elapsed_ms, motion.duration_ms))
+    local charged_fraction = charged_ms / math.max(motion.duration_ms, EPSILON)
+    if charged_fraction > 0 then
+        adapter.change_stamina(-motion.stamina_drain * charged_fraction)
+        adapter.change_satiety(-motion.satiety_drain * charged_fraction)
+    end
+    if state.hud_motion_owned and motion.elapsed_ms >= motion.hud_duration_ms then
+        state.hud_motion_owned = false
+    end
+    local progress = clamp_value(motion.elapsed_ms / motion.duration_ms, 0, 1)
+    local easing = demonized_randomizing_functions
+    local procedural_progress = easing.CubicEaseInOut(progress)
+    local procedural_camera = cubic_bezier(
+        motion.camera_p1,
+        motion.camera_p2,
+        motion.camera_p3,
+        motion.camera_p4,
+        procedural_progress
+    )
+
+    local animation_time = motion.elapsed_ms / 1000 * motion.speed
+    if motion.grunt_sound and not motion.grunt_played and animation_time >= motion.grunt_time then
+        motion.grunt_played = true
+        motion.grunt_sound:play(db.actor, 0, sound_object.s2d)
+        motion.grunt_sound.volume = settings.grunt_volume
+        motion.grunt_sound.frequency = 1 + random_float_range(-0.07, 0.07)
+    end
+    local curves = demonized_ledge_grabbing_animation_data.data.curves
+    local camera_offset = vector():set(
+        curve_value(curves.locationX, animation_time),
+        curve_value(curves.locationY, animation_time),
+        curve_value(curves.locationZ, animation_time)
+    )
+    camera_offset = rotate_y(camera_offset, math.deg(motion.camera_hpb.x) + motion.random_position_offset)
+    local animated_camera = copy_vector(motion.start_camera_position):add(camera_offset)
+
+    local animation_in = clamp_value(animation_time / motion.anim_in_time, 0, 1)
+    animation_in = easing.QuadraticEaseInOut(animation_in)
+    local result_position = vector_lerp(procedural_camera, animated_camera, animation_in)
+
+    local current_player_position = vector():set(
+        result_position.x,
+        result_position.y - state.camera_height,
+        result_position.z
+    ):sub(vector():set(0, 0.1, 0))
+    current_player_position = vector_lerp(current_player_position, motion.player_position, animation_in)
+
+    local animation_out = clamp_value(
+        (animation_time - motion.anim_out_time) / (motion.animation_end_time - motion.anim_out_time),
+        0,
+        1
+    )
+    animation_out = easing.QuadraticEaseInOut(animation_out)
+    result_position = vector_lerp(result_position, procedural_camera, animation_out)
+
+    local grab_direction = vector():set(
+        motion.intermediate_position.x - result_position.x,
+        motion.climb_position.y - result_position.y,
+        motion.intermediate_position.z - result_position.z
+    )
+    if grab_direction:magnitude() > EPSILON then grab_direction:normalize() end
+    local camera_rotation = vector_lerp(
+        motion.camera_hpb,
+        vector():set(motion.camera_hpb.x, grab_direction:getP(), 0),
+        animation_in
+    )
+
+    local rotation_blend = clamp_value(
+        (animation_time - motion.anim_in_time) / (motion.anim_out_time - motion.anim_in_time),
+        0,
+        1
+    )
+    rotation_blend = easing.QuadraticEaseInOut(rotation_blend)
+    local climb_direction = copy_vector(motion.climb_position):sub(result_position)
+    if climb_direction:magnitude() > EPSILON then climb_direction:normalize() end
+    camera_rotation = vector_lerp(
+        camera_rotation,
+        vector():set(motion.camera_hpb.x, climb_direction:getP() / 4, 0),
+        rotation_blend
+    )
+
+    camera_rotation = vector():set(
+        camera_rotation.x + curve_value(curves.rotation_eulerX, animation_time, motion.hud_motion_speed) * motion.rotation_modifier * motion.random_rotation_x,
+        camera_rotation.y + curve_value(curves.rotation_eulerY, animation_time, motion.hud_motion_speed) * motion.rotation_modifier * motion.random_rotation_y,
+        camera_rotation.z + curve_value(curves.rotation_eulerZ, animation_time, motion.hud_motion_speed) * motion.rotation_modifier * motion.random_rotation_z
+    )
+    camera_rotation = vector_lerp(camera_rotation, vector():set(motion.camera_hpb.x, 0, 0), animation_out)
+
+    level.set_cam_custom_position_direction(result_position, camera_rotation, 1, true, false)
+    state.camera_owned = true
+
+    if motion.first_update then
+        motion.first_update = false
+    else
+        db.actor:set_actor_position(current_player_position, true)
+        db.actor:set_actor_direction(motion.heading)
+    end
+
+    if progress >= 1 then complete_mantle() end
+end
+
+local function report_error(context, message)
+    log3("! [ledge-grabbing] %s failed: %s", context, tostring(message))
+    cancel(context .. " error", state.name == STATE_MANTLING or state.name == STATE_STARTING)
+    release_debug()
+end
+
+local function request_mantle()
+    if controller_faulted then return false end
+    local started = false
+    local ok, message = xpcall(function()
+        started = start_mantle()
+    end, debug.traceback)
+    if not ok then
+        controller_faulted = true
+        pressed_at = nil
+        report_error("mantle start", message)
+    end
+    if started then pressed_at = nil end
+    return ok and started
+end
+
+local function protected_update(delta)
+    if controller_faulted then return end
+    if not update_heartbeat_logged then
+        update_heartbeat_logged = true
+        log3("[ledge-grabbing] first controller update")
+    end
+    local ok, message = xpcall(function()
+        if state.name == STATE_STARTING or state.name == STATE_MANTLING then
+            mantle_update(delta)
+        else
+            detector_update()
+        end
+    end, debug.traceback)
+    if not ok then
+        controller_faulted = true
+        report_error("controller update", message)
+    end
+end
+
+local function initialize()
+    local ok, message = xpcall(function()
+        load_settings()
+        controller_faulted = false
+        assert(game.world2ui, "game.world2ui is unavailable")
+        assert(level.set_cam_custom_position_direction, "live script camera API is unavailable")
+        state.actor_id = db.actor and db.actor:id() or nil
+        state.camera_height = db.actor and (device().cam_pos.y - db.actor:position().y) or 1.6
+        state.last_actor_position = nil
+        state.last_actor_direction = nil
+        state.last_scan_time = 0
+        pressed_at = nil
+        update_heartbeat_logged = false
+        reset_candidate()
+        release_debug()
+        log3("[ledge-grabbing] initialized: actor=%s camera_height=%.3f input=%s debug=%s", tostring(state.actor_id), state.camera_height, settings.input_method, tostring(settings.debug))
+    end, debug.traceback)
+    if not ok then report_error("initialization", message) end
+end
+
+local function shutdown()
+    cancel("actor shutdown", false)
+    release_debug()
+    state.equipment = nil
+    state.name = STATE_IDLE
+    state.actor_id = nil
+    pressed_at = nil
+end
+
+local function matches_action(bind)
+    return settings and settings.key_action == "jump" and bind == key_bindings.kJUMP
+end
+
+local function on_key_down(_, bind)
+    if not feature_enabled() then return end
+    if not matches_action(bind) then return end
+    if level.main_input_receiver() then return end
+    if settings.debug then
+        log3("[ledge-grabbing] jump pressed: state=%s candidate=%s", state.name, state.candidate and "yes" or "no")
+    end
+    pressed_at = time_global()
+    if settings.input_method == "buttonPress" or settings.input_method == "both" then
+        request_mantle()
+    end
+end
+
+local function on_key_hold(_, bind)
+    if not feature_enabled() then return end
+    if not matches_action(bind) or not pressed_at then return end
+    if settings.input_method == "jumpHold" or settings.input_method == "both" then
+        if time_global() - pressed_at >= settings.hold_time_ms then request_mantle() end
+    end
+end
+
+local function on_key_up(_, bind)
+    if matches_action(bind) then pressed_at = nil end
+end
+
+function M.get_state()
+    return state.name
+end
+
+function M.get_candidate()
+    return state.candidate
+end
+
+function M.force_scan()
+    detector_update()
+    return state.candidate
+end
+
+function M.try_mantle()
+    return request_mantle()
+end
+
+function M.cancel(reason)
+    cancel(reason or "explicit script cancel", true)
+end
+
+function M.set_debug(enabled)
+    if not settings then load_settings() end
+    settings.debug = enabled == true
+    if not settings.debug then release_debug() end
+end
+
+function M.reload_settings()
+    load_settings()
+    if not settings.debug then release_debug() end
+end
+
+function M.attach(signal_manager)
+    if attached_signal_manager == signal_manager then return end
+    attached_signal_manager = signal_manager
+    log3("[ledge-grabbing] module attached to OGSE signals")
+    signal_manager:subscribe({signal = "on_before_first_update", fun = initialize})
+    signal_manager:subscribe({signal = "on_before_update", fun = protected_update})
+    signal_manager:subscribe({signal = "on_key_down", fun = on_key_down})
+    signal_manager:subscribe({signal = "on_key_hold", fun = on_key_hold})
+    signal_manager:subscribe({signal = "on_key_up", fun = on_key_up})
+    signal_manager:subscribe({signal = "on_before_destroy", fun = shutdown})
+end

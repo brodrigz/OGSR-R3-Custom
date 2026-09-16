@@ -1,0 +1,495 @@
+--Меню настроек геймплея. Используется скриптом ui_mm_opt_main.script
+
+local function bind_hint(handler, wnd, id, title_id, hint_id)
+	if not wnd then
+		return
+	end
+	handler:Register(wnd, id)
+	handler:AddCallback(id, ui_events.STATIC_FOCUS_RECEIVED, function()
+		if handler.hint_name then
+			handler.hint_name:SetText(game.translate_string(title_id))
+		end
+		if handler.hint_caption then
+			handler.hint_caption:SetText(game.translate_string(hint_id))
+		end
+	end)
+end
+
+local function fs_has_file(path, name)
+	local fs = getFS()
+	if not fs then
+		return false
+	end
+	local ok, info = pcall(function()
+		return fs:exist(path, name)
+	end)
+	if not ok or info == nil or type(info) == "number" then
+		return false
+	end
+	local found = false
+	pcall(function()
+		local sz = tonumber(info.size_real) or 0
+		local nm = string.lower(info.name and tostring(info.name) or "")
+		local leaf = string.lower(string.match(name, "[^\\/]+$") or name)
+		found = sz > 0 and leaf ~= "" and string.find(nm, leaf, 1, true) ~= nil
+	end)
+	return found
+end
+
+local function sebs_backpack_available()
+	return fs_has_file("$game_scripts$", "hoc_backpack_inventory_anim.script")
+		and fs_has_file("$game_config$", "misc\\hud_items\\hoc_backpack.ltx")
+end
+
+local function add_hint(handler, id, title_id, hint_id)
+	handler:AddCallback(id, ui_events.STATIC_FOCUS_RECEIVED, function()
+		if handler.hint_name then
+			handler.hint_name:SetText(game.translate_string(title_id))
+		end
+		if handler.hint_caption then
+			handler.hint_caption:SetText(game.translate_string(hint_id))
+		end
+	end)
+end
+
+class "opt_gameplay" (CUIWindow)
+function opt_gameplay:__init() super()
+end
+
+function opt_gameplay:__finalize()
+end
+
+function opt_gameplay:InitControls(x, y, xml, handler)
+	self:Init(x, y, 450, 454)
+	self:SetAutoDelete(true)
+
+	xml:InitFrameLine("tab_gameplay:cap_sec_difficulty", self)
+	xml:InitFrameLine("tab_gameplay:cap_sec_combat", self)
+	xml:InitFrameLine("tab_gameplay:cap_sec_world", self)
+	xml:InitFrameLine("tab_gameplay:cap_sec_immersion", self)
+
+	bind_hint(handler, xml:InitStatic("tab_gameplay:list_difficulty_cap", self), "gp_cap_difficulty", "st_cap_list_difficulty", "ui_mm_hint_difficulty")
+	bind_hint(handler, xml:InitStatic("tab_gameplay:list_economy_cap", self), "gp_cap_economy", "st_cap_list_economy", "ui_mm_hint_economy")
+	bind_hint(handler, xml:InitStatic("tab_gameplay:list_bullet_pen_cap", self), "gp_cap_bullet_pen", "ui_mm_bullet_penetration", "ui_mm_hint_bullet_pen")
+
+	bind_hint(handler, xml:InitCheck("tab_gameplay:check_aim_toggle", self), "gp_aim_toggle", "ui_mm_aim_toggle", "ui_mm_hint_aim_toggle")
+	bind_hint(handler, xml:InitCheck("tab_gameplay:check_auto_aim_zoom", self), "gp_auto_aim_zoom", "ui_mm_auto_aim_zoom", "ui_mm_hint_auto_aim_zoom")
+	bind_hint(handler, xml:InitCheck("tab_gameplay:check_late_reload", self), "gp_late_reload", "ui_mm_late_reload", "ui_mm_hint_late_reload")
+	bind_hint(handler, xml:InitCheck("tab_gameplay:check_lean_toggle", self), "gp_lean_toggle", "ui_mm_lean_toggle", "ui_mm_hint_lean_toggle")
+	bind_hint(handler, xml:InitCheck("tab_gameplay:check_switch_slot", self), "gp_switch_slot", "ui_mm_switch_slot", "ui_mm_hint_switch_slot")
+	bind_hint(handler, xml:InitCheck("tab_gameplay:check_sprint_lower_weapon", self), "gp_sprint_lower", "ui_mm_sprint_lower_weapon", "ui_mm_hint_sprint_lower_weapon")
+	bind_hint(handler, xml:InitCheck("tab_gameplay:check_sprint_hold", self), "gp_sprint_hold", "ui_mm_sprint_hold", "ui_mm_hint_sprint_hold")
+	bind_hint(handler, xml:InitCheck("tab_gameplay:check_sticky_aim", self), "gp_sticky_aim", "ui_mm_sticky_aim", "ui_mm_hint_sticky_aim")
+
+	ledge_grab = xml:InitCheck("tab_gameplay:check_ledge_grab", self)
+	handler:Register(ledge_grab, "ledge_grab")
+	local ledge_on = ui_data.load("rad3_ledge_grab")
+	if ledge_on == nil then ledge_on = true end
+	ledge_grab:SetCheck(ledge_on)
+	handler:AddCallback("ledge_grab", ui_events.BUTTON_CLICKED, self.LedgeGrab, self)
+	add_hint(handler, "ledge_grab", "ui_mm_ledge_grab", "ui_mm_hint_ledge_grab")
+
+	bind_hint(handler, xml:InitCheck("tab_gameplay:check_autopause", self), "gp_autopause", "ui_mm_keypress_on_start", "ui_mm_hint_autopause")
+	bind_hint(handler, xml:InitCheck("tab_gameplay:check_ambient", self), "gp_ambient", "ui_mm_ambient", "ui_mm_hint_ambient")
+
+	use_anims = xml:InitCheck("tab_gameplay:check_use_anims", self)
+	handler:Register(use_anims, "use_anims")
+	use_anims:SetCheck(ui_data.load("rad3_use_anims"))
+	handler:AddCallback("use_anims", ui_events.BUTTON_CLICKED, self.UseAnims, self)
+	add_hint(handler, "use_anims", "ui_mm_use_anims", "ui_mm_hint_use_anims")
+
+	harvest_anim = xml:InitCheck("tab_gameplay:check_harvest_anim", self)
+	handler:Register(harvest_anim, "harvest_anim")
+	harvest_anim:SetCheck(ui_data.load("rad3_harvest_anim"))
+	handler:AddCallback("harvest_anim", ui_events.BUTTON_CLICKED, self.HarvestAnim, self)
+	add_hint(handler, "harvest_anim", "ui_mm_harvest_anim", "ui_mm_hint_harvest_anim")
+
+	mutants_after_blowout = xml:InitCheck("tab_gameplay:check_mutants_after_blowout", self)
+	handler:Register(mutants_after_blowout, "mutants_after_blowout")
+	mutants_after_blowout:SetCheck(ui_data.load("rad3_mutants_after_blowout"))
+	handler:AddCallback("mutants_after_blowout", ui_events.BUTTON_CLICKED, self.MutantsAfterBlowout, self)
+	add_hint(handler, "mutants_after_blowout", "ui_mm_mutants_after_blowout", "ui_mm_hint_mutants_after_blowout")
+
+	gasmask_breath_snd = xml:InitCheck("tab_gameplay:check_gasmask_breath_snd", self)
+	handler:Register(gasmask_breath_snd, "gasmask_breath_snd")
+	gasmask_breath_snd:SetCheck(ui_data.load("rad3_gasmask_breath_snd"))
+	handler:AddCallback("gasmask_breath_snd", ui_events.BUTTON_CLICKED, self.GasmaskBreathSnd, self)
+	add_hint(handler, "gasmask_breath_snd", "ui_mm_gasmask_breath_snd", "ui_mm_hint_gasmask_breath_snd")
+
+	legs = xml:InitCheck("tab_gameplay:check_legs", self)
+	handler:Register(legs, "legs")
+	legs:SetCheck(ui_data.load("rad3_legs"))
+	handler:AddCallback("legs", ui_events.BUTTON_CLICKED, self.Legs, self)
+	add_hint(handler, "legs", "ui_mm_legs", "ui_mm_hint_legs")
+
+	dynamic_news = xml:InitCheck("tab_gameplay:check_dynamic_news", self)
+	handler:Register(dynamic_news, "dynamic_news")
+	dynamic_news:SetCheck(ui_data.load("rad3_dynamic_news"))
+	handler:AddCallback("dynamic_news", ui_events.BUTTON_CLICKED, self.DynamicNews, self)
+	add_hint(handler, "dynamic_news", "ui_mm_dynamic_news", "ui_mm_hint_dynamic_news")
+
+	autounload_wpn = xml:InitCheck("tab_gameplay:check_autounload_wpn", self)
+	handler:Register(autounload_wpn, "autounload_wpn")
+	autounload_wpn:SetCheck(ui_data.load("rad3_autounload_wpn"))
+	handler:AddCallback("autounload_wpn", ui_events.BUTTON_CLICKED, self.AutounloadWpn, self)
+	add_hint(handler, "autounload_wpn", "ui_mm_autounload_wpn", "ui_mm_hint_autounload_wpn")
+
+	pickup_anim = xml:InitCheck("tab_gameplay:check_pickup_anim", self)
+	handler:Register(pickup_anim, "pickup_anim")
+	pickup_anim:SetCheck(ui_data.load("rad3_pickup_anim"))
+	handler:AddCallback("pickup_anim", ui_events.BUTTON_CLICKED, self.PickupAnim, self)
+	add_hint(handler, "pickup_anim", "ui_mm_pickup_anim", "ui_mm_hint_pickup_anim")
+
+	hit_snd = xml:InitCheck("tab_gameplay:check_hit_snd", self)
+	handler:Register(hit_snd, "hit_snd")
+	hit_snd:SetCheck(ui_data.load("rad3_hit_snd"))
+	handler:AddCallback("hit_snd", ui_events.BUTTON_CLICKED, self.HitSnd, self)
+	add_hint(handler, "hit_snd", "ui_mm_hit_snd", "ui_mm_hint_hit_snd")
+
+	backpack_anim = nil
+	if sebs_backpack_available() then
+		backpack_anim = xml:InitCheck("tab_gameplay:check_backpack_anim", self)
+		handler:Register(backpack_anim, "backpack_anim")
+		local on = ui_data.load("rad3_backpack_anim")
+		if on == nil then on = true end
+		backpack_anim:SetCheck(on)
+		handler:AddCallback("backpack_anim", ui_events.BUTTON_CLICKED, self.BackpackAnim, self)
+		add_hint(handler, "backpack_anim", "ui_mm_backpack_anim", "ui_mm_hint_backpack_anim")
+	end
+
+	task_autosave = xml:InitCheck("tab_gameplay:check_task_autosave", self)
+	handler:Register(task_autosave, "task_autosave")
+	task_autosave:SetCheck(ui_data.load("rad3_task_autosave"))
+	handler:AddCallback("task_autosave", ui_events.BUTTON_CLICKED, self.TaskAutosave, self)
+	add_hint(handler, "task_autosave", "ui_mm_task_autosave", "ui_mm_hint_task_autosave")
+
+	list_difficulty = xml:InitComboBox("tab_gameplay:list_difficulty", self)
+	list_difficulty:SetAutoDelete(true)
+	handler:Register(list_difficulty, "list_difficulty")
+	handler:AddCallback("list_difficulty", ui_events.LIST_ITEM_SELECT, self.DifficultySelect, self)
+
+	list_economy = xml:InitComboBox("tab_gameplay:list_economy", self)
+	list_economy:SetAutoDelete(true)
+	handler:Register(list_economy, "list_economy")
+	handler:AddCallback("list_economy", ui_events.LIST_ITEM_SELECT, self.EconomySelect, self)
+
+	xml:InitComboBox("tab_gameplay:list_bullet_pen", self)
+
+	local btn = xml:Init3tButton("tab_gameplay:btn_default", self)
+	handler:Register(btn, "btn_game_default")
+end
+
+function opt_gameplay:DifficultySelect()
+	local diff_id = list_difficulty:CurrentID() + 1
+	get_console():execute("g_rad3_game_diff gdiff_" .. diff_id)
+	game_difficulties.set_game_factor("type", diff_id)
+end
+
+function opt_gameplay:EconomySelect()
+	local diff_id = list_economy:CurrentID() + 1
+	get_console():execute("g_rad3_economy_diff econ_" .. diff_id)
+	game_difficulties.set_eco_factor("type", diff_id)
+end
+
+function opt_gameplay:UseAnims()
+	use_anims:SetCheck(ui_data.load("rad3_use_anims"))
+	if use_anims:GetCheck() then
+		ui_data.save("rad3_use_anims", false)
+		use_anims:SetCheck(false) else
+		ui_data.save("rad3_use_anims", true)
+		use_anims:SetCheck(true)
+	end
+end
+
+function opt_gameplay:PickupAnim()
+	pickup_anim:SetCheck(ui_data.load("rad3_pickup_anim"))
+	if pickup_anim:GetCheck() then
+		ui_data.save("rad3_pickup_anim", false)
+		pickup_anim:SetCheck(false) else
+		ui_data.save("rad3_pickup_anim", true)
+		pickup_anim:SetCheck(true)
+	end
+end
+
+function opt_gameplay:HarvestAnim()
+	harvest_anim:SetCheck(ui_data.load("rad3_harvest_anim"))
+	if harvest_anim:GetCheck() then
+		ui_data.save("rad3_harvest_anim", false)
+		harvest_anim:SetCheck(false) else
+		ui_data.save("rad3_harvest_anim", true)
+		harvest_anim:SetCheck(true)
+	end
+end
+
+function opt_gameplay:MutantsAfterBlowout()
+	mutants_after_blowout:SetCheck(ui_data.load("rad3_mutants_after_blowout"))
+	if mutants_after_blowout:GetCheck() then
+		ui_data.save("rad3_mutants_after_blowout", false)
+		mutants_after_blowout:SetCheck(false) else
+		ui_data.save("rad3_mutants_after_blowout", true)
+		mutants_after_blowout:SetCheck(true)
+	end
+end
+
+function opt_gameplay:GasmaskBreathSnd()
+	gasmask_breath_snd:SetCheck(ui_data.load("rad3_gasmask_breath_snd"))
+	if gasmask_breath_snd:GetCheck() then
+		ui_data.save("rad3_gasmask_breath_snd", false)
+		gasmask_breath_snd:SetCheck(false) else
+		ui_data.save("rad3_gasmask_breath_snd", true)
+		gasmask_breath_snd:SetCheck(true)
+	end
+end
+
+function opt_gameplay:Legs()
+	legs:SetCheck(ui_data.load("rad3_legs"))
+	if legs:GetCheck() then
+		ui_data.save("rad3_legs", false)
+		legs:SetCheck(false) else
+		ui_data.save("rad3_legs", true)
+		legs:SetCheck(true)
+	end
+end
+
+function opt_gameplay:DynamicNews()
+	dynamic_news:SetCheck(ui_data.load("rad3_dynamic_news"))
+	if dynamic_news:GetCheck() then
+		ui_data.save("rad3_dynamic_news", false)
+		dynamic_news:SetCheck(false) else
+		ui_data.save("rad3_dynamic_news", true)
+		dynamic_news:SetCheck(true)
+	end
+end
+
+function opt_gameplay:AutounloadWpn()
+	autounload_wpn:SetCheck(ui_data.load("rad3_autounload_wpn"))
+	if autounload_wpn:GetCheck() then
+		ui_data.save("rad3_autounload_wpn", false)
+		autounload_wpn:SetCheck(false) else
+		ui_data.save("rad3_autounload_wpn", true)
+		autounload_wpn:SetCheck(true)
+	end
+end
+
+function opt_gameplay:HitSnd()
+	hit_snd:SetCheck(ui_data.load("rad3_hit_snd"))
+	if hit_snd:GetCheck() then
+		ui_data.save("rad3_hit_snd", false)
+		hit_snd:SetCheck(false) else
+		ui_data.save("rad3_hit_snd", true)
+		hit_snd:SetCheck(true)
+	end
+end
+
+function opt_gameplay:BackpackAnim()
+	local on = ui_data.load("rad3_backpack_anim")
+	if on == nil then on = true end
+	backpack_anim:SetCheck(on)
+	if backpack_anim:GetCheck() then
+		ui_data.save("rad3_backpack_anim", false)
+		backpack_anim:SetCheck(false) else
+		ui_data.save("rad3_backpack_anim", true)
+		backpack_anim:SetCheck(true)
+	end
+end
+
+function opt_gameplay:TaskAutosave()
+	task_autosave:SetCheck(ui_data.load("rad3_task_autosave"))
+	if task_autosave:GetCheck() then
+		ui_data.save("rad3_task_autosave", false)
+		task_autosave:SetCheck(false) else
+		ui_data.save("rad3_task_autosave", true)
+		task_autosave:SetCheck(true)
+	end
+end
+
+local function set_rad3_check(ctrl, key, value)
+	ui_data.save(key, value)
+	if ctrl then
+		ctrl:SetCheck(value)
+	end
+end
+
+function opt_gameplay:LedgeGrab()
+	local on = ui_data.load("rad3_ledge_grab")
+	if on == nil then on = true end
+	ledge_grab:SetCheck(on)
+	if ledge_grab:GetCheck() then
+		ui_data.save("rad3_ledge_grab", false)
+		ledge_grab:SetCheck(false) else
+		ui_data.save("rad3_ledge_grab", true)
+		ledge_grab:SetCheck(true)
+	end
+end
+
+function opt_gameplay:ResetToDefaults()
+	cmd("g_rad3_game_diff gdiff_2")
+	cmd("g_rad3_economy_diff econ_2")
+	cmd("g_bullet_penetration st_bullet_pen_on")
+	cmd("wpn_aim_toggle off")
+	cmd("g_auto_aim_zoom off")
+	cmd("g_complete_late_reload_on_hide on")
+	cmd("lean_toggle off")
+	cmd("g_mouse_wheel_switch_slot off")
+	cmd("g_sprint_lower_weapon off")
+	cmd("g_sprint_hold off")
+	cmd("g_sticky_aim off")
+	cmd("keypress_on_start on")
+	cmd("g_music_tracks on")
+
+	if game_difficulties then
+		game_difficulties.set_game_factor("type", 2)
+		game_difficulties.set_eco_factor("type", 2)
+	end
+
+	set_rad3_check(task_autosave, "rad3_task_autosave", true)
+	set_rad3_check(mutants_after_blowout, "rad3_mutants_after_blowout", true)
+	set_rad3_check(dynamic_news, "rad3_dynamic_news", true)
+	set_rad3_check(autounload_wpn, "rad3_autounload_wpn", false)
+	set_rad3_check(pickup_anim, "rad3_pickup_anim", true)
+	set_rad3_check(use_anims, "rad3_use_anims", true)
+	set_rad3_check(harvest_anim, "rad3_harvest_anim", true)
+	set_rad3_check(legs, "rad3_legs", true)
+	set_rad3_check(gasmask_breath_snd, "rad3_gasmask_breath_snd", true)
+	set_rad3_check(hit_snd, "rad3_hit_snd", true)
+	if backpack_anim and backpack_anim:IsShown() then
+		set_rad3_check(backpack_anim, "rad3_backpack_anim", true)
+	end
+	set_rad3_check(ledge_grab, "rad3_ledge_grab", true)
+
+	local opt = COptionsManager()
+	opt:SetCurrentValues("mm_opt_gameplay")
+	opt:SetCurrentValues("random")
+end
+
+class "opt_hud" (CUIWindow)
+function opt_hud:__init() super()
+end
+
+function opt_hud:__finalize()
+end
+
+function opt_hud:InitControls(x, y, xml, handler)
+	self:Init(x, y, 450, 410)
+	self:SetAutoDelete(true)
+
+	xml:InitFrameLine("tab_hud:cap_sec_display", self)
+	xml:InitFrameLine("tab_hud:cap_sec_compass", self)
+	xml:InitFrameLine("tab_hud:cap_sec_minimap", self)
+
+	bind_hint(handler, xml:InitCheck("tab_hud:check_crosshair", self), "hud_crosshair", "ui_mm_show_crosshair", "ui_mm_hint_crosshair")
+	bind_hint(handler, xml:InitCheck("tab_hud:check_crosshair_hard", self), "hud_crosshair_hard", "ui_mm_crosshair_hard", "ui_mm_hint_crosshair_hard")
+	bind_hint(handler, xml:InitCheck("tab_hud:check_dist", self), "hud_dist", "ui_mm_crosshair_distance", "ui_mm_hint_dist")
+	bind_hint(handler, xml:InitCheck("tab_hud:check_hud_interact", self), "hud_interact_opt", "ui_mm_hud_interact", "ui_mm_hint_hud_interact")
+	bind_hint(handler, xml:InitCheck("tab_hud:check_tips", self), "hud_tips", "ui_mm_tips", "ui_mm_hint_tips")
+	bind_hint(handler, xml:InitCheck("tab_hud:check_3d_pda", self), "hud_3d_pda", "ui_mm_3d_pda", "ui_mm_hint_3d_pda")
+
+	fakelens = xml:InitCheck("tab_hud:check_fakelens", self)
+	handler:Register(fakelens, "fakelens")
+	fakelens:SetCheck(ui_data.load("rad3_fakelens"))
+	handler:AddCallback("fakelens", ui_events.BUTTON_CLICKED, self.Fakelens, self)
+	add_hint(handler, "fakelens", "ui_mm_fakelens", "ui_mm_hint_fakelens")
+
+	local function load_flag(key)
+		local on = ui_data.load(key)
+		if on == nil then return true end
+		return on
+	end
+
+	dialog_ui = xml:InitCheck("tab_hud:check_dialog_ui", self)
+	handler:Register(dialog_ui, "dialog_ui")
+	dialog_ui:SetCheck(load_flag("rad3_dialog_ui"))
+	handler:AddCallback("dialog_ui", ui_events.BUTTON_CLICKED, self.DialogUi, self)
+	add_hint(handler, "dialog_ui", "ui_mm_dialog_ui", "ui_mm_hint_dialog_ui")
+
+	bind_hint(handler, xml:InitStatic("tab_hud:list_compass_cap", self), "hud_cap_compass", "ui_mm_tactical_compass", "ui_mm_hint_compass")
+	bind_hint(handler, xml:InitStatic("tab_hud:cap_compass_pos", self), "hud_cap_compass_pos", "ui_mm_compass_pos", "ui_mm_hint_compass_pos")
+	bind_hint(handler, xml:InitStatic("tab_hud:cap_compass_range", self), "hud_cap_compass_range", "ui_mm_compass_range", "ui_mm_hint_compass_range")
+	bind_hint(handler, xml:InitStatic("tab_hud:cap_compass_scale", self), "hud_cap_compass_scale", "ui_mm_compass_scale", "ui_mm_hint_compass_scale")
+	bind_hint(handler, xml:InitStatic("tab_hud:cap_compass_x", self), "hud_cap_compass_x", "ui_mm_compass_x", "ui_mm_hint_compass_x")
+	bind_hint(handler, xml:InitStatic("tab_hud:cap_compass_y", self), "hud_cap_compass_y", "ui_mm_compass_y", "ui_mm_hint_compass_y")
+	xml:InitTrackBar("tab_hud:track_compass_range", self)
+	xml:InitTrackBar("tab_hud:track_compass_scale", self)
+	xml:InitTrackBar("tab_hud:track_compass_x", self)
+	xml:InitTrackBar("tab_hud:track_compass_y", self)
+
+	bind_hint(handler, xml:InitStatic("tab_hud:cap_minimap_pos", self), "hud_cap_minimap_pos", "ui_mm_minimap_pos", "ui_mm_hint_minimap_pos")
+	bind_hint(handler, xml:InitStatic("tab_hud:cap_minimap_scale", self), "hud_cap_minimap_scale", "ui_mm_minimap_scale", "ui_mm_hint_minimap_scale")
+	bind_hint(handler, xml:InitStatic("tab_hud:cap_minimap_x", self), "hud_cap_minimap_x", "ui_mm_minimap_x", "ui_mm_hint_minimap_x")
+	bind_hint(handler, xml:InitStatic("tab_hud:cap_minimap_y", self), "hud_cap_minimap_y", "ui_mm_minimap_y", "ui_mm_hint_minimap_y")
+	xml:InitTrackBar("tab_hud:track_minimap_scale", self)
+	xml:InitTrackBar("tab_hud:track_minimap_x", self)
+	xml:InitTrackBar("tab_hud:track_minimap_y", self)
+
+	xml:InitComboBox("tab_hud:list_compass", self)
+	xml:InitComboBox("tab_hud:list_compass_pos", self)
+	xml:InitComboBox("tab_hud:list_minimap_pos", self)
+
+	local btn = xml:Init3tButton("tab_hud:btn_default", self)
+	handler:Register(btn, "btn_hud_default")
+end
+
+function opt_hud:Fakelens()
+	fakelens:SetCheck(ui_data.load("rad3_fakelens"))
+	if fakelens:GetCheck() then
+		ui_data.save("rad3_fakelens", false)
+		fakelens:SetCheck(false) else
+		ui_data.save("rad3_fakelens", true)
+		fakelens:SetCheck(true)
+	end
+end
+
+local function toggle_hud_flag(ctrl, key)
+	local on = ui_data.load(key)
+	if on == nil then on = true end
+	ctrl:SetCheck(on)
+	if ctrl:GetCheck() then
+		ui_data.save(key, false)
+		ctrl:SetCheck(false)
+	else
+		ui_data.save(key, true)
+		ctrl:SetCheck(true)
+	end
+end
+
+function opt_hud:DialogUi()
+	toggle_hud_flag(dialog_ui, "rad3_dialog_ui")
+end
+
+function opt_hud:ResetToDefaults()
+	cmd("hud_crosshair on")
+	cmd("hud_crosshair_hard off")
+	cmd("hud_crosshair_dist off")
+	cmd("hud_interact on")
+	cmd("hud_info on")
+	cmd("g_3d_pda on")
+	cmd("g_tactical_compass st_compass_classic")
+	cmd("g_tactical_compass_pos st_compass_pos_bottom")
+	cmd("g_tactical_compass_range 150")
+	cmd("g_tactical_compass_scale 1")
+	cmd("g_tactical_compass_x 0")
+	cmd("g_tactical_compass_y 0")
+	cmd("g_minimap_pos st_minimap_pos_bl")
+	cmd("g_minimap_scale 1")
+	cmd("g_minimap_x 0")
+	cmd("g_minimap_y 0")
+
+	ui_data.save("rad3_fakelens", true)
+	if fakelens then
+		fakelens:SetCheck(true)
+	end
+	ui_data.save("rad3_dialog_ui", true)
+	if dialog_ui then dialog_ui:SetCheck(true) end
+
+	local opt = COptionsManager()
+	opt:SetCurrentValues("mm_opt_gameplay")
+end
+
+class "text_item" (CUIListItemEx)
+function text_item:__init() super()
+	self.fn= CUIStatic()
+	self.fn:SetTextColor(255, 184, 184, 184)
+	self.fn:SetAutoDelete(true)
+	self:AttachChild(self.fn)
+	self.fn:SetText("item")
+end

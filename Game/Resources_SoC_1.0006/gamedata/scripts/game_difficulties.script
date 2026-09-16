@@ -1,0 +1,164 @@
+-- =======================================================================================
+-- Tronex
+-- 2018/8/10
+-- Economy and gameplay difficulty factors
+
+-- Set by options or new game (ui_mm_faction_select)
+-- Called by other scripts for gathering required values
+
+-- seaz5150: Adapted for Radiophobia 3 (14. 9. 2023). 
+-- =======================================================================================
+
+function attach(sm)
+    sm:subscribe({ signal = "on_spawn", fun = this.on_game_load })
+end
+
+local console = get_console()
+
+local ini_diff = ini_file_ex("tuning\\difficulty.ltx")
+
+local eco_num = 2
+local economy = {}
+local factors_eco = {}
+
+local game_num = 2
+local gameplay = {}
+local factors_game = {}
+
+local vanilla_diff = {
+	[1] = "gd_novice",
+	[2] = "gd_stalker",
+	[3] = "gd_veteran",
+	[4] = "gd_master",
+}
+
+function setup_game_factors(diff)
+	factors_game["type"]				= gameplay["type"] or game_num
+	factors_game["actor_immunities"]	= gameplay["actor_immunities"] or ini_diff:r_float_ex("gdiff_" .. diff , "actor_immunities") or 1
+	factors_game["hit_power"]			= gameplay["hit_power"] or ini_diff:r_float_ex("gdiff_" .. diff , "hit_power") or 1
+	factors_game["dispersion_base"]		= gameplay["dispersion_base"] or ini_diff:r_float_ex("gdiff_" .. diff , "dispersion_base") or 1
+	factors_game["dispersion_factor"]	= gameplay["dispersion_factor"] or ini_diff:r_float_ex("gdiff_" .. diff , "dispersion_factor") or 1
+	factors_game["power_loss_bias"]		= gameplay["power_loss_bias"] or ini_diff:r_float_ex("gdiff_" .. diff , "power_loss_bias") or 0.2
+	factors_game["weight"]			    = gameplay["weight"] or ini_diff:r_float_ex("gdiff_" .. diff , "max_weight") or 50
+end
+
+function setup_eco_factors(eco)
+	factors_eco["type"]				    = economy["type"] or eco_num
+	factors_eco["buy"]				    = economy["buy"] or ini_diff:r_float_ex("econ_" .. eco , "buy") or 1
+	factors_eco["sell"]				    = economy["sell"] or ini_diff:r_float_ex("econ_" .. eco , "sell") or 1
+	factors_eco["loots"]			    = economy["loots"] or ini_diff:r_float_ex("econ_" .. eco , "loots") or 1
+	factors_eco["stash_chance"]		    = economy["stash_chance"] or ini_diff:r_float_ex("econ_" .. eco , "stash_chance") or 0.4
+	factors_eco["weapon_degradation"]	= economy["weapon_degradation"] or ini_diff:r_float_ex("econ_" .. eco , "weapon_degradation") or 1
+	factors_eco["ammo_quantity"]	    = economy["ammo_quantity"] or ini_diff:r_float_ex("econ_" .. eco , "ammo_quantity") or 1
+end
+
+function set_game_factor(key, val)	
+	gameplay[key] = val
+	if (key == "type") then
+		game_num = tonumber(val) or 2
+	end
+	setup_game_factors(game_num)
+	if (key == "actor_immunities") then set_actor_immunities()
+	elseif (key == "hit_power") then set_hit_power()
+	elseif (key == "dispersion_base") then set_dispersion_base()
+	elseif (key == "dispersion_factor") then set_dispersion_factor()
+	elseif (key == "power_loss_bias") then set_actor_stamina()
+	elseif (key == "weight") then set_actor_weight()
+	end
+	log3("# Gameplay difficulty factor saved: [" .. key .. "] = " .. tostring(val))
+end
+
+function set_eco_factor(key, val)		
+	economy[key] = val
+	if (key == "type") then
+		eco_num = tonumber(val) or 2
+	end
+	setup_eco_factors(eco_num)
+	if (key == "weapon_degradation") then 
+		set_weapon_degradation() 
+	end
+	log3("# Progression difficulty factor saved: [" .. key .. "] = " .. tostring(val))
+end
+
+function get_game_factor(key)
+	--log3("Gameplay difficulty factor requested: [" .. key .. "] = " .. tostring(factors_game[key]))
+	return factors_game[key]
+end
+
+function get_eco_factor(key)
+	--log3("Progression difficulty factor requested: [" .. key .. "] = " .. tostring(factors_eco[key]))
+	return factors_eco[key]
+end
+
+
+--==================================================
+function set_actor_immunities()
+	local immunities = get_game_factor("actor_immunities") or 1
+	local pick = vanilla_diff[immunities]
+	console:execute("g_game_difficulty " .. pick)
+	log3("g_game_difficulty " .. pick)
+end
+
+function set_hit_power()
+	local hit_power = get_game_factor("hit_power") or 1
+	console:execute("g_hit_pwr_modif " .. hit_power)
+	log3("g_hit_pwr_modif " .. hit_power)
+end
+
+function set_dispersion_base()
+	local dispersion_base = get_game_factor("dispersion_base") or 1
+	console:execute("g_dispersion_base " .. dispersion_base)
+	log3("g_dispersion_base " .. dispersion_base)
+end
+
+function set_dispersion_factor()
+	local dispersion_factor = get_game_factor("dispersion_factor") or 1
+	console:execute("g_dispersion_factor " .. dispersion_factor)
+	log3("g_dispersion_factor " .. dispersion_factor)
+end
+
+function set_actor_stamina()
+	local pwb = get_game_factor("power_loss_bias") or 0.2
+	console:execute("power_loss_bias " .. tostring(pwb))
+end
+
+function set_actor_weight()
+	-- Set up maximum carry weight 
+	local cw = get_game_factor("weight") or 20
+	local mww = cw + (math.ceil(cw / 5) * 2)
+	if (cw ~= db.actor:get_actor_max_weight()) then
+		db.actor:set_actor_max_weight(cw)
+		db.actor:set_actor_max_walk_weight(mww)
+	end
+end
+
+function set_weapon_degradation()
+	local val = get_eco_factor("weapon_degradation") or 1
+	console:execute("wpn_degradation " .. tostring(val))
+end
+
+--=======================================< Callbacks >=======================================--
+function on_game_load()	
+	local console = get_console()
+	-- Prepare progression difficulty factors
+	economy = {}
+	eco_num = tonumber(string.sub(console:get_string("g_rad3_economy_diff"), -1))
+	economy["type"] = eco_num
+	setup_eco_factors(eco_num)
+	
+	
+	-- Prepare gameplay difficulty factors
+	gameplay = {}
+	game_num = tonumber(string.sub(console:get_string("g_rad3_game_diff"), -1))
+	gameplay["type"] = game_num
+	setup_game_factors(game_num)
+	
+	
+	set_actor_immunities() -- prepare actor immunities
+	set_hit_power() -- prepare hit_power
+	set_dispersion_base() -- prepare dispersion_base
+	set_dispersion_factor() -- prepare dispersion_factor
+	set_actor_weight() -- prepare weight
+	set_actor_stamina() -- prepare power loss bias
+	set_weapon_degradation() -- weapon degradation
+end

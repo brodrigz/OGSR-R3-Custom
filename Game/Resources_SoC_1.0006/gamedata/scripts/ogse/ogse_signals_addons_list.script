@@ -65,6 +65,7 @@ addons = {
 	"rad_respawn",
 	"rad_gear_rustle_sounds",
 	"blood_pool",
+	"ogsr_hud_animation_callbacks",
 	"animation_common",
 	"aol_anim_transitions",
 	"uni_anim_core",
@@ -81,9 +82,12 @@ addons = {
 	"rad_map_spots",
 	"swm_legs",
 	"ogse_dynamic_hud",
-	"ogse_quick_slots"
+	"ogse_quick_slots",
+	"rad_breath_indoors"
 }
 
+-- Seb's pack ships this script. Register it only when present so the
+-- overlay does not require a merged add-on list or Options UI.
 local function sebs_backpack_available()
 	local fs = getFS()
 	if not fs then

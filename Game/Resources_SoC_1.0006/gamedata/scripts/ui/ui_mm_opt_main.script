@@ -10,10 +10,15 @@ function options_dialog:__init() super()
 	self.hint_name = nil
 	self.hint_caption = nil
 	self.current_view = nil
+	self.page_hint_name = nil
+	self.page_hint_caption = nil
+	self.game_hud_index = 0
 
 	self:InitControls()
 	self:InitCallBacks()
 	self:UpdateOptValues()
+	
+	mm = _G.main_menu.get_main_menu()
 end
 
 function options_dialog:__finalize()
@@ -27,9 +32,8 @@ function options_dialog:InitControls()
 	local xml = CScriptXmlInit()
 	xml:ParseFile("ui_mm_opt.xml")
 
-	xml:InitStatic("back_video", self)
 	xml:InitStatic("background", self)
-	xml:InitStatic("rug_video", self)
+	xml:InitStatic("rad_vignette", self)
 	self.dialog = xml:InitStatic("main_dialog:dialog", self)
 
 	xml:InitFrame("frame_hint", self)
@@ -41,25 +45,40 @@ function options_dialog:InitControls()
 
 	self.dlg_video = ui_mm_opt_video.opt_video()
 	self.dlg_video:InitControls(55, 74, xml, self)
+	self.dlg_video:SetWndSize(738, 460)
 	self.dialog:AttachChild(self.dlg_video)
 
 	self.dlg_sound = ui_mm_opt_sound.opt_sound()
 	self.dlg_sound:InitControls(55, 74, xml, self)
+	self.dlg_sound:SetWndSize(738, 460)
 	self.dlg_sound:Show(false)
 	self.dialog:AttachChild(self.dlg_sound)
 
+	local btn_sound_default = xml:Init3tButton("tab_sound:btn_default_set", self.dlg_sound)
+	self:Register(btn_sound_default, "btn_sound_default")
+
 	self.dlg_gameplay = ui_mm_opt_gameplay.opt_gameplay()
-	self.dlg_gameplay:InitControls(55, 74, xml, self)
+	self.dlg_gameplay:InitControls(55, 128, xml, self)
+	self.dlg_gameplay:SetWndSize(450, 454)
 	self.dlg_gameplay:Show(false)
 	self.dialog:AttachChild(self.dlg_gameplay)
 
+	self.dlg_hud = ui_mm_opt_gameplay.opt_hud()
+	self.dlg_hud:InitControls(55, 128, xml, self)
+	self.dlg_hud:SetWndSize(450, 410)
+	self.dlg_hud:Show(false)
+	self.dialog:AttachChild(self.dlg_hud)
+
 	self.dlg_controls = ui_mm_opt_controls.opt_controls()
 	self.dlg_controls:InitControls(55, 74, xml, self)
+	self.dlg_controls:SetWndSize(738, 460)
+	xml:InitStatic("tab_controls:cap_unbind_hint", self.dlg_controls)
 	self.dlg_controls:Show(false)
 	self.dialog:AttachChild(self.dlg_controls)
 
 	self.dlg_video_adv = ui_mm_opt_video_adv.opt_video_adv()
 	self.dlg_video_adv:InitControls(55, 74, xml, self)
+	self.dlg_video_adv:SetWndSize(738, 460)
 	self.dlg_video_adv:Show(false)
 	self.dialog:AttachChild(self.dlg_video_adv)
 
@@ -72,13 +91,17 @@ function options_dialog:InitControls()
 	self.tab = xml:InitTab("main_dialog:tab", self.dialog)
 	self:Register(self.tab, "tab")
 
+	self.tab_game_hud = xml:InitTab("main_dialog:tab_game_hud", self.dialog)
+	self:Register(self.tab_game_hud, "tab_game_hud")
+	self.tab_game_hud:Show(false)
+
 	self.message_box = CUIMessageBoxEx()
 	self.message_box:Init("message_box_restart_game")
 end
 
 function options_dialog:UpdateOptValues(flag) --true - применить настройки, false - отменить настройки, nil - просто обновить дефолтные значения
 	local OptMgr = COptionsManager()
-	local opt_tbl = {"mm_opt_video_preset", "mm_opt_video", "mm_opt_video_adv", "mm_opt_gameplay", "mm_opt_sound", "mm_opt_controls", "key_binding"}
+	local opt_tbl = {"mm_opt_video_preset", "mm_opt_video", "mm_opt_video_adv", "mm_opt_gameplay", "mm_opt_sound", "mm_opt_controls", "key_binding", "random"}
 	for _, opt_name in ipairs(opt_tbl) do
 		if flag == true then
 			OptMgr:SaveValues(opt_name)
@@ -93,25 +116,56 @@ function options_dialog:UpdateOptValues(flag) --true - применить нас
 		OptMgr:SetCurrentValues(opt_name)
 		OptMgr:SaveBackupValues(opt_name)
 	end
+
+	--if (alife() ~= nil) then
+	--	if db.cc_npc == nil then closecaption.read_cc_ini() end
+	--	self.check_playigm:SetCheck(db.p_igm)
+	--	self.check_ccigm:SetCheck(db.cc_igm)
+	--	self.radio_captioning:SetNewActiveTab((db.cc_npc and 1 or 0) * (db.cc_icc and 2 or 1))
+	--	if closecaption.is_version_ok() == false then
+	--		self.check_ccigm:Show(false)
+	--	end
+	--else
+	--	self.check_playigm:Show(false)
+	--	self.check_ccigm:Show(false)
+	--	self.frame_captioning:Show(false)
+	--	self.radio_captioning:Show(false)
+	--end
 end
 
 function options_dialog:InitCallBacks()
 	self:AddCallback("tab", ui_events.TAB_CHANGED, self.OnTabChange, self)
+	self:AddCallback("tab_game_hud", ui_events.TAB_CHANGED, self.OnGameHudTabChange, self)
 	self:AddCallback("btn_advanced_graphic", ui_events.BUTTON_CLICKED, self.OnBtnAdvGraphic, self)
 	self:AddCallback("btn_accept", ui_events.BUTTON_CLICKED, self.OnBtnAccept, self)
 	self:AddCallback("btn_cancel", ui_events.BUTTON_CLICKED, self.OnBtnCancel, self)
 	self:AddCallback("combo_preset", ui_events.LIST_ITEM_SELECT, self.OnPresetChanged, self)	
 	self:AddCallback("btn_simply_graphic", ui_events.BUTTON_CLICKED, self.OnSimplyGraphic, self)	
 	self:AddCallback("btn_keyb_default", ui_events.BUTTON_CLICKED, self.Onbtn_keyb_default, self)
+	self:AddCallback("btn_video_default", ui_events.BUTTON_CLICKED, self.OnVideoDefault, self)
+	self:AddCallback("btn_sound_default", ui_events.BUTTON_CLICKED, self.OnSoundDefault, self)
+	self:AddCallback("btn_game_default", ui_events.BUTTON_CLICKED, self.OnGameDefault, self)
+	self:AddCallback("btn_hud_default", ui_events.BUTTON_CLICKED, self.OnHudDefault, self)
 	self:AddCallback("btn_advanced_graphic", ui_events.STATIC_FOCUS_RECEIVED, self.HintRefresh, self)
 	self:AddCallback("btn_accept",           ui_events.STATIC_FOCUS_RECEIVED, self.HintRefresh, self)
 	self:AddCallback("btn_cancel",           ui_events.STATIC_FOCUS_RECEIVED, self.HintRefresh, self)
 	self:AddCallback("btn_default_graphic",  ui_events.STATIC_FOCUS_RECEIVED, self.HintRefresh, self)
 	self:AddCallback("btn_default_sound",    ui_events.STATIC_FOCUS_RECEIVED, self.HintRefresh, self)
 	self:AddCallback("btn_simply_graphic",   ui_events.STATIC_FOCUS_RECEIVED, self.HintRefresh, self)
+	self:AddCallback("btn_video_default",    ui_events.STATIC_FOCUS_RECEIVED, self.HintDefaultBtn, self)
+	self:AddCallback("btn_sound_default",    ui_events.STATIC_FOCUS_RECEIVED, self.HintDefaultBtn, self)
+	self:AddCallback("btn_game_default",     ui_events.STATIC_FOCUS_RECEIVED, self.HintDefaultBtn, self)
+	self:AddCallback("btn_hud_default",      ui_events.STATIC_FOCUS_RECEIVED, self.HintDefaultBtn, self)
+	self:AddCallback("btn_keyb_default",     ui_events.STATIC_FOCUS_RECEIVED, self.HintDefaultBtn, self)
 end
 
+
 function options_dialog:HintRefresh()
+	if self.page_hint_name then
+		self.hint_name:SetText(game.translate_string(self.page_hint_name))
+		self.hint_caption:SetText(game.translate_string(self.page_hint_caption))
+		return
+	end
 	self.hint_name:SetText(game.translate_string("hint_name_text"))
 	if self.current_view == 1 then
 		self.hint_caption:SetText(game.translate_string("hint_caption_text"))
@@ -120,12 +174,56 @@ function options_dialog:HintRefresh()
 	end
 end
 
+function options_dialog:HintDefaultBtn()
+	self.hint_name:SetText(game.translate_string("ui_mm_default"))
+	self.hint_caption:SetText(game.translate_string("ui_mm_hint_default"))
+end
+
 function options_dialog:Onbtn_keyb_default()
 	cmd("unbindall")
+	cmd("mouse_sens 0.1")
+	cmd("mouse_invert off")
 
 	local opt = COptionsManager()
 	opt:SetCurrentValues("mm_opt_controls")
 	opt:SetCurrentValues("key_binding")
+end
+
+function options_dialog:OnVideoDefault()
+	cmd("ssfx_gamma 1")
+	cmd("ssfx_saturation 1")
+	cmd("ssfx_exposure 1")
+	cmd("r_fps_lock nofpslock")
+	cmd("rs_always_active off")
+
+	local opt = COptionsManager()
+	opt:SetCurrentValues("mm_opt_video")
+end
+
+function options_dialog:OnSoundDefault()
+	cmd("snd_volume_eff 1")
+	cmd("snd_volume_music 1")
+	cmd("snd_efx off")
+
+	ui_data.save("rad3_subtitles", true)
+	if subtitles then
+		subtitles:SetCheck(true)
+	end
+
+	local opt = COptionsManager()
+	opt:SetCurrentValues("mm_opt_sound")
+end
+
+function options_dialog:OnGameDefault()
+	if self.dlg_gameplay and self.dlg_gameplay.ResetToDefaults then
+		self.dlg_gameplay:ResetToDefaults()
+	end
+end
+
+function options_dialog:OnHudDefault()
+	if self.dlg_hud and self.dlg_hud.ResetToDefaults then
+		self.dlg_hud:ResetToDefaults()
+	end
 end
 
 function options_dialog:OnPresetChanged()
@@ -136,6 +234,9 @@ function options_dialog:OnPresetChanged()
 	if self.dlg_video_adv and self.dlg_video_adv.UpdateUpscalerQualityRows then
 		self.dlg_video_adv:UpdateUpscalerQualityRows()
 	end
+	if self.dlg_video_adv and self.dlg_video_adv.UpdateAoModeRows then
+		self.dlg_video_adv:UpdateAoModeRows()
+	end
 
 	self:show_need_restart_wnd()
 end
@@ -143,12 +244,28 @@ end
 function options_dialog:OnBtnAccept()
 	self:UpdateOptValues(true)
 
+	--if (alife() ~= nil) then
+	--	db.p_igm = self.check_playigm:GetCheck()
+	--	db.cc_igm = self.check_ccigm:GetCheck()
+	--	local rcap = self.radio_captioning:GetActiveIndex()
+	--	db.cc_npc = (rcap > 0)
+	--	db.cc_icc = (rcap > 1)
+	--	closecaption.save_variable("cc_icc", db.cc_icc)
+	--	closecaption.save_variable("cc_npc", db.cc_npc)
+	--	closecaption.save_variable("cc_igm", db.cc_igm)
+	--	closecaption.save_variable("p_igm", db.p_igm)
+	--end
+
 	self:GetHolder():start_stop_menu(self, true)
 	self.owner:Show(true)
 
 	self:HintRefresh()
 
 	cmd("cfg_save") -- сохраняем файл настроек на диск
+	
+	if level.present() and db.actor and db.actor:alive() then
+		ogse_signals.get_mgr():call( "on_option_change" )
+	end
 end
 
 function options_dialog:OnBtnCancel()
@@ -160,26 +277,53 @@ function options_dialog:OnBtnCancel()
 	self:HintRefresh()
 end
 
+function options_dialog:ApplyGameHudTab()
+	local i = self.tab_game_hud:GetActiveIndex()
+	self.game_hud_index = i
+	self.dlg_gameplay:Show(i == 0)
+	self.dlg_hud:Show(i == 1)
+	if i == 0 then
+		self.page_hint_name = "ui_mm_tab_game"
+		self.page_hint_caption = "ui_mm_hint_page_game"
+	else
+		self.page_hint_name = "ui_mm_tab_hud"
+		self.page_hint_caption = "ui_mm_hint_page_hud"
+	end
+	self:HintRefresh()
+end
+
+function options_dialog:OnGameHudTabChange()
+	self:ApplyGameHudTab()
+end
+
 function options_dialog:OnTabChange()
 	self.dlg_video:Show(false)
 	self.dlg_sound:Show(false)
 	self.dlg_gameplay:Show(false)
+	self.dlg_hud:Show(false)
 	self.dlg_controls:Show(false)
 	self.dlg_video_adv:Show(false)
+	self.tab_game_hud:Show(false)
 	self.current_view = 1
-
-	self:HintRefresh()
+	self.page_hint_name = nil
+	self.page_hint_caption = nil
 
 	local i = self.tab:GetActiveIndex()
 	if i == 0 then
-		self.dlg_video:Show(true)		
+		self.dlg_video:Show(true)
 	elseif i == 1 then
 		self.dlg_sound:Show(true)
 	elseif i == 2 then
-		self.dlg_gameplay:Show(true)
+		self.tab_game_hud:Show(true)
+		if self.tab_game_hud:GetActiveIndex() ~= self.game_hud_index then
+			self.tab_game_hud:SetNewActiveTab(self.game_hud_index)
+		end
+		self:ApplyGameHudTab()
+		return
 	elseif i == 3 then
 		self.dlg_controls:Show(true)
 	end
+	self:HintRefresh()
 end
 
 function options_dialog:OnBtnAdvGraphic()

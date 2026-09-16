@@ -1,0 +1,57 @@
+-- Bridges Anomaly-style CHudItem__PlayHUDMotion / OnAnimationEnd into ogse_signals,
+-- and provides minimal helpers so animation_common can play scripted_snd_* keys
+-- without Seb's full _g.script.
+
+function CHudItem__PlayHUDMotion(anm_table, obj)
+	local sm = ogse_signals and ogse_signals.get_mgr and ogse_signals.get_mgr()
+	if sm then
+		sm:call("actor_on_hud_animation_play", anm_table, obj)
+	end
+	return anm_table
+end
+
+function CHudItem__OnAnimationEnd(obj, section, motion, state, slot)
+	local sm = ogse_signals and ogse_signals.get_mgr and ogse_signals.get_mgr()
+	if sm then
+		sm:call("actor_on_hud_animation_end", obj, section, motion, state, slot)
+	end
+end
+
+-- Polyfills used by animation_common when AXR/_g helpers are absent.
+if not SYS_GetParam then
+	function SYS_GetParam(typ, section, line, def)
+		local ini = system_ini()
+		if not ini or not section or not line then
+			return def
+		end
+		if not ini:section_exist(section) or not ini:line_exist(section, line) then
+			return def
+		end
+		if typ == 1 then
+			return ini:r_float(section, line)
+		elseif typ == 2 then
+			return ini:r_bool(section, line)
+		end
+		return ini:r_string(section, line)
+	end
+end
+
+if not str_explode then
+	function str_explode(str, sep)
+		local t = {}
+		if not str then
+			return t
+		end
+		sep = sep or ","
+		for part in string.gmatch(str .. sep, "(.-)" .. sep) do
+			local s = string.gsub(part, "^%s+", "")
+			s = string.gsub(s, "%s+$", "")
+			t[#t + 1] = s
+		end
+		return t
+	end
+end
+
+if not ini_sys then
+	ini_sys = system_ini()
+end

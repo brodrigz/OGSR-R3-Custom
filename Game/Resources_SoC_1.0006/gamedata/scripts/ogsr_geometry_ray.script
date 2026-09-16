@@ -1,0 +1,158 @@
+-- OGSR adapter for Demonized's geometry-ray helper.
+-- The original algorithm and license provenance are preserved with the feature package.
+
+local M = this
+
+local function clamp_value(value, minimum, maximum)
+    return math.max(minimum, math.min(maximum, value))
+end
+local EPSILON = 0.00001
+
+local function copy_vector(value)
+    return vector():set(value)
+end
+
+local function target_from_flags(flags)
+    if flags == 0 then return rq_target.rqtNone end
+    if flags == 1 then return rq_target.rqtObject end
+    if flags == 2 then return rq_target.rqtStatic end
+    if flags == 3 then return rq_target.rqtBoth end
+    if flags == 4 then return rq_target.rqtShape end
+    if flags == 8 then return rq_target.rqtObstacle end
+    if flags == 13 then return rq_target.rqtDyn end
+    return rq_target.rqtBoth
+end
+
+local ray_methods = {}
+
+function M.new(args)
+    args = args or {}
+    local ray_range = args.ray_range or args.contact_range
+    if not ray_range then return nil end
+
+    local instance = {
+        ray_range = ray_range,
+        contact_range = args.contact_range or ray_range,
+        distance_offset = args.distance_offset or 0,
+        target = target_from_flags(args.flags or 2),
+        ignore_object = args.ignore_object,
+        visualize = args.visualize,
+        last_result = nil,
+    }
+    return setmetatable(instance, {__index = ray_methods})
+end
+
+function ray_methods:get(position, direction)
+    if not position or not direction then return nil end
+
+    local start = copy_vector(position)
+    local dir = copy_vector(direction)
+    if dir:magnitude() <= EPSILON then
+        return {
+            success = false,
+            in_contact = false,
+            position = start,
+            distance = self.ray_range,
+            raw_distance = self.ray_range,
+        }
+    end
+    dir:normalize()
+
+    local rq = level.ray_query(start, dir, self.ray_range, self.target, self.ignore_object)
+    local success = rq and rq.result or false
+    local raw_distance = success and rq.range or self.ray_range
+    local distance = raw_distance + self.distance_offset
+    local hit_position = vector():mad(start, dir, distance)
+    local mtl = success and rq.mtl or nil
+
+    local result = {
+        success = success,
+        in_contact = success and raw_distance <= self.contact_range,
+        position = hit_position,
+        distance = raw_distance,
+        raw_distance = raw_distance,
+        object = success and rq.object or nil,
+        element = success and rq.element or -1,
+        result = rq,
+        material = mtl,
+        material_name = mtl and mtl.m_Name or nil,
+        material_flags = mtl and mtl.Flags or nil,
+        material_shoot_factor = mtl and mtl.fShootFactor or nil,
+    }
+    self.last_result = result
+
+    if type(self.visualize) == "function" then
+        self.visualize(start, hit_position, success)
+    end
+    return result
+end
+
+function ray_methods:get_result()
+    return self.last_result
+end
+
+local function generate_orthonormal_basis(direction)
+    local dir = copy_vector(direction)
+    if dir:magnitude() <= EPSILON then return nil end
+    dir:normalize()
+
+    local helper
+    if math.abs(dir.y) > 0.999 then
+        helper = vector():set(0, 0, 1)
+    else
+        helper = vector():set(0, 1, 0)
+    end
+
+    local right = vector_cross(helper, dir)
+    if right:magnitude() <= EPSILON then return nil end
+    right:normalize()
+    local up = vector_cross(dir, right):normalize()
+    return dir, up, right
+end
+
+function M.get_surface_normal(position, direction, args, initial_ray)
+    args = args or {}
+    local dir, offset_up, offset_right = generate_orthonormal_basis(direction)
+    if not dir then return nil end
+
+    local start = copy_vector(position)
+    local start_up = vector():mad(start, offset_up, 0.01)
+    local start_right = vector():mad(start, offset_right, 0.01)
+
+    local function cast(ray_start)
+        local ray = M.new({
+            ray_range = args.ray_range or 1000,
+            flags = args.flags or 3,
+            ignore_object = args.ignore_object,
+        })
+        return ray:get(ray_start, dir)
+    end
+
+    local first = initial_ray or cast(start)
+    if not first or not first.success then return nil end
+    local second = cast(start_up)
+    local third = cast(start_right)
+    if not second or not second.success or not third or not third.success then return nil end
+
+    local edge_up = vector():set(first.position):sub(second.position)
+    local edge_right = vector():set(first.position):sub(third.position)
+    local normal = vector_cross(edge_up, edge_right)
+    if normal:magnitude() <= EPSILON then return nil end
+    normal:normalize()
+
+    if dir:dotproduct(normal) > 0 then normal:invert() end
+    normal.x = clamp_value(normal.x, -1, 1)
+    normal.y = clamp_value(normal.y, -1, 1)
+    normal.z = clamp_value(normal.z, -1, 1)
+    return normal
+end
+
+function M.similar(first, second, epsilon)
+    return math.abs(first - second) <= (epsilon or 0.0001)
+end
+
+function M.vector_similar(first, second, epsilon)
+    return M.similar(first.x, second.x, epsilon)
+       and M.similar(first.y, second.y, epsilon)
+       and M.similar(first.z, second.z, epsilon)
+end

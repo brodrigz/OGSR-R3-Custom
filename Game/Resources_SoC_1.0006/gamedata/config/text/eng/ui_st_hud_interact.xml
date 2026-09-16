@@ -30,9 +30,6 @@
 	<string id="st_hud_interact_damaged_carcass">
 		<text>Damaged carcass</text>
 	</string>
-	<string id="st_hud_interact_unload">
-		<text>Unload</text>
-	</string>
 	<string id="ui_mm_hud_interact">
 		<text>Interaction HUD</text>
 	</string>
@@ -83,9 +80,6 @@
 	</string>
 	<string id="st_minimap_pos_tr">
 		<text>Top right</text>
-	</string>
-	<string id="st_minimap_pos_off">
-		<text>Off</text>
 	</string>
 	<string id="ui_mm_compass_range">
 		<text>Compass range</text>
@@ -352,7 +346,7 @@
 		<text>Compass vertical offset.</text>
 	</string>
 	<string id="ui_mm_hint_minimap_pos">
-		<text>Minimap screen corner, or off.</text>
+		<text>Minimap screen corner.</text>
 	</string>
 	<string id="ui_mm_hint_minimap_scale">
 		<text>Minimap size.</text>
