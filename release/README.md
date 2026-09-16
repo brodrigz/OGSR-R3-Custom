@@ -27,7 +27,7 @@ parameters; those split-source parameters are no longer accepted.
 `-EngineBinaryPath` and `-DlssRuntimePath` can select built runtime files.
 
 The publisher refuses to overwrite existing artifacts, checks engine freshness
-against renderer C++ sources, and checks watched renderer, resource, and release
+against renderer, gameplay, common AI, and core engine C++ sources, and checks those sources plus resource and release
 sources for uncommitted changes. Use `-AllowDirty` for intentional working-tree
 validation and `-AllowStaleEngine` only when deliberately overriding freshness.
 These checks do not replace compiling and testing engine changes.
@@ -45,6 +45,7 @@ Optional add-ons, saves, logs, PDBs, and development tools are not packaged.
 
 ```powershell
 .\tests\Test-RadiophobiaRelease.ps1
+.\ogsr_engine\LuaJIT\bin\x64\Lua_JIT.exe .\tests\Test-RadiophobiaLaser.lua .\Game\Resources_SoC_1.0006
 .\tests\Test-RadiophobiaRelease.ps1 -ArchivePath '.\release\output\YOUR-ARCHIVE.zip'
 # For a packaging-only migration, also compare every runtime path and byte:
 .\tests\Test-RadiophobiaRelease.ps1 `

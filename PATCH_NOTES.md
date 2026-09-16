@@ -1,0 +1,66 @@
+# Bugfix
+- Fix tracers being rendered wrongly
+- Fix default NVG binding
+- Fix knife and weapon HUD getting stuck after scripted item animations
+- Fix leftover lean when switching sides
+- Fix reversed mouse wheel zoom on the PDA map
+- Fix overlapping HUD and character info elements on 16:10 displays
+- Prevent loading sounds and old sound memories from alerting nearby NPCs
+
+# Graphics
+- Implemented new ambient occlusion method XeGTAO
+  Performs about 80% faster than vanilla GTAO, looks better, radius can be changed with r_xegtao_radius)
+- Added an option to choose DLSS presets (CNN & Transformer models)
+  DLSS and FSR quality changes now reload the required video resources when applied
+- Added optional XeGTAO bent normals for directional ambient lighting
+- Implemented Folopes' laser shader improvements (distance-based dot size and brightness, sky suppression, better visibility under NVGs)
+  Restores laser toggling on original R3 weapons (Mouse 5 by default), laser hides during normal ADS but stays visible in alt-aim mode, native OGSR lasers are preserved
+- Enabled sky debanding and preset-based bloom by default
+
+# Optimization
+- Optmized all AO methods
+- Added optional half-resolution AO rendering (r_ao_resolution)
+- Sound cache optimizations(heavily mitigates stutters from Seb's pack)
+
+
+- these produces no noticiable performance impact:
+- Grass rendering optimizations
+- Reduce particle task overhead
+- Optimize scheduler queue maintenance
+- Skip unused scene-depth snapshots when 3D scopes and DoF are inactive
+
+# Features
+- Restore NPC muzzle flash
+- Restore R3 alt sights mode
+  The selected aim mode persists per weapon, fake lenses and scope NV update when switching modes
+- Restore R3 inspect weapon mode
+- Mission objective tracking improvements
+- Added DynamicUI option (oblivion style dialogue camera)
+- Added ability to drop items from inventory by dragging them out
+- Added Freelook action
+- Added Iteractible dot marks (Not a port of IDM, implemented in-engine with 0 performance cost, doesn't has all features from IDM)
+  Interaction prompts use the configured keycap without duplicated key hints
+- Added Item wheel (In-engine port with 0 performance cost, uses assets from HarukaSai's mod)
+- Added Item wheel favorites (pin consumables, grenades and detectors from inventory)
+- Added weapon attachment tab to Item wheel (attach / detach scopes, silencers and grenade launchers)
+- Added Tactical compass (In-engine port with 0 performance cost)
+- Configurable HUD (Minimap & compass has menu options for position and scale)
+- Added Flashlight HUD icon
+- Keys can be binded to multiple actions with shared-key fallthrough (uses first available action)
+- Mouse wheel can now be binded to any action
+- Added action to cycle between nearby interactible items
+- Added Quick use action for world items (use consumables or unload weapons without opening inventory)
+- Added loot shortcut to take everything except weapons and armor (R)
+- Added Weapon lower / raise action
+- Sprint exits crouch and lean
+- Added Hold-to-sprint option
+- Added Lowered weapon on sprint option (replaces default sprint anim)
+- Added Sticky aim option (keep ADS after reload / jam)
+- Added new Walk / low-crouch toggle binds
+- Added World bullet penetration option (on/off/reduced)
+- Reworked options UI
+- Added backpack animation option when Seb's pack is installed
+- Gasmask breathing now follows indoor / outdoor level changes
+- Added engine support for Anomaly-style HUD animation callbacks
+- Added name filter and CSV export to the engine's GPU profiler
+- Release packages now use the maintained Game resources directly, with UI and compatibility checks before packaging

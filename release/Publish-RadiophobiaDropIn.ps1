@@ -30,7 +30,10 @@ $rendererSourceRoots = @(
     'ogsr_engine\Layers\xrRenderDX10',
     'ogsr_engine\Layers\xrRenderPC_R4'
 )
-$dirtyWatchPaths = $rendererSourceRoots + @(
+$engineSourceRoots = $rendererSourceRoots + @(
+    'ogsr_engine\xrGame', 'ogsr_engine\COMMON_AI', 'ogsr_engine\xr_3da'
+)
+$dirtyWatchPaths = $engineSourceRoots + @(
     'Game/Resources_SoC_1.0006', 'release', 'tests/Test-RadiophobiaRelease.ps1'
 )
 
@@ -133,7 +136,7 @@ function Assert-EngineFreshness {
     foreach ($relativeRoot in $RelativeRoots) {
         $root = Join-Path $RepoRoot $relativeRoot
         if (-not (Test-Path -LiteralPath $root -PathType Container)) {
-            throw "Renderer source root is missing: $root"
+            throw "Engine source root is missing: $root"
         }
         $candidate = Get-ChildItem -LiteralPath $root -File -Recurse -Force |
             Where-Object { $_.Extension -in '.cpp', '.cxx', '.c', '.h', '.hpp' } |
@@ -144,12 +147,12 @@ function Assert-EngineFreshness {
         }
     }
     if (-not $newest) {
-        throw 'No renderer C++ sources were found for the engine freshness check.'
+        throw 'No C++ sources were found for the engine freshness check.'
     }
     if ($newest.LastWriteTimeUtc -le $engineTime) {
         return
     }
-    $message = "Engine binary is older than renderer source $($newest.FullName) ($($newest.LastWriteTimeUtc.ToString('u')) > $($engineTime.ToString('u'))). Rebuild Release|x64 before publishing."
+    $message = "Engine binary is older than source $($newest.FullName) ($($newest.LastWriteTimeUtc.ToString('u')) > $($engineTime.ToString('u'))). Rebuild Release|x64 before publishing."
     if ($AllowStaleEngine) {
         Write-Warning $message
         return
@@ -173,109 +176,47 @@ function Assert-CombinePostprocessBind {
     }
 }
 
-function Assert-RequiredCompatPayload {
+function Assert-RuntimeIntegration {
     param([string]$Root)
 
-    $required = @(
-        'gamedata\scripts\rad_breath_indoors.script',
-        'gamedata\scripts\ogse\ogse_signals_addons_list.script',
-        'gamedata\scripts\ogsr_hud_animation_callbacks.script',
-        'gamedata\scripts\animation_common.script',
-        'gamedata\scripts\ui\ui_mm_opt_gameplay.script',
-        'gamedata\config\ui\ui_mm_opt.xml',
-        'gamedata\config\ui\ui_keybinding.xml',
-        'gamedata\config\misc\hud_items\items_anim.ltx',
-        'gamedata\config\text\eng\ui_st_hud_interact.xml',
-        'gamedata\config\text\rus\ui_st_hud_interact.xml',
-        'gamedata\config\text\eng\ui_st_keybinding.xml',
-        'gamedata\config\text\rus\ui_st_keybinding.xml'
-    )
-    foreach ($relative in $required) {
-        $path = Join-Path $Root $relative
-        if (-not (Test-Path -LiteralPath $path -PathType Leaf)) {
-            throw "Required compatibility file is missing: $relative"
-        }
-    }
-
     $addons = [IO.File]::ReadAllText((Join-Path $Root 'gamedata\scripts\ogse\ogse_signals_addons_list.script'))
+    if ($addons -notmatch '(?m)^\s*"rad_laser_control"' -or $addons -match '(?m)^\s*"zzz_bas_laser_control"') {
+        throw 'The add-on list must register the adapted Folopes laser controller.'
+    }
+    $controls = [IO.File]::ReadAllText((Join-Path $Root 'gamedata\config\default_controls.ltx'))
+    if ($controls -notmatch '(?m)^bind night_vision_rad kN\s*$' -or $controls -notmatch '(?m)^bind laser_on mouse5\s*$') {
+        throw 'Default controls must retain the Radiophobia NVG and laser bindings.'
+    }
+    $nvShader = [IO.File]::ReadAllText((Join-Path $Root 'gamedata\shaders\r3\ogsr_nightvision.s'))
+    if ($nvShader -notmatch 'dx10texture\("s_laser_scene", "\$user\$generic_temp"\)') {
+        throw 'NVG laser visibility requires the pre-tonemap scene binding.'
+    }
     if ($addons -notmatch '"rad_breath_indoors"') {
-        throw 'Compatibility add-on list does not register rad_breath_indoors.'
+        throw 'The add-on list does not register rad_breath_indoors.'
     }
     if ($addons -notmatch 'hoc_backpack_inventory_anim\.script') {
-        throw 'Compatibility add-on list does not detect Seb''s backpack script.'
+        throw 'The add-on list does not detect Seb''s backpack script.'
     }
     if ($addons -match '(?m)^\s*"hoc_backpack_inventory_anim"') {
-        throw 'Compatibility add-on list always registers hoc_backpack_inventory_anim; it must be conditional on Seb''s pack.'
+        throw 'The add-on list always registers hoc_backpack_inventory_anim; it must be conditional on Seb''s pack.'
     }
     if ($addons -match '(?m)^\s*"rad_qol_moves"') {
-        throw 'Compatibility add-on list still registers rad_qol_moves; native QoL replaced that script.'
+        throw 'The add-on list still registers rad_qol_moves; native QoL replaced that script.'
     }
     if ($addons -notmatch '"ogsr_hud_animation_callbacks"') {
-        throw 'Compatibility add-on list does not register ogsr_hud_animation_callbacks.'
+        throw 'The add-on list does not register ogsr_hud_animation_callbacks.'
     }
     if ($addons -notmatch '"animation_common"') {
-        throw 'Compatibility add-on list does not register animation_common.'
+        throw 'The add-on list does not register animation_common.'
     }
 
     $hudCb = [IO.File]::ReadAllText((Join-Path $Root 'gamedata\scripts\ogsr_hud_animation_callbacks.script'))
     if ($hudCb -notmatch 'CHudItem__PlayHUDMotion') {
-        throw 'Compatibility ogsr_hud_animation_callbacks.script is missing CHudItem__PlayHUDMotion.'
+        throw 'ogsr_hud_animation_callbacks.script is missing CHudItem__PlayHUDMotion.'
     }
     $animCommon = [IO.File]::ReadAllText((Join-Path $Root 'gamedata\scripts\animation_common.script'))
     if ($animCommon -notmatch 'scripted_snd_') {
-        throw 'Compatibility animation_common.script does not map scripted_snd_ keys.'
-    }
-    $keybinding = [IO.File]::ReadAllText((Join-Path $Root 'gamedata\config\ui\ui_keybinding.xml'))
-    foreach ($command in @('walk_toggle', 'crouch_low_toggle')) {
-        if ($keybinding -notmatch "exe=`"$command`"") {
-            throw "Compatibility ui_keybinding.xml is missing $command."
-        }
-    }
-
-    $opt = [IO.File]::ReadAllText((Join-Path $Root 'gamedata\config\ui\ui_mm_opt.xml'))
-    foreach ($id in @('check_sprint_hold', 'check_sticky_aim', 'check_backpack_anim')) {
-        if ($opt -notmatch [regex]::Escape($id)) {
-            throw "Compatibility ui_mm_opt.xml is missing $id."
-        }
-    }
-    if ($opt -match 'check_alt_aim_remember|g_alt_aim_remember') {
-        throw 'Compatibility ui_mm_opt.xml still has the removed Remember alt aim option.'
-    }
-    $gameplay = [IO.File]::ReadAllText((Join-Path $Root 'gamedata\scripts\ui\ui_mm_opt_gameplay.script'))
-    if ($gameplay -notmatch 'check_backpack_anim') {
-        throw 'Compatibility ui_mm_opt_gameplay.script does not initialize check_backpack_anim.'
-    }
-    if ($gameplay -notmatch 'hoc_backpack_inventory_anim\.script') {
-        throw 'Compatibility ui_mm_opt_gameplay.script does not detect Seb''s backpack script.'
-    }
-    if ($gameplay -notmatch 'rad3_backpack_anim') {
-        throw 'Compatibility ui_mm_opt_gameplay.script does not persist rad3_backpack_anim.'
-    }
-    if ($gameplay -match 'g_backpack_anim') {
-        throw 'Compatibility ui_mm_opt_gameplay.script still binds backpack animation to g_backpack_anim; Seb''s pack reads rad3_backpack_anim.'
-    }
-    if ($gameplay -match 'alt_aim_remember|g_alt_aim_remember') {
-        throw 'Compatibility ui_mm_opt_gameplay.script still references Remember alt aim.'
-    }
-
-    $engHud = [IO.File]::ReadAllText((Join-Path $Root 'gamedata\config\text\eng\ui_st_hud_interact.xml'))
-    foreach ($id in @('ui_mm_sprint_hold', 'ui_mm_sticky_aim', 'ui_mm_backpack_anim', 'ui_mm_hint_backpack_anim', 'ui_st_take_all_hint')) {
-        if ($engHud -notmatch [regex]::Escape($id)) {
-            throw "Compatibility English HUD strings are missing $id."
-        }
-    }
-    if ($engHud -match 'ui_mm_alt_aim_remember|ui_mm_hint_alt_aim_remember') {
-        throw 'Compatibility English HUD strings still include Remember alt aim.'
-    }
-
-    $rusHud = [IO.File]::ReadAllText((Join-Path $Root 'gamedata\config\text\rus\ui_st_hud_interact.xml'))
-    foreach ($id in @('ui_mm_backpack_anim', 'ui_mm_hint_backpack_anim')) {
-        if ($rusHud -notmatch [regex]::Escape($id)) {
-            throw "Compatibility Russian HUD strings are missing $id."
-        }
-    }
-    if ($rusHud -match 'ui_mm_alt_aim_remember|ui_mm_hint_alt_aim_remember') {
-        throw 'Compatibility Russian HUD strings still include Remember alt aim.'
+        throw 'animation_common.script does not map scripted_snd_ keys.'
     }
 }
 
@@ -307,7 +248,7 @@ $output = [IO.Path]::GetFullPath($OutputDirectory).TrimEnd('\')
 $engine = Get-ExistingFile -Path $EngineBinaryPath -Label 'Engine binary'
 $dlssRuntime = Get-ExistingFile -Path $DlssRuntimePath -Label 'DLSS runtime'
 $sourceTree = Assert-CleanWatchedTree -RepoRoot $repoRoot -RelativePaths $dirtyWatchPaths -AllowDirty:$AllowDirty
-Assert-EngineFreshness -RepoRoot $repoRoot -EnginePath $engine -RelativeRoots $rendererSourceRoots -AllowStaleEngine:$AllowStaleEngine
+Assert-EngineFreshness -RepoRoot $repoRoot -EnginePath $engine -RelativeRoots $engineSourceRoots -AllowStaleEngine:$AllowStaleEngine
 $resourceFiles = @(Get-RadiophobiaPayload -ResourceRoot $resources)
 
 New-Item -ItemType Directory -Force -Path $output | Out-Null
@@ -328,7 +269,7 @@ try {
         Add-Payload -Records $payloadRecords -StageRoot $stage -Source $file.Source -RelativePath $file.RelativePath | Out-Null
     }
     # Validate exactly what will ship, not unselected legacy files in Game/.
-    Assert-RequiredCompatPayload -Root $stage
+    Assert-RuntimeIntegration -Root $stage
     Assert-RadiophobiaUI -Root $stage
     Assert-RequiredStagedShaders -StageRoot $stage
     foreach ($name in @('default', 'extreme', 'high', 'low', 'minimum')) {

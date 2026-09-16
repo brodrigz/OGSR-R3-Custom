@@ -2,6 +2,12 @@
 
 This fork rebases Radiophobia 3 version 1.20 engine contracts onto current OGSR while keeping reusable capability in the engine and feature policy in game scripts and configuration.
 
+The maintained Radiophobia resources live in `Game/Resources_SoC_1.0006`.
+Despite its inherited name, this is the fork's R3 target, not a pristine SoC
+resource tree. See its README and `radiophobia-release-files.txt` for package
+selection. The release publisher copies these resources directly; separate
+compatibility and renderer overlays under `release/` have been retired.
+
 ## Integration rule
 
 - Engine code should expose generic operations, data formats, callbacks, or lifecycle primitives.
@@ -73,6 +79,10 @@ API generic while allowing modules with top-level initialization to survive
 the Lua-VM recreation introduced by current OGSR.
 
 ## Porting custom features
+
+The restored R3/Folopes laser configuration, saved state, alternate-sight callback,
+and HUD font controls are documented in
+[release/LASER-AND-SIGHT-FIXES.md](release/LASER-AND-SIGHT-FIXES.md).
 
 Keep compatibility work focused on observable contracts:
 
