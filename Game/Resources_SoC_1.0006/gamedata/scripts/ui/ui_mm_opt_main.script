@@ -13,6 +13,7 @@ function options_dialog:__init() super()
 	self.page_hint_name = nil
 	self.page_hint_caption = nil
 	self.game_hud_index = 0
+	self.controls_index = 0
 
 	self:InitControls()
 	self:InitCallBacks()
@@ -70,11 +71,17 @@ function options_dialog:InitControls()
 	self.dialog:AttachChild(self.dlg_hud)
 
 	self.dlg_controls = ui_mm_opt_controls.opt_controls()
-	self.dlg_controls:InitControls(55, 74, xml, self)
+	self.dlg_controls:InitControls(55, 128, xml, self)
 	self.dlg_controls:SetWndSize(738, 460)
 	xml:InitStatic("tab_controls:cap_unbind_hint", self.dlg_controls)
 	self.dlg_controls:Show(false)
 	self.dialog:AttachChild(self.dlg_controls)
+
+	self.dlg_input_behavior = ui_mm_opt_gameplay.opt_input_behavior()
+	self.dlg_input_behavior:InitControls(55, 128, xml, self)
+	self.dlg_input_behavior:SetWndSize(450, 410)
+	self.dlg_input_behavior:Show(false)
+	self.dialog:AttachChild(self.dlg_input_behavior)
 
 	self.dlg_video_adv = ui_mm_opt_video_adv.opt_video_adv()
 	self.dlg_video_adv:InitControls(55, 74, xml, self)
@@ -95,13 +102,17 @@ function options_dialog:InitControls()
 	self:Register(self.tab_game_hud, "tab_game_hud")
 	self.tab_game_hud:Show(false)
 
+	self.tab_controls_mode = xml:InitTab("main_dialog:tab_controls_mode", self.dialog)
+	self:Register(self.tab_controls_mode, "tab_controls_mode")
+	self.tab_controls_mode:Show(false)
+
 	self.message_box = CUIMessageBoxEx()
 	self.message_box:Init("message_box_restart_game")
 end
 
 function options_dialog:UpdateOptValues(flag) --true - применить настройки, false - отменить настройки, nil - просто обновить дефолтные значения
 	local OptMgr = COptionsManager()
-	local opt_tbl = {"mm_opt_video_preset", "mm_opt_video", "mm_opt_video_adv", "mm_opt_gameplay", "mm_opt_sound", "mm_opt_controls", "key_binding", "random"}
+	local opt_tbl = {"mm_opt_video_preset", "mm_opt_video", "mm_opt_video_adv", "mm_opt_gameplay", "mm_opt_input", "mm_opt_sound", "mm_opt_controls", "key_binding", "random"}
 	for _, opt_name in ipairs(opt_tbl) do
 		if flag == true then
 			OptMgr:SaveValues(opt_name)
@@ -136,6 +147,7 @@ end
 function options_dialog:InitCallBacks()
 	self:AddCallback("tab", ui_events.TAB_CHANGED, self.OnTabChange, self)
 	self:AddCallback("tab_game_hud", ui_events.TAB_CHANGED, self.OnGameHudTabChange, self)
+	self:AddCallback("tab_controls_mode", ui_events.TAB_CHANGED, self.OnControlsTabChange, self)
 	self:AddCallback("btn_advanced_graphic", ui_events.BUTTON_CLICKED, self.OnBtnAdvGraphic, self)
 	self:AddCallback("btn_accept", ui_events.BUTTON_CLICKED, self.OnBtnAccept, self)
 	self:AddCallback("btn_cancel", ui_events.BUTTON_CLICKED, self.OnBtnCancel, self)
@@ -146,6 +158,7 @@ function options_dialog:InitCallBacks()
 	self:AddCallback("btn_sound_default", ui_events.BUTTON_CLICKED, self.OnSoundDefault, self)
 	self:AddCallback("btn_game_default", ui_events.BUTTON_CLICKED, self.OnGameDefault, self)
 	self:AddCallback("btn_hud_default", ui_events.BUTTON_CLICKED, self.OnHudDefault, self)
+	self:AddCallback("btn_input_default", ui_events.BUTTON_CLICKED, self.OnInputDefault, self)
 	self:AddCallback("btn_advanced_graphic", ui_events.STATIC_FOCUS_RECEIVED, self.HintRefresh, self)
 	self:AddCallback("btn_accept",           ui_events.STATIC_FOCUS_RECEIVED, self.HintRefresh, self)
 	self:AddCallback("btn_cancel",           ui_events.STATIC_FOCUS_RECEIVED, self.HintRefresh, self)
@@ -156,6 +169,7 @@ function options_dialog:InitCallBacks()
 	self:AddCallback("btn_sound_default",    ui_events.STATIC_FOCUS_RECEIVED, self.HintDefaultBtn, self)
 	self:AddCallback("btn_game_default",     ui_events.STATIC_FOCUS_RECEIVED, self.HintDefaultBtn, self)
 	self:AddCallback("btn_hud_default",      ui_events.STATIC_FOCUS_RECEIVED, self.HintDefaultBtn, self)
+	self:AddCallback("btn_input_default",    ui_events.STATIC_FOCUS_RECEIVED, self.HintDefaultBtn, self)
 	self:AddCallback("btn_keyb_default",     ui_events.STATIC_FOCUS_RECEIVED, self.HintDefaultBtn, self)
 end
 
@@ -212,6 +226,12 @@ function options_dialog:OnSoundDefault()
 
 	local opt = COptionsManager()
 	opt:SetCurrentValues("mm_opt_sound")
+end
+
+function options_dialog:OnInputDefault()
+	self.dlg_input_behavior:ResetToDefaults()
+	local opt = COptionsManager()
+	opt:SetCurrentValues("mm_opt_input")
 end
 
 function options_dialog:OnGameDefault()
@@ -296,14 +316,35 @@ function options_dialog:OnGameHudTabChange()
 	self:ApplyGameHudTab()
 end
 
+function options_dialog:ApplyControlsTab()
+	local i = self.tab_controls_mode:GetActiveIndex()
+	self.controls_index = i
+	self.dlg_controls:Show(i == 0)
+	self.dlg_input_behavior:Show(i == 1)
+	if i == 0 then
+		self.page_hint_name = "ui_mm_tab_bindings"
+		self.page_hint_caption = "ui_mm_hint_page_bindings"
+	else
+		self.page_hint_name = "ui_mm_tab_input_behavior"
+		self.page_hint_caption = "ui_mm_hint_page_input_behavior"
+	end
+	self:HintRefresh()
+end
+
+function options_dialog:OnControlsTabChange()
+	self:ApplyControlsTab()
+end
+
 function options_dialog:OnTabChange()
 	self.dlg_video:Show(false)
 	self.dlg_sound:Show(false)
 	self.dlg_gameplay:Show(false)
 	self.dlg_hud:Show(false)
 	self.dlg_controls:Show(false)
+	self.dlg_input_behavior:Show(false)
 	self.dlg_video_adv:Show(false)
 	self.tab_game_hud:Show(false)
+	self.tab_controls_mode:Show(false)
 	self.current_view = 1
 	self.page_hint_name = nil
 	self.page_hint_caption = nil
@@ -321,7 +362,12 @@ function options_dialog:OnTabChange()
 		self:ApplyGameHudTab()
 		return
 	elseif i == 3 then
-		self.dlg_controls:Show(true)
+		self.tab_controls_mode:Show(true)
+		if self.tab_controls_mode:GetActiveIndex() ~= self.controls_index then
+			self.tab_controls_mode:SetNewActiveTab(self.controls_index)
+		end
+		self:ApplyControlsTab()
+		return
 	end
 	self:HintRefresh()
 end

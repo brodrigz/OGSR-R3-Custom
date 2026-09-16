@@ -147,6 +147,10 @@ bool CActor::OnActionPress(int cmd)
         mstate_wishful |= mcJump;
         return true;
     }
+    case kCROUCH:
+        if (!psActorFlags.test(AF_CROUCH_TOGGLE))
+            return false;
+        [[fallthrough]];
     case kCROUCH_TOGGLE: {
         g_bAutoClearCrouch = !g_bAutoClearCrouch;
         if (!g_bAutoClearCrouch)
@@ -158,13 +162,19 @@ bool CActor::OnActionPress(int cmd)
     case kWALK_TOGGLE: {
         if ((mstate_wishful & mcCrouch) || (mstate_real & mcCrouch))
             return true;
-        m_bWalkToggled = !m_bWalkToggled;
+        if (psActorFlags.test(AF_WALK_TOGGLE))
+            m_bWalkToggled = !m_bWalkToggled;
+        else
+            m_bWalkToggled = true;
         return true;
     }
     case kCROUCH_LOW_TOGGLE: {
         if (!((mstate_wishful & mcCrouch) || (mstate_real & mcCrouch) || !g_bAutoClearCrouch))
             return true;
-        m_bLowCrouchToggled = !m_bLowCrouchToggled;
+        if (psActorFlags.test(AF_LOW_CROUCH_TOGGLE))
+            m_bLowCrouchToggled = !m_bLowCrouchToggled;
+        else
+            m_bLowCrouchToggled = true;
         return true;
     }
     case kSPRINT_TOGGLE: {
@@ -338,7 +348,18 @@ void CActor::IR_OnKeyboardRelease(int cmd)
             if (GAME_PHASE_INPROGRESS == Game().Phase())
                 g_PerformDrop();
             break;
-        case kCROUCH: g_bAutoClearCrouch = true; break;
+        case kCROUCH:
+            if (!psActorFlags.test(AF_CROUCH_TOGGLE))
+                g_bAutoClearCrouch = true;
+            break;
+        case kWALK_TOGGLE:
+            if (!psActorFlags.test(AF_WALK_TOGGLE))
+                m_bWalkToggled = false;
+            break;
+        case kCROUCH_LOW_TOGGLE:
+            if (!psActorFlags.test(AF_LOW_CROUCH_TOGGLE))
+                m_bLowCrouchToggled = false;
+            break;
         case kSPRINT_TOGGLE:
             if (psActorFlags.test(AF_SPRINT_HOLD))
                 mstate_wishful &= ~mcSprint;

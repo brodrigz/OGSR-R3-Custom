@@ -256,6 +256,36 @@ static xr_token minimap_pos_token[] = {
     {"st_minimap_pos_bl", 0}, {"st_minimap_pos_br", 1}, {"st_minimap_pos_tl", 2}, {"st_minimap_pos_tr", 3},
     {"st_minimap_pos_off", 4}, {nullptr, 0}};
 static xr_token item_wheel_token[] = {{"off", 0}, {"on", 1}, {nullptr, 0}};
+static xr_token input_mode_token[] = {{"st_input_hold", 0}, {"st_input_toggle", 1}, {nullptr, 0}};
+
+class CCC_InputMode final : public CCC_Token
+{
+    u32 mode{};
+    Flags32* flags;
+    u32 mask;
+    bool inverted;
+
+    void ReadFlag() { mode = (flags->test(mask) != inverted) ? 1u : 0u; }
+
+public:
+    CCC_InputMode(LPCSTR name, Flags32* value, u32 bit, bool invert = false)
+        : CCC_Token(name, &mode, input_mode_token), flags(value), mask(bit), inverted(invert)
+    {
+        ReadFlag();
+    }
+
+    void Execute(LPCSTR args) override
+    {
+        CCC_Token::Execute(args);
+        flags->set(mask, (mode == 1u) != inverted);
+    }
+
+    void Status(TStatus& status) override
+    {
+        ReadFlag();
+        CCC_Token::Status(status);
+    }
+};
 float g_tactical_compass_range = 150.f;
 float g_tactical_compass_scale = 1.f;
 float g_tactical_compass_x = 0.f;
@@ -1628,6 +1658,12 @@ void CCC_RegisterCommands()
     CMD3(CCC_Mask, "lean_toggle", &psActorFlags, AF_LEAN_TOGGLE);
     CMD3(CCC_Mask, "g_sprint_lower_weapon", &psActorFlags, AF_SPRINT_LOWER_WEAPON);
     CMD3(CCC_Mask, "g_sprint_hold", &psActorFlags, AF_SPRINT_HOLD);
+    CMD4(CCC_InputMode, "g_aim_input_mode", &psActorFlags, AF_WPN_AIM_TOGGLE, false);
+    CMD4(CCC_InputMode, "g_sprint_input_mode", &psActorFlags, AF_SPRINT_HOLD, true);
+    CMD4(CCC_InputMode, "g_lean_input_mode", &psActorFlags, AF_LEAN_TOGGLE, false);
+    CMD4(CCC_InputMode, "g_crouch_input_mode", &psActorFlags, AF_CROUCH_TOGGLE, false);
+    CMD4(CCC_InputMode, "g_walk_input_mode", &psActorFlags, AF_WALK_TOGGLE, false);
+    CMD4(CCC_InputMode, "g_low_crouch_input_mode", &psActorFlags, AF_LOW_CROUCH_TOGGLE, false);
     CMD3(CCC_Mask, "g_sticky_aim", &psActorFlags, AF_STICKY_AIM);
     static BOOL backpack_anim_enabled = TRUE;
     CMD2(CCC_Bool, "g_backpack_anim", &backpack_anim_enabled);

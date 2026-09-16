@@ -1130,4 +1130,24 @@
 		<text>Если включен DLSS или FSR, эта настройка регулирует масштабирование изображения в 3D прицеле для улучшения его чёткости. %c[yellow] \nПри значении 1 изображение не масштабируется. %c[green] \nОптимальное значение: 2. %c[red] \nПри значениях больше 2 может заметно падать FPS.</text>
 	</string>
 
+	<string id="st_input_hold"><text>&#x423;&#x434;&#x435;&#x440;&#x436;&#x430;&#x43D;&#x438;&#x435;</text></string>
+	<string id="st_input_toggle"><text>&#x41F;&#x435;&#x440;&#x435;&#x43A;&#x43B;&#x44E;&#x447;&#x435;&#x43D;&#x438;&#x435;</text></string>
+	<string id="ui_mm_tab_bindings"><text>&#x41A;&#x43B;&#x430;&#x432;&#x438;&#x448;&#x438;</text></string>
+	<string id="ui_mm_tab_input_behavior"><text>&#x420;&#x435;&#x436;&#x438;&#x43C;&#x44B; &#x432;&#x432;&#x43E;&#x434;&#x430;</text></string>
+	<string id="ui_mm_hint_page_bindings"><text>&#x41D;&#x430;&#x437;&#x43D;&#x430;&#x447;&#x435;&#x43D;&#x438;&#x435; &#x43E;&#x441;&#x43D;&#x43E;&#x432;&#x43D;&#x44B;&#x445; &#x438; &#x430;&#x43B;&#x44C;&#x442;&#x435;&#x440;&#x43D;&#x430;&#x442;&#x438;&#x432;&#x43D;&#x44B;&#x445; &#x43A;&#x43B;&#x430;&#x432;&#x438;&#x448;.</text></string>
+	<string id="ui_mm_hint_page_input_behavior"><text>&#x412;&#x44B;&#x431;&#x435;&#x440;&#x438;&#x442;&#x435; &#x440;&#x435;&#x436;&#x438;&#x43C; &#x443;&#x434;&#x435;&#x440;&#x436;&#x430;&#x43D;&#x438;&#x44F; &#x438;&#x43B;&#x438; &#x43F;&#x435;&#x440;&#x435;&#x43A;&#x43B;&#x44E;&#x447;&#x435;&#x43D;&#x438;&#x44F;.</text></string>
+	<string id="ui_mm_input_modes"><text>&#x423;&#x434;&#x435;&#x440;&#x436;&#x430;&#x43D;&#x438;&#x435; / &#x43F;&#x435;&#x440;&#x435;&#x43A;&#x43B;&#x44E;&#x447;&#x435;&#x43D;&#x438;&#x435;</text></string>
+	<string id="ui_mm_input_aim"><text>&#x41F;&#x440;&#x438;&#x446;&#x435;&#x43B;&#x438;&#x432;&#x430;&#x43D;&#x438;&#x435;</text></string>
+	<string id="ui_mm_input_sprint"><text>&#x421;&#x43F;&#x440;&#x438;&#x43D;&#x442;</text></string>
+	<string id="ui_mm_input_lean"><text>&#x41D;&#x430;&#x43A;&#x43B;&#x43E;&#x43D; &#x432;&#x43B;&#x435;&#x432;&#x43E; / &#x432;&#x43F;&#x440;&#x430;&#x432;&#x43E;</text></string>
+	<string id="ui_mm_input_crouch"><text>&#x41F;&#x440;&#x438;&#x441;&#x435;&#x434;&#x430;&#x43D;&#x438;&#x435;</text></string>
+	<string id="ui_mm_input_walk"><text>&#x425;&#x43E;&#x434;&#x44C;&#x431;&#x430;</text></string>
+	<string id="ui_mm_input_low_crouch"><text>&#x41D;&#x438;&#x437;&#x43A;&#x43E;&#x435; &#x43F;&#x440;&#x438;&#x441;&#x435;&#x434;&#x430;&#x43D;&#x438;&#x435;</text></string>
+	<string id="ui_mm_hint_input_aim"><text>&#x412;&#x44B;&#x431;&#x435;&#x440;&#x438;&#x442;&#x435; &#x440;&#x435;&#x436;&#x438;&#x43C; &#x43F;&#x440;&#x438;&#x446;&#x435;&#x43B;&#x438;&#x432;&#x430;&#x43D;&#x438;&#x44F;.</text></string>
+	<string id="ui_mm_hint_input_sprint"><text>&#x412;&#x44B;&#x431;&#x435;&#x440;&#x438;&#x442;&#x435; &#x440;&#x435;&#x436;&#x438;&#x43C; &#x441;&#x43F;&#x440;&#x438;&#x43D;&#x442;&#x430;.</text></string>
+	<string id="ui_mm_hint_input_lean"><text>&#x412;&#x44B;&#x431;&#x435;&#x440;&#x438;&#x442;&#x435; &#x440;&#x435;&#x436;&#x438;&#x43C; &#x43D;&#x430;&#x43A;&#x43B;&#x43E;&#x43D;&#x430;.</text></string>
+	<string id="ui_mm_hint_input_crouch"><text>&#x412;&#x44B;&#x431;&#x435;&#x440;&#x438;&#x442;&#x435; &#x440;&#x435;&#x436;&#x438;&#x43C; &#x43F;&#x440;&#x438;&#x441;&#x435;&#x434;&#x430;&#x43D;&#x438;&#x44F;.</text></string>
+	<string id="ui_mm_hint_input_walk"><text>&#x412;&#x44B;&#x431;&#x435;&#x440;&#x438;&#x442;&#x435; &#x440;&#x435;&#x436;&#x438;&#x43C; &#x445;&#x43E;&#x434;&#x44C;&#x431;&#x44B;.</text></string>
+	<string id="ui_mm_hint_input_low_crouch"><text>&#x412;&#x44B;&#x431;&#x435;&#x440;&#x438;&#x442;&#x435; &#x440;&#x435;&#x436;&#x438;&#x43C; &#x43D;&#x438;&#x437;&#x43A;&#x43E;&#x433;&#x43E; &#x43F;&#x440;&#x438;&#x441;&#x435;&#x434;&#x430;&#x43D;&#x438;&#x44F;.</text></string>
+
 </string_table>

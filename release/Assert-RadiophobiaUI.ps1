@@ -27,14 +27,17 @@ function Assert-RadiophobiaUI {
     $ui.Load($uiPath)
     $keys = [xml]::new()
     $keys.Load((Join-Path $Root 'gamedata\config\ui\ui_keybinding.xml'))
-    foreach ($command in @('walk_toggle', 'crouch_low_toggle')) {
+    foreach ($command in @('crouch', 'walk_toggle', 'crouch_low_toggle')) {
         if (-not $keys.SelectSingleNode("//*[@exe='$command']")) {
-            throw "Compatibility ui_keybinding.xml is missing $command."
+            throw "Radiophobia ui_keybinding.xml is missing $command."
         }
+    }
+    if ($keys.SelectSingleNode("//*[@exe='crouch_toggle']")) {
+        throw 'Controls still expose the obsolete separate crouch-toggle bind.'
     }
     $requiredPaths = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
     foreach ($path in @(
-        'main_dialog:tab_game_hud', 'tab_hud:cap_sec_minimap',
+        'main_dialog:tab_game_hud', 'main_dialog:tab_controls_mode', 'tab_hud:cap_sec_minimap',
         'tab_gameplay:list_economy', 'tab_gameplay:check_backpack_anim',
         'tab_sound:check_subtitles', 'tab_sound:cap_language', 'tab_sound:list_language',
         'tab_sound:cap_mastervolume', 'tab_sound:cap_musicvolume',
@@ -74,6 +77,21 @@ function Assert-RadiophobiaUI {
     if ($ui.SelectSingleNode('//options_item[@entry="g_alt_aim_remember"]')) {
         throw 'Options contain the removed g_alt_aim_remember command.'
     }
+    foreach ($axis in @('x', 'y')) {
+        if (-not $ui.SelectSingleNode("/window/tab_hud/track_font_scale_$axis/options_item[@entry='g_font_scale_$axis' and @group='mm_opt_gameplay']")) {
+            throw "Missing HUD font control: g_font_scale_$axis"
+        }
+    }
+    foreach ($action in @('aim', 'sprint', 'lean', 'crouch', 'walk', 'low_crouch')) {
+        if (-not $ui.SelectSingleNode("/window/tab_input_behavior/list_$action/options_item[@entry='g_${action}_input_mode' and @group='mm_opt_input']")) {
+            throw "Missing hold/toggle selector for $action."
+        }
+    }
+    foreach ($oldEntry in @('wpn_aim_toggle', 'lean_toggle', 'g_sprint_hold')) {
+        if ($ui.SelectSingleNode("//options_item[@entry='$oldEntry']")) {
+            throw "Legacy hold/toggle setting remains outside Input Behavior: $oldEntry"
+        }
+    }
     foreach ($entry in @('r_aa_dlss_quality', 'r_aa_dlss_preset', 'r_aa_fsr3_quality', 'r_xegtao_bent_normals', 'r_ao_mode', 'r2_ssao')) {
         if (-not $ui.SelectSingleNode("//options_item[@entry='$entry' and @depend='vid']")) {
             throw "Options must restart video resources for $entry."
@@ -83,17 +101,22 @@ function Assert-RadiophobiaUI {
     foreach ($language in @('eng', 'rus')) {
         $ids = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
         foreach ($file in Get-ChildItem -LiteralPath (Join-Path $Root "gamedata\config\text\$language") -Filter '*.xml') {
-            $table = [xml]::new()
-            $table.Load($file.FullName) # Honor windows-1251 declarations.
-            foreach ($node in $table.SelectNodes('/string_table/string')) {
-                if (-not $ids.Add($node.GetAttribute('id'))) {
-                    throw "Duplicate $language UI translation: $($node.GetAttribute('id'))"
+            # Some inherited string values contain engine-tolerated XML text
+            # that System.Xml rejects. IDs have a simple, stable syntax, so
+            # scan those directly while still catching cross-file duplicates.
+            $text = [Text.Encoding]::GetEncoding(1251).GetString([IO.File]::ReadAllBytes($file.FullName))
+            foreach ($match in [regex]::Matches($text, '<string\s+id="([^"]+)"')) {
+                $id = $match.Groups[1].Value
+                if (-not $ids.Add($id)) {
+                    throw "Duplicate $language UI translation: $id"
                 }
             }
         }
         foreach ($id in @('st_xegtao', 'ui_mm_xegtao_bent_normals', 'video_settings_name_73', 'video_settings_desc_73',
             'ui_mm_backpack_anim', 'ui_mm_hint_backpack_anim', 'ui_mm_sprint_hold', 'ui_mm_sticky_aim',
-            'st_cap_list_economy', 'st_cap_list_difficulty', 'ui_mm_sec_minimap', 'ui_st_take_all_hint')) {
+            'st_input_hold', 'st_input_toggle', 'ui_mm_tab_bindings', 'ui_mm_tab_input_behavior',
+            'st_cap_list_economy', 'st_cap_list_difficulty', 'ui_mm_sec_minimap', 'ui_st_take_all_hint',
+            'ui_mm_font_scale_x', 'ui_mm_font_scale_y')) {
             if (-not $ids.Contains($id)) { throw "Missing $language UI translation: $id" }
         }
     }

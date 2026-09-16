@@ -31,6 +31,9 @@ enum
     AF_SPRINT_LOWER_WEAPON = 1 << 26,
     AF_SPRINT_HOLD = 1 << 27,
     AF_STICKY_AIM = 1 << 28,
+    AF_CROUCH_TOGGLE = 1 << 29,
+    AF_WALK_TOGGLE = 1 << 30,
+    AF_LOW_CROUCH_TOGGLE = 1u << 31,
 };
 
 //enum

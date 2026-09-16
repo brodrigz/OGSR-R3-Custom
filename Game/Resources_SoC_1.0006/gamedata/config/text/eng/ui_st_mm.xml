@@ -1174,4 +1174,24 @@
 		<text>If DLSS or FSR is enabled, this setting adjusts the scaling of the image in the 3D scopes to improve its clarity. %c[yellow] \nWhen set to 1, the image is not scaled. %c[green] \nOptimal value: 2. %c[red] \nValues greater than 2 may noticeably reduce FPS.</text>
 	</string>
 
+	<string id="st_input_hold"><text>Hold</text></string>
+	<string id="st_input_toggle"><text>Toggle</text></string>
+	<string id="ui_mm_tab_bindings"><text>Bindings</text></string>
+	<string id="ui_mm_tab_input_behavior"><text>Input Behavior</text></string>
+	<string id="ui_mm_hint_page_bindings"><text>Assign the primary and alternate keys for each action.</text></string>
+	<string id="ui_mm_hint_page_input_behavior"><text>Choose whether movement and aiming actions remain active while held or switch state when pressed.</text></string>
+	<string id="ui_mm_input_modes"><text>Hold / Toggle Behavior</text></string>
+	<string id="ui_mm_input_aim"><text>Aim</text></string>
+	<string id="ui_mm_input_sprint"><text>Sprint</text></string>
+	<string id="ui_mm_input_lean"><text>Lean left / right</text></string>
+	<string id="ui_mm_input_crouch"><text>Crouch</text></string>
+	<string id="ui_mm_input_walk"><text>Walk</text></string>
+	<string id="ui_mm_input_low_crouch"><text>Low crouch</text></string>
+	<string id="ui_mm_hint_input_aim"><text>Choose hold or toggle aiming.</text></string>
+	<string id="ui_mm_hint_input_sprint"><text>Choose hold or toggle sprinting.</text></string>
+	<string id="ui_mm_hint_input_lean"><text>Choose hold or toggle leaning.</text></string>
+	<string id="ui_mm_hint_input_crouch"><text>Choose hold or toggle crouching.</text></string>
+	<string id="ui_mm_hint_input_walk"><text>Choose hold or toggle walking.</text></string>
+	<string id="ui_mm_hint_input_low_crouch"><text>Choose hold or toggle low crouching.</text></string>
+
 </string_table>

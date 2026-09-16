@@ -72,13 +72,10 @@ function opt_gameplay:InitControls(x, y, xml, handler)
 	bind_hint(handler, xml:InitStatic("tab_gameplay:list_economy_cap", self), "gp_cap_economy", "st_cap_list_economy", "ui_mm_hint_economy")
 	bind_hint(handler, xml:InitStatic("tab_gameplay:list_bullet_pen_cap", self), "gp_cap_bullet_pen", "ui_mm_bullet_penetration", "ui_mm_hint_bullet_pen")
 
-	bind_hint(handler, xml:InitCheck("tab_gameplay:check_aim_toggle", self), "gp_aim_toggle", "ui_mm_aim_toggle", "ui_mm_hint_aim_toggle")
 	bind_hint(handler, xml:InitCheck("tab_gameplay:check_auto_aim_zoom", self), "gp_auto_aim_zoom", "ui_mm_auto_aim_zoom", "ui_mm_hint_auto_aim_zoom")
 	bind_hint(handler, xml:InitCheck("tab_gameplay:check_late_reload", self), "gp_late_reload", "ui_mm_late_reload", "ui_mm_hint_late_reload")
-	bind_hint(handler, xml:InitCheck("tab_gameplay:check_lean_toggle", self), "gp_lean_toggle", "ui_mm_lean_toggle", "ui_mm_hint_lean_toggle")
 	bind_hint(handler, xml:InitCheck("tab_gameplay:check_switch_slot", self), "gp_switch_slot", "ui_mm_switch_slot", "ui_mm_hint_switch_slot")
 	bind_hint(handler, xml:InitCheck("tab_gameplay:check_sprint_lower_weapon", self), "gp_sprint_lower", "ui_mm_sprint_lower_weapon", "ui_mm_hint_sprint_lower_weapon")
-	bind_hint(handler, xml:InitCheck("tab_gameplay:check_sprint_hold", self), "gp_sprint_hold", "ui_mm_sprint_hold", "ui_mm_hint_sprint_hold")
 	bind_hint(handler, xml:InitCheck("tab_gameplay:check_sticky_aim", self), "gp_sticky_aim", "ui_mm_sticky_aim", "ui_mm_hint_sticky_aim")
 
 	ledge_grab = xml:InitCheck("tab_gameplay:check_ledge_grab", self)
@@ -326,13 +323,10 @@ function opt_gameplay:ResetToDefaults()
 	cmd("g_rad3_game_diff gdiff_2")
 	cmd("g_rad3_economy_diff econ_2")
 	cmd("g_bullet_penetration st_bullet_pen_on")
-	cmd("wpn_aim_toggle off")
 	cmd("g_auto_aim_zoom off")
 	cmd("g_complete_late_reload_on_hide on")
-	cmd("lean_toggle off")
 	cmd("g_mouse_wheel_switch_slot off")
 	cmd("g_sprint_lower_weapon off")
-	cmd("g_sprint_hold off")
 	cmd("g_sticky_aim off")
 	cmd("keypress_on_start on")
 	cmd("g_music_tracks on")
@@ -360,6 +354,37 @@ function opt_gameplay:ResetToDefaults()
 	local opt = COptionsManager()
 	opt:SetCurrentValues("mm_opt_gameplay")
 	opt:SetCurrentValues("random")
+end
+
+class "opt_input_behavior" (CUIWindow)
+function opt_input_behavior:__init() super()
+end
+
+function opt_input_behavior:__finalize()
+end
+
+function opt_input_behavior:InitControls(x, y, xml, handler)
+	self:Init(x, y, 450, 410)
+	self:SetAutoDelete(true)
+
+	xml:InitFrameLine("tab_input_behavior:cap_sec_modes", self)
+	for _, id in ipairs({"aim", "sprint", "lean", "crouch", "walk", "low_crouch"}) do
+		bind_hint(handler, xml:InitStatic("tab_input_behavior:cap_" .. id, self), "input_cap_" .. id,
+			"ui_mm_input_" .. id, "ui_mm_hint_input_" .. id)
+		xml:InitComboBox("tab_input_behavior:list_" .. id, self)
+	end
+
+	local btn = xml:Init3tButton("tab_input_behavior:btn_default", self)
+	handler:Register(btn, "btn_input_default")
+end
+
+function opt_input_behavior:ResetToDefaults()
+	cmd("g_aim_input_mode st_input_hold")
+	cmd("g_sprint_input_mode st_input_toggle")
+	cmd("g_lean_input_mode st_input_hold")
+	cmd("g_crouch_input_mode st_input_hold")
+	cmd("g_walk_input_mode st_input_toggle")
+	cmd("g_low_crouch_input_mode st_input_toggle")
 end
 
 class "opt_hud" (CUIWindow)
@@ -420,6 +445,10 @@ function opt_hud:InitControls(x, y, xml, handler)
 	xml:InitTrackBar("tab_hud:track_minimap_scale", self)
 	xml:InitTrackBar("tab_hud:track_minimap_x", self)
 	xml:InitTrackBar("tab_hud:track_minimap_y", self)
+	xml:InitStatic("tab_hud:cap_font_scale_x", self)
+	xml:InitTrackBar("tab_hud:track_font_scale_x", self)
+	xml:InitStatic("tab_hud:cap_font_scale_y", self)
+	xml:InitTrackBar("tab_hud:track_font_scale_y", self)
 
 	xml:InitComboBox("tab_hud:list_compass", self)
 	xml:InitComboBox("tab_hud:list_compass_pos", self)
@@ -473,6 +502,8 @@ function opt_hud:ResetToDefaults()
 	cmd("g_minimap_scale 1")
 	cmd("g_minimap_x 0")
 	cmd("g_minimap_y 0")
+	cmd("g_font_scale_x 1")
+	cmd("g_font_scale_y 1")
 
 	ui_data.save("rad3_fakelens", true)
 	if fakelens then
