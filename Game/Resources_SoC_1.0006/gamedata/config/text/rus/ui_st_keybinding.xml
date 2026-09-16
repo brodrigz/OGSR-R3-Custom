@@ -88,10 +88,10 @@
 		<text>  </text>
 	</string>
 	<string id="kb_walk_toggle">
-		<text>Переключение шага</text>
+		<text>Шаг</text>
 	</string>
 	<string id="kb_crouch_low_toggle">
-		<text>Переключение низкого приседа</text>
+		<text>Низкий присед</text>
 	</string>
 	<string id="kb_down">
 		<text></text>

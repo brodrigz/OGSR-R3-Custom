@@ -35,6 +35,9 @@ function Assert-RadiophobiaUI {
     if ($keys.SelectSingleNode("//*[@exe='crouch_toggle']")) {
         throw 'Controls still expose the obsolete separate crouch-toggle bind.'
     }
+    if ($keys.SelectSingleNode("//*[@exe='accel']")) {
+        throw 'Controls still expose the obsolete contextual walk/low-crouch bind.'
+    }
     $requiredPaths = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
     foreach ($path in @(
         'main_dialog:tab_game_hud', 'main_dialog:tab_controls_mode', 'tab_hud:cap_sec_minimap',
