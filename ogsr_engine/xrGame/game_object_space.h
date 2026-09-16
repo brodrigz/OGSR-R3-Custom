@@ -108,6 +108,9 @@ enum ECallbackType
     eOnActorJump,
     eOnActorBoltThrow,
 
+    // Append restored R3 callbacks to preserve existing callback IDs.
+    eOnActorWeaponAltAimSwitch,
+
     eDummy = u32(-1),
 };
 };

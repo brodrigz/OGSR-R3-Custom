@@ -594,6 +594,7 @@ public:
 
 protected:
     bool has_laser{};
+    bool legacy_shader_laser{};
 
 private:
     shared_str laserdot_attach_bone;
@@ -618,6 +619,8 @@ public:
         return true;
     }
     inline bool IsLaserOn() const { return m_flagsAddOnState & CSE_ALifeItemWeapon::eWeaponAddonLaserOn; }
+    bool HasLegacyShaderLaser() const { return legacy_shader_laser; }
+    bool HasNativeLaser() const { return has_laser && !legacy_shader_laser; }
 
     Fvector flashlight_attach_offset{}, flashlight_pos{};
     Fvector flashlight_omni_attach_offset{}, flashlight_world_attach_offset{}, flashlight_omni_world_attach_offset{};

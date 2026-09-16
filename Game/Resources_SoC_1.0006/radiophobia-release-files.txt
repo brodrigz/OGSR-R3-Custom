@@ -46,6 +46,7 @@ gamedata/scripts/ogsr_hud_animation_callbacks.script
 gamedata/scripts/ogsr_ledge_adapter.script
 gamedata/scripts/ogsr_ledge_grabbing.script
 gamedata/scripts/ogsr_scope_nightvision.script
+gamedata/scripts/rad_laser_control.script
 gamedata/scripts/ogsr_tactical_compass.script
 gamedata/scripts/ogsr/ogsr_actor_animation.script
 gamedata/scripts/ogsr/ogsr_dof.script

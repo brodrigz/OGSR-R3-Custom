@@ -195,8 +195,7 @@ function actor_binder:net_destroy()
 	self.object:set_callback(callback.on_actor_weapon_zoom_in, nil)
     self.object:set_callback(callback.on_actor_weapon_zoom_out, nil)
 	
-	-- OGSR 3.529 removed callback.on_actor_weapon_alt_aim_switch.
-	-- The old fake-lens signal path stays disabled until that feature is adapted.
+	self.object:set_callback(callback.on_actor_weapon_alt_aim_switch, nil)
 
     --self.object:set_callback(callback.on_actor_weapon_start_firing, nil)
     self.object:set_callback(callback.on_actor_weapon_fire, nil)
@@ -279,7 +278,7 @@ function actor_binder:reinit()
 	self.object:set_callback(callback.on_actor_weapon_zoom_in, self.on_actor_weapon_zoom_in, self)
     self.object:set_callback(callback.on_actor_weapon_zoom_out, self.on_actor_weapon_zoom_out, self)
 	
-	-- OGSR 3.529 removed callback.on_actor_weapon_alt_aim_switch.
+	self.object:set_callback(callback.on_actor_weapon_alt_aim_switch, self.on_actor_weapon_alt_aim_switch, self)
 
     --self.object:set_callback(callback.on_actor_weapon_start_firing, self.on_actor_weapon_start_firing, self)
     self.object:set_callback(callback.on_actor_weapon_fire, self.on_actor_weapon_fire, self)

@@ -622,6 +622,24 @@ bool CScriptGameObject::CanSwitchSightMode() const
     return weapon && weapon->CanSwitchSightMode();
 }
 
+bool CScriptGameObject::GetLaserOn() const
+{
+    const auto* weapon = smart_cast<const CWeapon*>(&object());
+    return weapon && weapon->IsLaserOn();
+}
+
+bool CScriptGameObject::HasLegacyShaderLaser() const
+{
+    const auto* weapon = smart_cast<const CWeapon*>(&object());
+    return weapon && weapon->HasLegacyShaderLaser();
+}
+
+bool CScriptGameObject::HasNativeLaser() const
+{
+    const auto* weapon = smart_cast<const CWeapon*>(&object());
+    return weapon && weapon->HasNativeLaser();
+}
+
 bool CScriptGameObject::SwitchSightMode()
 {
     auto* weapon = smart_cast<CWeapon*>(&object());

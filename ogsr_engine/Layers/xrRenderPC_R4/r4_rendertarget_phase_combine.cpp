@@ -173,6 +173,15 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
         }
     }
 
+    if (ps_pnv_mode == 1)
+    {
+        // Folopes' laser beacon is HDR (>10), but combine_tonemap clamps the
+        // NVG scene to [0,1]. Preserve the pre-tonemap image for the NVG pass.
+        // Water/SSR have finished reading this render-sized reflection scratch.
+        // Reuse it instead of allocating another full-size render target.
+        HW.get_context(cmd_list.context_id)->CopyResource(rt_Generic_0_temp->pSurface, rt_Generic_0->pSurface);
+    }
+
     {
         // Perform blooming filter and distortion if needed
         cmd_list.set_Stencil(FALSE);

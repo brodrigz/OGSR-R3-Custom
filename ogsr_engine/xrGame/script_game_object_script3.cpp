@@ -396,6 +396,9 @@ class_<CScriptGameObject> script_register_game_object2(class_<CScriptGameObject>
         .def("get_scope_nightvision", &CScriptGameObject::GetScopeNightVision)
         .def("is_3dss_enabled", &CScriptGameObject::Is3dssEnabled)
         .def("is_alt_aim", &CScriptGameObject::IsAltSightMode)
+        .def("get_laser_on", &CScriptGameObject::GetLaserOn)
+        .def("has_shader_laser", &CScriptGameObject::HasLegacyShaderLaser)
+        .def("has_native_laser", &CScriptGameObject::HasNativeLaser)
         .def("can_switch_sight_mode", &CScriptGameObject::CanSwitchSightMode)
         .def("switch_sight_mode", &CScriptGameObject::SwitchSightMode)
 

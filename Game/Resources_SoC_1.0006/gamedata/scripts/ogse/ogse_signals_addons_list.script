@@ -30,7 +30,7 @@ addons = {
 	"ogsr_scope_nightvision",
 	"ogse_hud_control",
 	"dsh_hud_fx",
-	-- "zzz_bas_laser_control", -- requires removed weapon:get_laser_on() API
+	"rad_laser_control", -- Folopes laser effects, adapted to the current engine
 	"treasure_manager",
     "task_manager",
 	"ui_inGame2_radblood",

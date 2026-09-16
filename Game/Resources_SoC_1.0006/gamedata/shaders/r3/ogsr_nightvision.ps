@@ -21,6 +21,9 @@
 #include "night_vision.h"
 #include "ogsr_gasmask_common.h"
 
+uniform float4 shader_param_5;
+Texture2D s_laser_scene; // HDR snapshot before tone mapping; render resolution
+
 float3 bokeh_pass_3(float image, float2 tc)
 {
     float Pi = 6.28318530718;
@@ -133,6 +136,16 @@ float4 main(p_screen I) : SV_Target
         if (jitter.z > (pnv_param_3.z - ((1.0 - pnv_param_3.z) * (lua_param_nvg_gain_current - 1.0f))))
         {
             image.r = 1.0f;
+        }
+
+        // Folopes RP3 QoL v5.2: retain the bright laser beacon under NVGs.
+        // Gate the bypass to an enabled legacy laser so ordinary bright sources
+        // keep the upgraded renderer's normal night-vision processing.
+        if (shader_param_5.y > 0.5f && shader_param_5.z < 0.5f && shader_param_5.w < 0.5f)
+        {
+            float3 beacon_src = s_laser_scene.Sample(smp_rtlinear, I.tc0).xyz;
+            if (beacon_src.r > 10.0f)
+                image.r = 1.0f;
         }
 
         // APPLY IMAGE COLOR CORRECTION AND MAKE BRIGHT SPOTS WHITE

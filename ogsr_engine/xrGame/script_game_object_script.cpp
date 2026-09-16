@@ -74,6 +74,7 @@ void CScriptGameObject::script_register(lua_State* L)
                     value("on_actor_weapon_fire", int(GameObject::eOnActorWeaponFire)), value("on_actor_weapon_reload", int(GameObject::eOnActorWeaponReload)),
                     value("on_actor_weapon_empty", int(GameObject::eOnActorWeaponEmpty)), value("on_actor_weapon_zoom_in", int(GameObject::eOnActorWeaponZoomIn)),
                     value("on_actor_weapon_zoom_out", int(GameObject::eOnActorWeaponZoomOut)),
+                    value("on_actor_weapon_alt_aim_switch", int(GameObject::eOnActorWeaponAltAimSwitch)),
 
                     value("on_cell_item_focus", int(GameObject::eCellItemFocus)), value("on_cell_item_select", int(GameObject::eCellItemSelect)),
                     value("on_cell_item_focus_lost", int(GameObject::eCellItemFocusLost)), value("on_cell_item_mouse", int(GameObject::eOnCellItemMouse)),

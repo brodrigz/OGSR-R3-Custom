@@ -1,0 +1,64 @@
+-- Folopes RP3 QoL v5.2 laser controller, adapted for OGSR R3 Custom.
+-- Original BaS controller: HarukaSai; credits: LVutner, Ishmaeel;
+-- Radiophobia adaptation: seaz5150. Folopes adds NVG and ADS policy.
+-- Engine owns toggling/save state. Poll actual per-weapon sight state so
+-- switching weapons or loading a save cannot leave stale alternate-aim state.
+-- shader_param_5: x=legacy laser on, y=NVG on, z=hide in ADS, w=native laser.
+
+local HIDE_WHEN_AIMING = true
+local last_command = nil
+local last_weapon_id = nil
+local last_laser = nil
+local snd_laser = sound_object("interface\\item_usage\\headflash_switch")
+
+local function publish(on, nvg, hide, native)
+    local command = string.format("shader_param_5 %d, %d, %d, %d", on, nvg, hide, native)
+    if command ~= last_command then
+        get_console():execute(command)
+        last_command = command
+    end
+end
+
+function reset()
+    last_command = nil
+    last_weapon_id = nil
+    last_laser = nil
+    publish(0, 0, 0, 0)
+end
+
+function actor_on_update()
+    local actor = db.actor
+    local weapon = actor and actor:alive() and actor:active_item()
+    if not weapon or not weapon:is_weapon() then
+        if last_weapon_id ~= nil or last_command == nil then reset() end
+        return
+    end
+
+    local legacy = weapon:has_shader_laser()
+    local on = legacy and weapon:get_laser_on()
+    local id = weapon:id()
+    -- Only an actual toggle of the same legacy weapon plays Folopes' effects.
+    -- Native weapons retain the engine's device-switch animation and sound.
+    if legacy and id == last_weapon_id and last_laser ~= nil and on ~= last_laser then
+        level.add_cam_effector("camera_effects\\weapon\\ak74_switch_off.anm", 9342, false, "")
+        snd_laser:play(actor, 0, sound_object.s2d)
+    end
+    last_weapon_id = id
+    last_laser = on
+
+    local nvg = ogse_night_vision.is_nv_working()
+        or ogse_night_vision.is_scope_nightvision_visual_active()
+    local hide = HIDE_WHEN_AIMING and actor:zoom_mode() and not weapon:is_alt_aim()
+    publish(on and 1 or 0, on and nvg and 1 or 0, hide and 1 or 0,
+        weapon:has_native_laser() and 1 or 0)
+end
+
+function attach(sm)
+    sm:subscribe({ signal = "on_spawn", fun = this.reset })
+    sm:subscribe({ signal = "on_update", fun = this.actor_on_update })
+    sm:subscribe({ signal = "on_actor_weapon_zoom_in", fun = this.actor_on_update })
+    sm:subscribe({ signal = "on_actor_weapon_zoom_out", fun = this.actor_on_update })
+    sm:subscribe({ signal = "on_actor_weapon_alt_aim_switch", fun = this.actor_on_update })
+    sm:subscribe({ signal = "on_death", fun = this.reset })
+    sm:subscribe({ signal = "on_before_destroy", fun = this.reset })
+end

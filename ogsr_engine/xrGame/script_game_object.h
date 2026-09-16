@@ -719,6 +719,9 @@ public:
     LPCSTR GetScopeNightVision() const;
     bool Is3dssEnabled() const;
     bool IsAltSightMode() const;
+    bool GetLaserOn() const;
+    bool HasLegacyShaderLaser() const;
+    bool HasNativeLaser() const;
     bool CanSwitchSightMode() const;
     bool SwitchSightMode();
 

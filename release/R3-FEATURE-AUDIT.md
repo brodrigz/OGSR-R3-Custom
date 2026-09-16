@@ -2,9 +2,25 @@
 
 Audit date: 2026-09-15. Reference: `D:\Radiophobia 3 - Clean backup`.
 
+## Implementation update: 2026-09-16
+
+Findings 1, 2, 3, and 5 below have now been addressed in source and selected release
+resources. Their original evidence is retained as audit history. The new laser
+controller is adapted from Folopes RP3 QoL v5.2; it replaces `zzz_bas_laser_control`
+and uses the engine's saved laser flag. The restored alternate-aim callback reaches
+the original fake-lens and dedicated-scope NV consumers. HUD Options again exposes
+font width/height. Default NVG/laser bindings are N/Mouse 5.
+
+The animation helper and duplicate animation namespace remain unchanged, per the
+user's instruction. This update does not establish full private-engine parity.
+See [LASER-AND-SIGHT-FIXES.md](LASER-AND-SIGHT-FIXES.md) for implementation and checks.
+
+## Original audit findings
+
 **Full behavioral equivalence is not established.** Static comparison found
 missing original laser integration, disconnected alternate-aim notifications,
-and missing font controls. It also found an animation-helper registration risk.
+and missing font controls. A follow-up on 2026-09-16 also confirmed an incorrect
+default NVG binding. The review found an animation-helper registration risk.
 The packaging checks alone cannot certify Radiophobia feature parity.
 
 This audit added tools and documentation; it did not change runtime resources
@@ -99,6 +115,21 @@ Treat this as a registration/integration risk, not a proven startup crash. Verif
 the full initialization path, remove redundant registration or provide a proper
 adapter, and test scripted animation sounds and animation-end consumers.
 
+### 5. Default NVG key targets the wrong action (2026-09-16 follow-up)
+
+The selected `gamedata/config/default_controls.ltx:39` binds `night_vision kN`.
+Clean R3 binds `night_vision_rad kN`. These are distinct actions: the engine's
+native `kNIGHT_VISION` and the custom `kNIGHT_VISION_RAD` registered by inherited
+`system.ltx`. The wearable NVG script rejects actions other than
+`kNIGHT_VISION_RAD`; the options UI also edits `night_vision_rad`.
+
+Consequently, applying the packaged default controls does not send N to the R3
+wearable NVG handler. Existing user bindings can mask the defect. The appropriate
+binding is `bind night_vision_rad kN`. This is a confirmed input-path defect, not
+proof that every NVG configuration or shader is broken. The render pass,
+`SSFX_BEEFS_NVG`, shader constants, and wearable controller are present; visual
+correctness remains untested. The audit now checks this mismatch explicitly.
+
 ## Maintenance and inherited findings
 
 - The fork ships `scripts/animation_common.script` while the reference supplies
@@ -139,7 +170,9 @@ complete runtime equivalence with the private binary.
 
 The targeted callback audit found no stale direct references against 76 exported
 callbacks. The input audit checked 69 actions across the effective LTX/XML content
-without registry/binding findings. These do not detect deliberately removed
+without registry/binding findings. That check accepted both valid NVG action names
+and missed their semantic mismatch; the follow-up above corrects that omission.
+These checks also do not detect deliberately removed
 registrations; the disconnected alternate-aim callback illustrates that limit.
 
 The private object-API scan produced three actual calls to missing bindings:

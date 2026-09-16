@@ -1,16 +1,85 @@
 #include "common.h"
 
+float4 shader_param_5;
 uniform float4 laser_params;
 
 struct v2p
 {
-    float2 tc0 : TEXCOORD0; // base
-    //	float2 tc1: TEXCOORD1; // lmap
-    float4 c0 : COLOR0; // sun
+	float2 tc0: TEXCOORD0; // base
+//	float2 tc1: TEXCOORD1; // lmap
+	float4 c0: COLOR0; // sun
 };
 
-float4 main(v2p I) : SV_Target
+float4 main(v2p I, float4 pos2d : SV_Position) : SV_Target
 {
-    float4 t_base = s_base.Sample(smp_base, I.tc0);
-    return float4(t_base.r, t_base.g, t_base.b, laser_params.x > laser_params.y ? 0.f : t_base.a * I.c0.a);
+	float4 t_base = s_base.Sample( smp_base, I.tc0 );
+	// OGSR native laser weapons keep their existing geometry/visibility path.
+	// The controller sets .w only for laser_light_section weapons.
+	if (shader_param_5.w > 0.5f)
+		return float4(t_base.rgb, laser_params.x > laser_params.y ? 0.f : t_base.a * I.c0.a);
+	float a = shader_param_5.x > 0.f ? t_base.a * I.c0.a : 0.f;
+	// while aiming down sights (shader_param_5.z, fed by
+	// rad_laser_control.script) the laser is hidden: the dot sits under
+	// the sight reticle and its depth-reactive size/visibility changes
+	// read as reticle flicker during aim sway
+	if (shader_param_5.z > 0.5f)
+		a = 0.f;
+
+	// [RP3 QoL] realistic laser falloff: fade every laser pixel by the
+	// distance of the WORLD SURFACE behind it (sampled from the deferred
+	// position buffer). Sky writes no position -> laser vanishes when
+	// aimed at nothing.
+	// PRESET 2 "bright & size-driven" (preset 1 saved in the Modding folder)
+	//   BRIGHT_RANGE: full brightness inside this (m)
+	//   DIM_END:      still visible out to this (m)
+	//   DIM_LEVEL:    brightness floor at range (real dots stay bright)
+	//   SIZE_NEAR/FAR: alpha-curve exponents; <1 fattens the disc, >1
+	//                  thins it. Blended over SIZE_SPAN meters, this makes
+	//                  dot SIZE the main distance cue across a room.
+	#define LASER_BRIGHT_RANGE 8.0f
+	#define LASER_DIM_END 150.0f
+	#define LASER_DIM_LEVEL 0.75f
+	#define LASER_SIZE_NEAR 0.15f
+	#define LASER_SIZE_FAR 1.8f
+	// two-phase size curve: FAST_SHARE of the whole size transition plays
+	// out inside SIZE_FAST meters (dramatic 0-6 m scaling), the rest eases
+	// slowly out to SIZE_SLOW
+	#define LASER_SIZE_FAST 6.0f
+	#define LASER_SIZE_SLOW 30.0f
+	#define LASER_SIZE_FAST_SHARE 0.7f
+	float2 uv = pos2d.xy * screen_res.zw;
+	gbuffer_data gbd = gbuffer_load_data(uv, pos2d.xy);
+	float scene_z = gbd.P.z;
+	// the BEAM stub at the muzzle (fragments geometrically close to the
+	// camera) keeps a constant vanilla look; only the DOT (fragments at the
+	// beam's far end) reacts to distance
+	#define LASER_BEAM_EXEMPT 3.0f
+	// Pixel SV_Position.w is reciprocal clip W, not view-space distance.
+	float fragment_depth = rcp(max(pos2d.w, 0.000001f));
+	if (fragment_depth >= LASER_BEAM_EXEMPT)
+	{
+		float size_t = saturate(scene_z / LASER_SIZE_FAST) * LASER_SIZE_FAST_SHARE
+		             + saturate((scene_z - LASER_SIZE_FAST) / (LASER_SIZE_SLOW - LASER_SIZE_FAST)) * (1.0f - LASER_SIZE_FAST_SHARE);
+		a = pow(saturate(a), lerp(LASER_SIZE_NEAR, LASER_SIZE_FAR, size_t));
+		float bright = saturate(1.0f - (scene_z - LASER_BRIGHT_RANGE) / 27.0f);
+		float tail = saturate(1.0f - (scene_z - LASER_BRIGHT_RANGE) / (LASER_DIM_END - LASER_BRIGHT_RANGE));
+		float dist_fade = max(bright, LASER_DIM_LEVEL * tail);
+		if (scene_z < 0.05f)
+			dist_fade = 0.0f;
+		a *= dist_fade;
+	}
+
+	// [RP3 QoL] night vision: the amplified image washes the dot out, so
+	// boost it while NVGs are active (flag fed by rad_laser_control)
+	if (shader_param_5.y > 0.f)
+	{
+		// beacon signature: just above the NVG shader's >10 bypass
+		// threshold. Kept low on purpose -- higher values feed the NVG's
+		// own bloom passes and wash out the dot's surroundings, making it
+		// BLEND IN at high gain instead of standing out.
+		t_base.rgb = float3(15.0f, 15.0f, 15.0f);
+		a = saturate(a * 3.0f);
+	}
+
+	return float4(t_base.r, t_base.g, t_base.b, a);
 }

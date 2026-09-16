@@ -3,6 +3,7 @@ function element_0(shader, t_base, t_second, t_detail)
 		:fog(false)
 		:zb(false, false)
 	shader:dx10texture("s_image", "$user$postprocess0")
+	shader:dx10texture("s_laser_scene", "$user$generic_temp")
 	shader:dx10texture("s_position", "$user$position")
 	shader:dx10texture("s_bloom_new", "$user$pp_bloom")
 

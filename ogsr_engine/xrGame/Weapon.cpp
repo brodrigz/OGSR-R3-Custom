@@ -523,6 +523,12 @@ void CWeapon::Load(LPCSTR section)
         }
     }
 
+    // R3/BaS models carry their own shader laser geometry. Reuse the saved
+    // addon flag, but create a native light only for explicitly configured lights.
+    // An explicit native configuration takes precedence if both keys exist.
+    legacy_shader_laser = READ_IF_EXISTS(pSettings, r_bool, section, "laser_status", false) &&
+        !pSettings->line_exist(section, "laser_light_section");
+    has_laser = legacy_shader_laser || pSettings->line_exist(section, "laser_light_section");
     if (!laser_light_render && pSettings->line_exist(section, "laser_light_section"))
     {
         has_laser = true;
@@ -1287,6 +1293,20 @@ bool CWeapon::Action(s32 cmd, u32 flags)
             return false;
     }
 
+    case kLASER_ON: {
+        // Legacy models have no native device-switch animation contract.
+        // Native lasers continue through CWeaponMagazined's animated path.
+        if (!legacy_shader_laser)
+            return false;
+        if ((flags & CMD_START) && !IsPending() && GetState() == eIdle)
+        {
+            SwitchLaser(!IsLaserOn());
+            UpdateHUDAddonsVisibility();
+            UpdateAddonsVisibility();
+        }
+        return true;
+    }
+
     case kWPN_ZOOM_ALTER: {
         if ((flags & CMD_START) && !IsPending() && SwitchSightMode())
             return true;
@@ -1761,6 +1781,7 @@ bool CWeapon::SwitchSightMode()
 
     if (ParentIsActor())
     {
+        smart_cast<CActor*>(H_Parent())->callback(GameObject::eOnActorWeaponAltAimSwitch)(IsAltSightMode());
         ::luabind::functor<void> funct;
         if (ai().script_engine().functor("CWeapon_OnSwitchSightMode", funct))
             funct(lua_game_object(), IsAltSightMode());
