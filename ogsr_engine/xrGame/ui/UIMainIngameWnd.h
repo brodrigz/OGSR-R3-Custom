@@ -171,7 +171,6 @@ protected:
 
     Fvector2 m_xml_health_pos{};
     Fvector2 m_xml_weapon_pos{};
-    Fvector2 m_xml_flashlight_pos{};
     int m_applied_hud_cluster_pos{-1};
     bool m_applied_hud_16x10{};
 

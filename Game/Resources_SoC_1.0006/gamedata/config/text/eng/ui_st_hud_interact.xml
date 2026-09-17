@@ -31,7 +31,7 @@
 		<text>Damaged carcass</text>
 	</string>
 	<string id="ui_mm_hud_interact">
-		<text>Interaction HUD</text>
+		<text>Interactible dot markers</text>
 	</string>
 	<string id="ui_mm_bullet_penetration">
 		<text>Bullet penetration</text>
@@ -148,7 +148,7 @@
 		<text>Toggle aiming</text>
 	</string>
 	<string id="ui_mm_auto_aim_zoom">
-		<text>Aim on zoom</text>
+		<text>Zoom on ADS</text>
 	</string>
 	<string id="ui_mm_autounload_wpn">
 		<text>Auto-unload weapons</text>
@@ -172,7 +172,7 @@
 		<text>E - take everything.  R - take everything except weapons and armor.</text>
 	</string>
 	<string id="ui_mm_late_reload">
-		<text>Late reload</text>
+		<text>Forgiving Reload Interruption</text>
 	</string>
 	<string id="ui_mm_use_anims">
 		<text>Use animations</text>
@@ -193,7 +193,7 @@
 		<text>Show legs</text>
 	</string>
 	<string id="ui_mm_dialog_ui">
-		<text>Dialog UI</text>
+		<text>Dynamic Dialogue UI</text>
 	</string>
 	<string id="ui_mm_dynamic_news">
 		<text>Dynamic news</text>
@@ -241,7 +241,7 @@
 		<text>Click to aim instead of holding the aim button.</text>
 	</string>
 	<string id="ui_mm_hint_auto_aim_zoom">
-		<text>Automatically zoom when aiming.</text>
+		<text>Apply an additional zoom step while aiming with non-magnified sights.</text>
 	</string>
 	<string id="ui_mm_hint_autounload_wpn">
 		<text>Unload weapons when switching them.</text>
@@ -268,7 +268,7 @@
 		<text>Keep ADS after reload and jam, for hold-aim and toggle-aim.</text>
 	</string>
 	<string id="ui_mm_hint_late_reload">
-		<text>Allow reload cancel until the magazine seats.</text>
+		<text>Keep a regular reload completed when the weapon is hidden after at least 80% of its animation. Shell-by-shell reloads and animations with commit marks are unchanged.</text>
 	</string>
 	<string id="ui_mm_hint_switch_slot">
 		<text>Quick slot switching behaviour.</text>
@@ -292,7 +292,7 @@
 		<text>Show the player legs in first person.</text>
 	</string>
 	<string id="ui_mm_hint_dialog_ui">
-		<text>NPC dialog interface style.</text>
+		<text>Oblivion style dialogue UI</text>
 	</string>
 	<string id="ui_mm_hint_dynamic_news">
 		<text>Show dynamic world news.</text>
@@ -325,7 +325,7 @@
 		<text>Show a fake lens overlay while aiming.</text>
 	</string>
 	<string id="ui_mm_hint_hud_interact">
-		<text>Show the floating interaction prompt.</text>
+		<text>Show dot markers over nearby interactible objects.</text>
 	</string>
 	<string id="ui_mm_hint_compass">
 		<text>Compass style.</text>

@@ -115,7 +115,9 @@ function Assert-RadiophobiaUI {
                 }
             }
         }
-        foreach ($id in @('st_xegtao', 'ui_mm_xegtao_bent_normals', 'video_settings_name_73', 'video_settings_desc_73',
+        foreach ($id in @('ui_mm_dlss_quality', 'video_settings_name_70', 'video_settings_desc_70',
+            'ui_mm_dlss_preset', 'video_settings_name_72', 'video_settings_desc_72',
+            'st_xegtao', 'ui_mm_xegtao_bent_normals', 'video_settings_name_73', 'video_settings_desc_73',
             'ui_mm_backpack_anim', 'ui_mm_hint_backpack_anim', 'ui_mm_sprint_hold', 'ui_mm_sticky_aim',
             'st_input_hold', 'st_input_toggle', 'ui_mm_tab_bindings', 'ui_mm_tab_input_behavior',
             'st_cap_list_economy', 'st_cap_list_difficulty', 'ui_mm_sec_minimap', 'ui_st_take_all_hint',

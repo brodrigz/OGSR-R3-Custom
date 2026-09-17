@@ -246,7 +246,6 @@ void CUIMainIngameWnd::Init()
     {
         AttachChild(&UIFlashlightIcon);
         xml_init.InitStatic(uiXml, "flashlight_static", 0, &UIFlashlightIcon);
-        m_xml_flashlight_pos = UIFlashlightIcon.GetWndPos();
         UIFlashlightIcon.Show(false);
     }
 
@@ -327,13 +326,11 @@ void CUIMainIngameWnd::UpdateHudClusterLayout()
     UIWeaponBack.SetWndPos(m_xml_weapon_pos.x + dx, m_xml_weapon_pos.y);
     if (m_bFlashlightIcon)
     {
-        float fx = m_xml_flashlight_pos.x + dx;
-        float fy = m_xml_flashlight_pos.y;
-        // Bottom-left minimap covers the XML flashlight slot; park under the health cluster.
-        // Same for left-shifted clusters that would clamp off-screen.
-        if (pos == 0 || fx < 4.f)
-            fx = m_xml_health_pos.x + dx;
-        UIFlashlightIcon.SetWndPos(fx, fy);
+        const Fvector2 weapon_pos = UIWeaponBack.GetWndPos();
+        const Fvector2 ammo_pos = UIWeaponSignAmmo.GetWndPos();
+        constexpr float kAmmoIconGap = 2.f;
+        UIFlashlightIcon.SetWndPos(weapon_pos.x + ammo_pos.x,
+            weapon_pos.y + ammo_pos.y - UIFlashlightIcon.GetHeight() - kAmmoIconGap);
     }
     UIMotionIcon.ApplyClusterShift(dx);
 }

@@ -5,6 +5,8 @@
 - Fix leftover lean when switching sides
 - Fix reversed mouse wheel zoom on the PDA map
 - Fix overlapping HUD and character info elements on 16:10 displays
+- Fix options hints and dropdowns overlapping nearby controls
+- Align the flashlight HUD icon above the ammo counter
 - Prevent loading sounds and old sound memories from alerting nearby NPCs
 
 # Graphics

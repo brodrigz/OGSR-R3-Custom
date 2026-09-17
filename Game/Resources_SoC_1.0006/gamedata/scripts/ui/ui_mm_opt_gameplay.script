@@ -371,6 +371,10 @@ function opt_input_behavior:InitControls(x, y, xml, handler)
 	for _, id in ipairs({"aim", "sprint", "lean", "crouch", "walk", "low_crouch"}) do
 		bind_hint(handler, xml:InitStatic("tab_input_behavior:cap_" .. id, self), "input_cap_" .. id,
 			"ui_mm_input_" .. id, "ui_mm_hint_input_" .. id)
+	end
+	-- Later children draw above earlier ones. Create bottom rows first so an
+	-- expanded combo box is never covered by the combo box below it.
+	for _, id in ipairs({"low_crouch", "walk", "crouch", "lean", "sprint", "aim"}) do
 		xml:InitComboBox("tab_input_behavior:list_" .. id, self)
 	end
 
