@@ -732,7 +732,9 @@ function actor_binder:update(delta)
 	end
 
 	-- Апдейт прятание оружия игрока во время диалога
-	if weapon_hide == true or self.object:is_talking() then
+	-- The talk window keeps lowered weapons visible; avoid a hide/show animation on exit.
+	local hide_for_dialogue = self.object:is_talking() and not self.object:weapon_lowered()
+	if weapon_hide == true or hide_for_dialogue then
 		if self.weapon_hide == false then
 			self.object:hide_weapon()
 			self.weapon_hide = true

@@ -82,7 +82,8 @@ void CActor::g_fireParams(CHudItem* pHudItem, Fvector& fire_pos, Fvector& fire_d
     else if (auto weapon = smart_cast<CWeapon*>(pHudItem);
              weapon && !smart_cast<CWeaponKnife*>(pHudItem) && !smart_cast<CMissile*>(pHudItem) && !smart_cast<CWeaponBinoculars*>(pHudItem))
     {
-        if (psHUD_Flags.test(HUD_CROSSHAIR_HARD) && !(weapon->IsZoomed() && !weapon->IsRotatingToZoom()))
+        // Keep interaction targeting on the camera while the weapon points down.
+        if (psHUD_Flags.test(HUD_CROSSHAIR_HARD) && !(for_cursor && weapon->IsLowered()) && !(weapon->IsZoomed() && !weapon->IsRotatingToZoom()))
         {
             fire_dir = weapon->get_LastFD();
             fire_pos = weapon->get_LastShootPoint();
