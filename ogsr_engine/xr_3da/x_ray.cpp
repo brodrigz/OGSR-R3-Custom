@@ -55,6 +55,9 @@ void InitSettings()
     // Simp: сюда добавлены параметры для актуальных шейдеров, в конфигах их держать не практично (потерялся параметр - и шейдер будет работать не правильно.)
     shader_exports.set_custom_params("shader_param_grayscale", {});
 
+    // R3/Folopes laser state is required even when system.ltx omits the export.
+    shader_exports.set_custom_params("shader_param_5", {});
+
     shader_exports.set_custom_params("pnv_color_old", {});
     shader_exports.set_custom_params("pnv_params_old", {});
 

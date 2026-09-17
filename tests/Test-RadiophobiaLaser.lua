@@ -15,8 +15,19 @@ local function load_module(name, path)
     return assert(_G[name])
 end
 
+-- Validate script commands against startup exports, not a console accepting anything.
+local engine_file = assert(io.open(arg[1] .. "/../../ogsr_engine/xr_3da/x_ray.cpp", "rb"))
+local engine_source = engine_file:read("*a")
+engine_file:close()
+local exports = {}
+for name in engine_source:gmatch('shader_exports%.set_custom_params%s*%(%s*"([^"]+)"') do
+    exports[name] = true
+end
 local commands, sounds, camera_effects = {}, 0, 0
-get_console = function() return { execute = function(_, c) commands[#commands + 1] = c end } end
+get_console = function() return { execute = function(_, c)
+    check(exports[c:match("^(%S+)")], "laser command has no built-in shader export: " .. c)
+    commands[#commands + 1] = c
+end } end
 sound_object = setmetatable({ s2d = 1 }, { __call = function()
     return { play = function() sounds = sounds + 1 end }
 end })
