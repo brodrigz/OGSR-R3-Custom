@@ -52,10 +52,10 @@ lowered_anm_classes = {
 
 function allow_animation()
 	local active_item = db.actor:active_item()
-	if active_item and not active_item:section() == "device_torch"  then
-		return active_item:get_hud_item_state() == 0 and game.hud_motion_allowed() and not level.only_allow_movekeys()
+	if active_item and active_item:section() ~= "device_torch" then
+		return active_item:get_hud_item_state() == 0 and game.hud_motion_allowed() and not level.only_movekeys_allowed()
 	else
-		return game.hud_motion_allowed() and not level.only_allow_movekeys()
+		return game.hud_motion_allowed() and not level.only_movekeys_allowed()
 	end
 end
 

@@ -83,6 +83,9 @@ enum EGameActions
     kITEM_WHEEL,
     kWALK_TOGGLE,
     kCROUCH_LOW_TOGGLE,
+    // Keep Radiophobia's scripted wearable NV separate from the native torch
+    // NV command handled by ActorInput.
+    kNIGHT_VISION_RAD,
 
     kLASTACTION = u32(-3),
     kNOTBINDED = u32(-2),

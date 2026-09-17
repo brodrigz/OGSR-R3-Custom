@@ -50,6 +50,7 @@ xr_vector<_action> actions = {
                                                                                                                                     DEF_ACTION("item_wheel", kITEM_WHEEL)
                                                                                                                                         DEF_ACTION("walk_toggle", kWALK_TOGGLE)
                                                                                                                                             DEF_ACTION("crouch_low_toggle", kCROUCH_LOW_TOGGLE)
+                                                                                                                                                DEF_ACTION("night_vision_rad", kNIGHT_VISION_RAD)
 };
 
 xr_vector<_binding> g_key_bindings;
@@ -323,6 +324,23 @@ EGameActions action_name_to_id(LPCSTR _name)
 
 _action* action_name_to_ptr(LPCSTR _name)
 {
+    // Radiophobia's controls use script-facing names. Keep the stock names
+    // loadable so older profiles migrate without changing their keys.
+    LPCSTR migrated_action = nullptr;
+    if (!_stricmp(_name, "night_vision"))
+        migrated_action = "night_vision_rad";
+    else if (!_stricmp(_name, "torch_rad"))
+        migrated_action = "torch";
+
+    if (migrated_action)
+    {
+        for (auto& action : actions)
+        {
+            if (action.action_name && !_stricmp(action.action_name, migrated_action))
+                return &action;
+        }
+    }
+
     int idx = 0;
     while (actions[idx].action_name)
     {

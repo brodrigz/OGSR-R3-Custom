@@ -313,6 +313,14 @@ function get_nightvision_section_for_nv_fx()
 		end
 	end
 
+	-- Seb's separate NVG devices inherit device_torch and occupy its slot.
+	if not nightvision_section then
+		local nv_in_torch = db.actor:item_in_slot(9)
+		if nv_in_torch then
+			nightvision_section = get_string_wq(nv_in_torch:section(), "nightvision_sect", false)
+		end
+	end
+
 	return nightvision_section
 end
 
@@ -417,5 +425,4 @@ function turn_off_nv_scope_fx() --Остановка ночника в приц�
 	night_vision_scope_fx_on = false
 end
 --***************************************************************************************]=]
-
 

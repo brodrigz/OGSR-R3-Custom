@@ -117,6 +117,19 @@ if ($ArchivePath) {
             finally { $stream.Dispose(); $sha.Dispose() }
             if ($actual -ne (Get-FileHash -LiteralPath $file.Source).Hash) { throw "Stale Game resource: $name" }
         }
+        $engineStream = $entries['bin_x64/xrEngine.exe'].Open()
+        $engineBytes = [IO.MemoryStream]::new()
+        try {
+            $engineStream.CopyTo($engineBytes)
+            $engineText = [Text.Encoding]::ASCII.GetString($engineBytes.ToArray())
+        }
+        finally {
+            $engineStream.Dispose()
+            $engineBytes.Dispose()
+        }
+        foreach ($marker in @('night_vision_rad', 'kNIGHT_VISION_RAD', 'shader_param_5')) {
+            if (-not $engineText.Contains($marker)) { throw "Engine is missing required runtime export: $marker" }
+        }
         $runtimeNames = @($entries.Keys | Where-Object { $_ -match '^(gamedata|mods|bin_x64)/' -and -not $_.EndsWith('/') })
         $expectedNames = @($payload.RelativePath) + @('bin_x64/xrEngine.exe', 'bin_x64/nvngx_dlss.dll')
         if (Compare-Object $expectedNames $runtimeNames) { throw 'Unexpected or missing runtime files in ZIP.' }

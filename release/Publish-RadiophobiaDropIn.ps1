@@ -220,6 +220,17 @@ function Assert-RuntimeIntegration {
     }
 }
 
+function Assert-RequiredEngineExports {
+    param([string]$EnginePath)
+
+    $engineText = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes($EnginePath))
+    foreach ($marker in @('night_vision_rad', 'kNIGHT_VISION_RAD', 'shader_param_5')) {
+        if (-not $engineText.Contains($marker)) {
+            throw "Engine binary is missing required runtime export: $marker. Rebuild Release|x64 before publishing."
+        }
+    }
+}
+
 function Assert-RequiredStagedShaders {
     param([string]$StageRoot)
 
@@ -249,6 +260,7 @@ $engine = Get-ExistingFile -Path $EngineBinaryPath -Label 'Engine binary'
 $dlssRuntime = Get-ExistingFile -Path $DlssRuntimePath -Label 'DLSS runtime'
 $sourceTree = Assert-CleanWatchedTree -RepoRoot $repoRoot -RelativePaths $dirtyWatchPaths -AllowDirty:$AllowDirty
 Assert-EngineFreshness -RepoRoot $repoRoot -EnginePath $engine -RelativeRoots $engineSourceRoots -AllowStaleEngine:$AllowStaleEngine
+Assert-RequiredEngineExports -EnginePath $engine
 $resourceFiles = @(Get-RadiophobiaPayload -ResourceRoot $resources)
 
 New-Item -ItemType Directory -Force -Path $output | Out-Null
