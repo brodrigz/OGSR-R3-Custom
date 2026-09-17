@@ -50,7 +50,6 @@ xr_vector<_action> actions = {
                                                                                                                                     DEF_ACTION("item_wheel", kITEM_WHEEL)
                                                                                                                                         DEF_ACTION("walk_toggle", kWALK_TOGGLE)
                                                                                                                                             DEF_ACTION("crouch_low_toggle", kCROUCH_LOW_TOGGLE)
-                                                                                                                                                DEF_ACTION("night_vision_rad", kNIGHT_VISION_RAD)
 };
 
 xr_vector<_binding> g_key_bindings;

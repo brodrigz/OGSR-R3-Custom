@@ -224,10 +224,13 @@ function Assert-RequiredEngineExports {
     param([string]$EnginePath)
 
     $engineText = [Text.Encoding]::ASCII.GetString([IO.File]::ReadAllBytes($EnginePath))
-    foreach ($marker in @('night_vision_rad', 'kNIGHT_VISION_RAD', 'shader_param_5')) {
+    foreach ($marker in @('night_vision_rad', 'shader_param_5')) {
         if (-not $engineText.Contains($marker)) {
             throw "Engine binary is missing required runtime export: $marker. Rebuild Release|x64 before publishing."
         }
+    }
+    if ($engineText.Contains('kNIGHT_VISION_RAD')) {
+        throw 'Engine binary contains a duplicate static NV action export. Rebuild Release|x64 before publishing.'
     }
 }
 

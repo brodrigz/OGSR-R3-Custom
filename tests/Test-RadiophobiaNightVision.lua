@@ -5,8 +5,10 @@ local controller_path = arg[1] .. '/../../ogsr_engine/xrGame/xr_level_controller
 local controller = assert(io.open(controller_path, 'rb'))
 local controller_text = controller:read('*a')
 controller:close()
-assert(controller_text:match('DEF_ACTION%s*%(%s*"night_vision_rad"%s*,%s*kNIGHT_VISION_RAD%s*%)'),
-    'Engine must register the action name and script export expected by Radiophobia')
+assert(not controller_text:match('DEF_ACTION%s*%(%s*"night_vision_rad"'),
+    'Radiophobia NV must not duplicate the dynamically registered custom action')
+assert(controller_text:match('keyboard_section%s*=%s*"custom_keyboard_action"'),
+    'Engine must load Radiophobia custom actions from system.ltx')
 assert(controller_text:match('_stricmp%s*%(%s*_name%s*,%s*"night_vision"%s*%)'),
     'Engine must retain the vanilla night_vision profile alias')
 assert(controller_text:match('_stricmp%s*%(%s*_name%s*,%s*"torch_rad"%s*%)'),
@@ -136,6 +138,11 @@ local function read_profiles(config)
 end
 
 if arg[2] and arg[3] then
+    local system = assert(io.open(arg[2] .. '/config/system.ltx', 'rb'))
+    local system_text = system:read('*a')
+    system:close()
+    assert(system_text:match('[\r\n]%s*night_vision_rad%s*=%s*kNIGHT_VISION_RAD%s*[\r\n]'),
+        'Base R3 system.ltx must register the scripted NV action')
     local base = read_profiles(arg[2] .. '/config/misc/outfit.ltx')
     local seb = read_profiles(arg[3] .. '/config/misc/outfit.ltx')
     local devices = read_profiles(arg[3] .. '/config/misc/items.ltx')

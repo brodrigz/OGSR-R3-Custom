@@ -127,8 +127,11 @@ if ($ArchivePath) {
             $engineStream.Dispose()
             $engineBytes.Dispose()
         }
-        foreach ($marker in @('night_vision_rad', 'kNIGHT_VISION_RAD', 'shader_param_5')) {
+        foreach ($marker in @('night_vision_rad', 'shader_param_5')) {
             if (-not $engineText.Contains($marker)) { throw "Engine is missing required runtime export: $marker" }
+        }
+        if ($engineText.Contains('kNIGHT_VISION_RAD')) {
+            throw 'Engine contains a duplicate static NV action export.'
         }
         $runtimeNames = @($entries.Keys | Where-Object { $_ -match '^(gamedata|mods|bin_x64)/' -and -not $_.EndsWith('/') })
         $expectedNames = @($payload.RelativePath) + @('bin_x64/xrEngine.exe', 'bin_x64/nvngx_dlss.dll')
