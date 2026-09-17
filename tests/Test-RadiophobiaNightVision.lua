@@ -5,6 +5,14 @@ local controller_path = arg[1] .. '/../../ogsr_engine/xrGame/xr_level_controller
 local controller = assert(io.open(controller_path, 'rb'))
 local controller_text = controller:read('*a')
 controller:close()
+local shader_path = arg[1] .. '/gamedata/shaders/r3/ogsr_nightvision.ps'
+local shader = assert(io.open(shader_path, 'rb'))
+local shader_text = shader:read('*a')
+shader:close()
+assert(not shader_text:match('lerp%s*%([^\r\n]-pnv_param_3%.y'),
+    'Radiophobia scanline values exceed the valid CRT lerp range and black out NV')
+assert(shader_text:match('lerp%s*%(%s*image%s*,%s*make_crt_ified%b()%s*,%s*0%.5%s*%)'),
+    'Radiophobia NV must retain its original half-strength CRT blend')
 assert(not controller_text:match('DEF_ACTION%s*%(%s*"night_vision_rad"'),
     'Radiophobia NV must not duplicate the dynamically registered custom action')
 assert(controller_text:match('keyboard_section%s*=%s*"custom_keyboard_action"'),
