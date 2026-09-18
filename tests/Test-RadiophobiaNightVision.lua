@@ -13,6 +13,16 @@ assert(not shader_text:match('lerp%s*%([^\r\n]-pnv_param_3%.y'),
     'Radiophobia scanline values exceed the valid CRT lerp range and black out NV')
 assert(shader_text:match('lerp%s*%(%s*image%s*,%s*make_crt_ified%b()%s*,%s*0%.5%s*%)'),
     'Radiophobia NV must retain its original half-strength CRT blend')
+local blur_path = arg[1] .. '/gamedata/shaders/r3/ogsr_blur.ps'
+local blur = assert(io.open(blur_path, 'rb'))
+local blur_text = blur:read('*a')
+blur:close()
+assert(not blur_text:match('blur_params%.z%s*==%s*%(screen_res%.x'),
+    'NV blur pass selection must not compare its target size with the active target size')
+for _, divisor in ipairs({ '2%.0f', '4', '8' }) do
+    assert(blur_text:match('blur_params%.z%s*==%s*%(display_res%.x%s*/%s*' .. divisor),
+        'NV blur pass selection must use the display domain for divisor ' .. divisor:gsub('%%', ''))
+end
 assert(not controller_text:match('DEF_ACTION%s*%(%s*"night_vision_rad"'),
     'Radiophobia NV must not duplicate the dynamically registered custom action')
 assert(controller_text:match('keyboard_section%s*=%s*"custom_keyboard_action"'),
