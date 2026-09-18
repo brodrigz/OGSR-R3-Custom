@@ -99,7 +99,9 @@ float4 main(p_screen I) : SV_Target
         float depth = blurred_depth(I.tc0);
 
         // image.r = lerp(half_res_blur.r,image.r,0.6f);
-        image = pow(image, 0.85);
+        // Temporal upscalers can reconstruct small negative color lobes. A
+        // fractional pow turns those values into NaNs and blacks out the pass.
+        image = pow(max(image, 0.0f), 0.85f);
 
         image = lerp(image, half_res_blur, clamp(1 - smoothstep(0, 15, depth), 0.2, 1)); // NEAR BLUR
 

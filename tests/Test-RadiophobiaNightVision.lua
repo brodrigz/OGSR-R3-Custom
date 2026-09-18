@@ -13,6 +13,8 @@ assert(not shader_text:match('lerp%s*%([^\r\n]-pnv_param_3%.y'),
     'Radiophobia scanline values exceed the valid CRT lerp range and black out NV')
 assert(shader_text:match('lerp%s*%(%s*image%s*,%s*make_crt_ified%b()%s*,%s*0%.5%s*%)'),
     'Radiophobia NV must retain its original half-strength CRT blend')
+assert(shader_text:match('pow%s*%(%s*max%s*%(%s*image%s*,%s*0%.0f%s*%)%s*,%s*0%.85f%s*%)'),
+    'NV must clamp temporal reconstruction values before its fractional pow')
 local blur_path = arg[1] .. '/gamedata/shaders/r3/ogsr_blur.ps'
 local blur = assert(io.open(blur_path, 'rb'))
 local blur_text = blur:read('*a')
