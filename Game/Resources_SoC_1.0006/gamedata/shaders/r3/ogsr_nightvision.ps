@@ -79,8 +79,10 @@ float4 main(p_screen I) : SV_Target
 
     float lua_param_nvg_num_tubes = pnv_param_4.x;
     float lua_param_glitch_power = pnv_param_4.z;
-    float lua_param_nvg_gain_current = pnv_param_2.y;
-    float lua_param_vignette_current = pnv_param_2.z;
+    // Keep R3's defaults when a driver supplies an empty dynamic constant
+    // block during the first frame in which the effect becomes active.
+    float lua_param_nvg_gain_current = pnv_param_2.y > 0.0f ? pnv_param_2.y : 1.0f;
+    float lua_param_vignette_current = pnv_param_2.z > 0.0f ? pnv_param_2.z : 0.1f;
     float lua_param_nvg_mode = pnv_param_4.w;
 
     if (compute_lens_mask(corrected_texturecoords, lua_param_nvg_num_tubes) == 1) // see if we're inside the lens mask
@@ -155,7 +157,10 @@ float4 main(p_screen I) : SV_Target
         }
 
         // APPLY IMAGE COLOR CORRECTION AND MAKE BRIGHT SPOTS WHITE
-        image.rgb = saturate(image.r) * pnv_color.rgb;
+        float3 nv_color = dot(abs(pnv_color.rgb), float3(1.0f, 1.0f, 1.0f)) > 0.001f
+            ? pnv_color.rgb
+            : float3(0.66f, 1.0f, 0.45f);
+        image.rgb = saturate(image.r) * nv_color;
         if (image.g >= 0.95)
         {
             image.rgb = pow(image.ggg, 2);

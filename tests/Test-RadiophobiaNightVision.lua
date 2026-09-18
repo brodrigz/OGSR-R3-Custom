@@ -15,6 +15,10 @@ assert(shader_text:match('lerp%s*%(%s*image%s*,%s*make_crt_ified%b()%s*,%s*0%.5%
     'Radiophobia NV must retain its original half-strength CRT blend')
 assert(shader_text:match('pow%s*%(%s*max%s*%(%s*image%s*,%s*0%.0f%s*%)%s*,%s*0%.85f%s*%)'),
     'NV must clamp temporal reconstruction values before its fractional pow')
+assert(shader_text:match('pnv_param_2%.y%s*>%s*0%.0f%s*%?%s*pnv_param_2%.y%s*:%s*1%.0f'),
+    'NV must retain the R3 gain when the dynamic parameter block is initially empty')
+assert(shader_text:match('float3%(%s*0%.66f%s*,%s*1%.0f%s*,%s*0%.45f%s*%)'),
+    'NV must retain the R3 bad-device color when the dynamic color block is initially empty')
 local blur_path = arg[1] .. '/gamedata/shaders/r3/ogsr_blur.ps'
 local blur = assert(io.open(blur_path, 'rb'))
 local blur_text = blur:read('*a')
