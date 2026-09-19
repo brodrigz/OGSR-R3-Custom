@@ -1,14 +1,14 @@
 <w>
 	<file name="ui\hud_interact\dot">
-		<texture id="ui_catsy_marker_intdot" x="0" y="0" width="256" height="256" />
+		<texture id="ui_hud_interact_dot" x="0" y="0" width="256" height="256" />
 	</file>
 	<file name="ui\hud_interact\drop">
-		<texture id="ui_dotmarks_main_drop" x="0" y="0" width="215" height="70" />
+		<texture id="ui_hud_interact_backplate" x="0" y="0" width="215" height="70" />
 	</file>
 	<file name="ui\hud_interact\key">
-		<texture id="ui_catsy_keybind_bg_single_v4" x="0" y="0" width="256" height="256" />
-		<texture id="ui_catsy_keybind_bg_left_v4" x="20" y="16" width="52" height="216" />
-		<texture id="ui_catsy_keybind_bg_center_v4" x="72" y="16" width="112" height="216" />
-		<texture id="ui_catsy_keybind_bg_right_v4" x="184" y="16" width="52" height="216" />
+		<texture id="ui_hud_interact_keycap" x="0" y="0" width="256" height="256" />
+		<texture id="ui_hud_interact_keycap_left" x="20" y="16" width="52" height="216" />
+		<texture id="ui_hud_interact_keycap_center" x="72" y="16" width="112" height="216" />
+		<texture id="ui_hud_interact_keycap_right" x="184" y="16" width="52" height="216" />
 	</file>
 </w>

@@ -1062,15 +1062,15 @@ void CUIMainIngameWnd::InitInteractOverlay()
     ApplyLetterica(UIStaticQuickHelp2Sh);
     ApplyLetterica(UIInteractKeyBind2);
 
-    InitHudTex(UIInteractDrop, "ui_dotmarks_main_drop", 80.f, 28.f);
-    InitHudTex(UIInteractKey, "ui_catsy_keybind_bg_single_v4", kInteractKeySingleW, kInteractKeyH);
-    InitHudTex(UIInteractKeyL, "ui_catsy_keybind_bg_left_v4", kInteractKeySlice, kInteractKeyH);
-    InitHudTex(UIInteractKeyC, "ui_catsy_keybind_bg_center_v4", 9.f, kInteractKeyH);
-    InitHudTex(UIInteractKeyR, "ui_catsy_keybind_bg_right_v4", kInteractKeySlice, kInteractKeyH);
-    InitHudTex(UIInteractKey2, "ui_catsy_keybind_bg_single_v4", kInteractKeySingleW, kInteractKeyH);
-    InitHudTex(UIInteractKey2L, "ui_catsy_keybind_bg_left_v4", kInteractKeySlice, kInteractKeyH);
-    InitHudTex(UIInteractKey2C, "ui_catsy_keybind_bg_center_v4", 9.f, kInteractKeyH);
-    InitHudTex(UIInteractKey2R, "ui_catsy_keybind_bg_right_v4", kInteractKeySlice, kInteractKeyH);
+    InitHudTex(UIInteractDrop, "ui_hud_interact_backplate", 80.f, 28.f);
+    InitHudTex(UIInteractKey, "ui_hud_interact_keycap", kInteractKeySingleW, kInteractKeyH);
+    InitHudTex(UIInteractKeyL, "ui_hud_interact_keycap_left", kInteractKeySlice, kInteractKeyH);
+    InitHudTex(UIInteractKeyC, "ui_hud_interact_keycap_center", 9.f, kInteractKeyH);
+    InitHudTex(UIInteractKeyR, "ui_hud_interact_keycap_right", kInteractKeySlice, kInteractKeyH);
+    InitHudTex(UIInteractKey2, "ui_hud_interact_keycap", kInteractKeySingleW, kInteractKeyH);
+    InitHudTex(UIInteractKey2L, "ui_hud_interact_keycap_left", kInteractKeySlice, kInteractKeyH);
+    InitHudTex(UIInteractKey2C, "ui_hud_interact_keycap_center", 9.f, kInteractKeyH);
+    InitHudTex(UIInteractKey2R, "ui_hud_interact_keycap_right", kInteractKeySlice, kInteractKeyH);
 
     UIInteractFactionPatch.Init(0.f, 0.f, kInteractPatchW, kInteractPatchH);
     UIInteractFactionPatch.SetAlignment(waNone);
@@ -1083,7 +1083,7 @@ void CUIMainIngameWnd::InitInteractOverlay()
         dot.Init(0.f, 0.f, kInteractDotSize, kInteractDotSize);
         dot.SetAlignment(waCenter);
         dot.SetStretchTexture(true);
-        dot.InitTexture("ui_catsy_marker_intdot");
+        dot.InitTexture("ui_hud_interact_dot");
         dot.TextureOn();
         dot.SetColor(color_rgba(255, 255, 255, 220));
         AttachChild(&dot);

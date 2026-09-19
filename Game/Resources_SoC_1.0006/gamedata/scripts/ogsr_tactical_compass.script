@@ -210,7 +210,7 @@ end
 -- Relation spots are nested auto_statics (3–4px ui_minimap_point). The parent
 -- has no texture for the compass to copy, and stretching those dots (or the
 -- ui\ui_common atlas) is unusable. Use the HUD intdot and tint by relation.
-local NPC_ICON = "ui_catsy_marker_intdot"
+local NPC_ICON = "ui_hud_interact_dot"
 local NPC_SIZE = 12
 local NPC_TINT = {
 	friend_location = {50, 255, 0},
