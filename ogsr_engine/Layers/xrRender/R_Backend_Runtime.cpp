@@ -346,6 +346,27 @@ void CBackend::set_Textures(STextureList* _T)
     }
 }
 
+void CBackend::override_PS_texture(u32 stage, CTexture* texture)
+{
+    R_ASSERT(stage < CTexture::mtMaxPixelShaderTextures);
+    if (textures_ps[stage] == texture && (!texture || texture->last_slice == texture->curr_slice))
+        return;
+
+    // The bound textures no longer match the shader's original texture list.
+    // Invalidate that list as well as updating the expanded per-slot cache, so
+    // even reselecting the same shader can restore its declared bindings.
+    T = nullptr;
+    textures_ps[stage] = texture;
+    stat.textures++;
+    if (texture)
+    {
+        texture->bind(*this, stage);
+        texture->last_slice = texture->curr_slice;
+    }
+    else
+        SRVSManager.SetPSResource(stage, nullptr);
+}
+
 extern float r__dtex_range;
 
 void CBackend::apply_lmaterial()

@@ -1,6 +1,7 @@
 #pragma once
 
 // Common
+extern int ps_pnv_debug;
 extern ECORE_API u32 r2_SmapCascade0Size, /*r2_SmapCascade1Size,*/ r2_SmapCascade2Size, r2_SmapLightsSize, r2_SmapRainSize;
 
 extern ECORE_API u32 ps_r_pp_aa_mode;

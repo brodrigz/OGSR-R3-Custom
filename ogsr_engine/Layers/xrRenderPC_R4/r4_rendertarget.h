@@ -370,6 +370,7 @@ private:
         m_pp_pingponged = true;
     }
     void pp_remap_scene_srv(CBackend& cmd_list, ShaderElement* se) const;
+    void debug_nvg_readback(CBackend& cmd_list, const char* stage, ID3D11Resource* resource) const;
 
     void RenderScreenTriangle(CBackend& cmd_list, const ref_rt& rt, ref_selement& sh, const std::function<void()>& lambda = dummy);
     void RenderScreenQuad(CBackend& cmd_list, const u32 w, u32 const h, const ref_rt& rt, ref_selement& sh, const std::function<void()>& lambda = dummy);

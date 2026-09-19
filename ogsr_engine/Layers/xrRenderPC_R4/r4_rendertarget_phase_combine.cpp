@@ -9,6 +9,15 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
 {
     ZoneScoped;
 
+    const bool capture_nvg = ps_pnv_debug != 0;
+    if (capture_nvg)
+    {
+        ps_pnv_debug = 0;
+        Msg("[NVDBG E1] capture frame=%u mode=%d aa=%u base=%08x gray=%08x gray_amount=%.6g noise=%.6g add=%.6g,%.6g,%.6g colormap=%.6g",
+            Device.dwFrame, ps_pnv_mode, ps_r_pp_aa_mode, param_color_base, param_color_gray, param_gray, param_noise,
+            param_color_add.x, param_color_add.y, param_color_add.z, param_color_map_influence);
+    }
+
     const bool separate_ao = m_ao_enabled && (m_ao_mode == AO_MODE_XEGTAO || ps_r_ao_resolution != AO_RES_LEGACY);
     if (separate_ao)
         phase_ao(cmd_list);
@@ -179,7 +188,10 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
         // NVG scene to [0,1]. Preserve the pre-tonemap image for the NVG pass.
         // Water/SSR have finished reading this render-sized reflection scratch.
         // Reuse it instead of allocating another full-size render target.
-        HW.get_context(cmd_list.context_id)->CopyResource(rt_Generic_0_temp->pSurface, rt_Generic_0->pSurface);
+        // Match the s_laser_scene sampling branch in ogsr_nightvision.ps.
+        const auto& laser = shader_exports.get_custom_params("shader_param_5");
+        if (laser.y > 0.5f && laser.z < 0.5f && laser.w < 0.5f)
+            HW.get_context(cmd_list.context_id)->CopyResource(rt_Generic_0_temp->pSurface, rt_Generic_0->pSurface);
     }
 
     {
@@ -274,12 +286,21 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
         phase_gasmask_dudv(cmd_list);
     }
 
+    if (capture_nvg)
+        debug_nvg_readback(cmd_list, "before-nvg", pp_src()->pSurface);
+
     if (ps_pnv_mode == 1) // должен быть после дофа и после шлема
         phase_nightvision(cmd_list);
+
+    if (capture_nvg)
+        debug_nvg_readback(cmd_list, ps_pnv_mode == 1 ? "after-nvg" : "nvg-skipped", pp_src()->pSurface);
 
     // Rain droplets on screen
     if (ps_r2_ls_flags_ext.test(R2FLAGEXT_RAIN_DROPS))
         phase_rain_drops(cmd_list);
+
+    if (capture_nvg)
+        debug_nvg_readback(cmd_list, "after-rain", pp_src()->pSurface);
 
     {
         PIX_EVENT(combine_2);
@@ -309,6 +330,9 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
     }
 
     {
+        if (capture_nvg)
+            debug_nvg_readback(cmd_list, "after-combine2", pp_src()->pSurface);
+
         PIX_EVENT(RenderFlares);
         cmd_list.set_Stencil(FALSE);
         g_pGamePersistent->Environment().RenderFlares(cmd_list, FALSE, ps_r2_ls_flags_ext.test(R2FLAGEXT_LENS_FLARE) && r_lens_flare_mode == old_style_flare, TRUE);
@@ -318,6 +342,13 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
     {
         PIX_EVENT(phase_pp);
         phase_pp(cmd_list);
+        if (capture_nvg)
+        {
+            Microsoft::WRL::ComPtr<ID3D11Resource> output;
+            get_base_rt()->GetResource(output.GetAddressOf());
+            debug_nvg_readback(cmd_list, "after-final-pp", output.Get());
+            Msg("[NVDBG E1] capture complete");
+        }
     }
 
     {

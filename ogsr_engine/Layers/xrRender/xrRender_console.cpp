@@ -329,6 +329,7 @@ float ps_r2_no_rain_radius = 0.f;
 float ps_r2_gloss_factor = 4.0f;
 
 int ps_pnv_mode = 0;
+int ps_pnv_debug = 0; // One-shot GPU readback; reset after the captured frame.
 
 float ps_pnv_noise = 0.15;
 float ps_pnv_scanlines = 0.175;
@@ -952,6 +953,7 @@ void xrRender_initconsole()
     CMD1(CCC_VideoMemoryStats, "video_memory_stats");
 
     CMD4(CCC_Integer, "r_pnv_mode", &ps_pnv_mode, 0, 3);
+    CMD4(CCC_Integer, "r_pnv_debug", &ps_pnv_debug, 0, 1);
 
     CMD4(CCC_Float, "r_pnv_noise", &ps_pnv_noise, 0.f, 1.f);
     CMD4(CCC_Float, "r_pnv_scanlines", &ps_pnv_scanlines, 0.f, 5.f);

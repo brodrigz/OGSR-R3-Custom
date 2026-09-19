@@ -228,6 +228,7 @@ public:
     void set_Constants(ref_ctable& C) { set_Constants(&*C); }
 
     void set_Textures(STextureList* T);
+    void override_PS_texture(u32 stage, CTexture* texture);
     void set_Textures(ref_texture_list& T) { set_Textures(&*T); }
 
     IC void set_Element(ShaderElement* S, u32 pass = 0);

@@ -23,12 +23,12 @@ void CRenderTarget::pp_remap_scene_srv(CBackend& cmd_list, ShaderElement* se) co
                 continue;
 
             CTexture* tex = loader.second._get();
-            if (!tex || tex == current || (tex != pp0 && tex != combine))
+            if (!tex || (tex != pp0 && tex != combine))
                 continue;
             if (!current->bind)
                 continue;
 
-            current->bind(cmd_list, loader.first);
+            cmd_list.override_PS_texture(loader.first, current);
         }
     }
 }
