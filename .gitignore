@@ -40,3 +40,5 @@ ogsr_build_info.hpp
 /release/*
 !/release/*.ps1
 !/release/*.md
+!/release/mo2-plugin/
+/release/mo2-plugin/__pycache__/
