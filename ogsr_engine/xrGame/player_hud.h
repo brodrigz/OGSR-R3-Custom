@@ -300,6 +300,7 @@ public:
     CHudItem* m_parent_hud_item{};
     shared_str m_sect_name;
     shared_str m_visual_name;
+    shared_str m_item_attach_bone;
     IKinematics* m_model{};
     u16 m_attach_place_idx{};
     hud_item_measures m_measures{};
@@ -371,7 +372,7 @@ public:
         m_attached_items[1] = nullptr;
     }
 
-    void calc_transform(u16 attach_slot_idx, const Fmatrix& offset, Fmatrix& result);
+    void calc_transform(u16 attach_slot_idx, const Fmatrix& offset, Fmatrix& result, const char* attach_bone = nullptr);
     void tune(const Ivector& values);
 
     u32 motion_length(const motion_params& P, const motion_descr& M, const CMotionDef*& md, IKinematicsAnimated* itemModel, float speed);

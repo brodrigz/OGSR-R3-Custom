@@ -264,7 +264,7 @@ void attachable_hud_item::update(bool bForce)
     m_attach_offset.setHPB(ypr.x, ypr.y, ypr.z);
     m_attach_offset.translate_over(m_measures.m_item_attach[0]);
 
-    m_parent->calc_transform(m_attach_place_idx, m_attach_offset, m_item_transform);
+    m_parent->calc_transform(m_attach_place_idx, m_attach_offset, m_item_transform, m_item_attach_bone.c_str());
     m_upd_firedeps_frame = Device.dwFrame;
 
     IKinematicsAnimated* ka = m_model->dcast_PKinematicsAnimated();
@@ -655,6 +655,8 @@ void attachable_hud_item::load(const shared_str& sect_name)
     ::Render->shader_option_hud_loading(false);
 
     m_attach_place_idx = READ_IF_EXISTS(pSettings, r_u16, sect_name, "attach_place_idx", 0);
+    // Optional hand-skeleton anchor; item_position/orientation are relative to it.
+    m_item_attach_bone = READ_IF_EXISTS(pSettings, r_string, sect_name, "item_attach_bone", nullptr);
     m_measures.load(sect_name, m_model);
 
     IKinematicsAnimated* animatedHudItem = smart_cast<IKinematicsAnimated*>(m_model);
@@ -1539,14 +1541,22 @@ void player_hud::detach_item(CHudItem* item)
         detach_item_idx(item_idx);
 }
 
-void player_hud::calc_transform(u16 attach_slot_idx, const Fmatrix& offset, Fmatrix& result)
+void player_hud::calc_transform(u16 attach_slot_idx, const Fmatrix& offset, Fmatrix& result, const char* attach_bone)
 {
     bool hasHands = m_attached_items[attach_slot_idx] && m_attached_items[attach_slot_idx]->m_has_separated_hands;
 
     if (hasHands || script_anim_item_model)
     {
         IKinematics* kin = (attach_slot_idx == 0) ? m_model->dcast_PKinematics() : m_model_2->dcast_PKinematics();
-        Fmatrix ancor_m = kin->LL_GetTransform(m_ancors.at(attach_slot_idx));
+        u16 anchor = m_ancors.at(attach_slot_idx);
+        if (hasHands && attach_bone && attach_bone[0])
+        {
+            // Resolve against the current arms model, including after an outfit change.
+            // Script items keep their usual anchor unless explicitly requested by their caller.
+            anchor = kin->LL_BoneID(attach_bone);
+            R_ASSERT3(anchor != BI_NONE, "HUD item_attach_bone not found in arms model", attach_bone);
+        }
+        Fmatrix ancor_m = kin->LL_GetTransform(anchor);
         result.mul((attach_slot_idx == 0) ? m_transform : m_transform_2, ancor_m);
         result.mulB_43(offset);
     }
