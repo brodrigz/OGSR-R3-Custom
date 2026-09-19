@@ -24,6 +24,9 @@ git clone --branch main3 --depth 1 https://github.com/microsoft/mimalloc.git 3rd
 
 RD /s /q 3rd_party\Src\NVIDIA_DLSS\DLSS
 git clone --branch v310.4.0 --depth 1 https://github.com/NVIDIA/DLSS.git 3rd_party\Src\NVIDIA_DLSS\DLSS
+rem Keep the integration SDK unchanged; ship the newer retail DLSS runtime.
+git -C 3rd_party\Src\NVIDIA_DLSS\DLSS fetch --depth 1 origin tag v310.9.1
+git -C 3rd_party\Src\NVIDIA_DLSS\DLSS restore --source v310.9.1 --worktree -- lib/Windows_x86_64/rel/nvngx_dlss.dll
 
 RD /s /q 3rd_party\Src\cpputils\cpputils
 git clone --branch main --depth 1 https://github.com/tzcnt/cpputils.git 3rd_party\Src\cpputils\cpputils
