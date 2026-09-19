@@ -4,6 +4,7 @@
 #include "../actor.h"
 #include "../ActorCondition.h"
 #include "../hudmanager.h"
+#include "../UICursor.h"
 #include "../inventory.h"
 #include "UIInventoryUtilities.h"
 
@@ -403,6 +404,29 @@ bool CUIInventoryWnd::OnItemDrop(CUICellItem* itm)
     auto new_owner = CUIDragDropListEx::m_drag_item ? CUIDragDropListEx::m_drag_item->BackList() : nullptr;
     if (!new_owner)
     {
+        // Scripted quick slots are buttons, so they never become BackList().
+        // Their mouse callback has already handled assignment before this call.
+        const Fvector2 cursor = GetUICursor()->GetCursorPosition();
+        for (LPCSTR name : {"slot1", "slot2", "slot3", "slot4"})
+        {
+            CUIWindow* slot = FindChild(name);
+            if (!slot)
+                continue;
+
+            bool active = true;
+            for (CUIWindow* wnd = slot; wnd; wnd = wnd->GetParent())
+                if (!wnd->IsShown() || !wnd->IsEnabled())
+                {
+                    active = false;
+                    break;
+                }
+
+            Frect rect;
+            slot->GetAbsoluteRect(rect);
+            if (active && rect.in(cursor))
+                return true;
+        }
+
         SetCurrentItem(itm);
         if (CurrentIItem() && !CurrentIItem()->IsQuestItem())
             DropCurrentItem(CurrentItem() && CurrentItem()->ChildsCount() > 0);
