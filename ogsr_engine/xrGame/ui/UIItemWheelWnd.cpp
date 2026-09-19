@@ -93,9 +93,13 @@ void WritePins()
     }
 }
 
-bool IsMed(CInventoryItem* item) { return smart_cast<CMedkit*>(item) || smart_cast<CAntirad*>(item); }
+// R3's usable radio inherits antir_f to receive scripted use callbacks.
+// Keep it pinnable, but do not classify the device as medicine or food.
+bool IsRadio(CInventoryItem* item) { return item && item->object().cNameSect() == "hand_radio_f"; }
 
-bool IsFood(CInventoryItem* item) { return smart_cast<CEatableItem*>(item) && !IsMed(item); }
+bool IsMed(CInventoryItem* item) { return !IsRadio(item) && (smart_cast<CMedkit*>(item) || smart_cast<CAntirad*>(item)); }
+
+bool IsFood(CInventoryItem* item) { return !IsRadio(item) && smart_cast<CEatableItem*>(item) && !IsMed(item); }
 
 bool IsGrenade(CInventoryItem* item) { return smart_cast<CGrenade*>(item); }
 

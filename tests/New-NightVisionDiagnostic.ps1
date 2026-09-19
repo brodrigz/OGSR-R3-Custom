@@ -142,23 +142,23 @@ $script = Replace-Once $script '    r_pnv_gain_current_base = get_float(nv_sect,
 gameName=S.T.A.L.K.E.R.: Radiophobia 3
 modid=0
 version=2.0
-comments=Temporary NVG shader stage diagnostics. Enable after RC8 and both compatibility patches; disable after testing.
+comments=Temporary NVG shader stage diagnostics for Radiophobia Unofficial Patch. Enable after the patch and addon compatibility patches; disable after testing.
 '@ | Set-Content -LiteralPath (Join-Path $stage 'meta.ini') -Encoding utf8
 
 @'
-NVG diagnostic D2 (for engine upgrade RC8)
+NVG diagnostic D2 for Radiophobia Unofficial Patch
 
 Disable diagnostic D1. Install D2 as a separate MO2 mod with the highest numeric
-Priority in the left pane so it wins conflicts over RC8 and both compat patches.
+Priority in the left pane so it wins conflicts over the patch and addon compatibility patches.
 The Data tab entry gamedata/shaders/r3/ogsr_nightvision.s must show D2 as its mod.
-Keep RC8 enabled. Restart the game, load the save, and switch NVG off/on.
+Keep Radiophobia Unofficial Patch enabled. Restart the game, load the save, and switch NVG off/on.
 No engine rebuild or console commands are needed.
 
 Expected: cyan-bordered grid with 12 numbered tiles. Screenshot it after the
 activation animation finishes. The log must contain [NVDBG D2] for both the
 renderer binding and the gameplay script; profile parameters follow NV activation.
 The compiled shader/cache is now named ogsr_nightvision_diagnostic_d2, which
-distinguishes it from the RC8 shader even when the image is black.
+distinguishes it from the normal shader even when the image is black.
 If that binding marker appears but the grid is black, investigate NV pass
 activation and the downstream postprocessing before changing NV shader maths.
 
@@ -170,7 +170,7 @@ Tiles, left to right:
 Magenta marks NaN/infinite values. Blue marks negative values. Black is zero.
 Tile 12 bands: color; gain/3, vignette, tubes/4; radius, flip/100, mode; inertia.
 Tiles after the lens test are black outside the lens according to the profile.
-Disable this mod after the test to restore RC8. Do not use it for normal play.
+Disable this mod after the test to restore the normal shader. Do not use it for normal play.
 '@ | Set-Content -LiteralPath (Join-Path $stage 'README.txt') -Encoding utf8
 
 $zip = Join-Path $repo 'release\radiophobia-nvg-diagnostic-2-mo2.zip'

@@ -267,7 +267,7 @@ Assert-RequiredEngineExports -EnginePath $engine
 $resourceFiles = @(Get-RadiophobiaPayload -ResourceRoot $resources)
 
 New-Item -ItemType Directory -Force -Path $output | Out-Null
-$archiveName = "radiophobia-ogsr-$EngineSeries-engine-upgrade-$Version.zip"
+$archiveName = "radiophobia-unofficial-patch-$Version.zip"
 $archivePath = Join-Path $output $archiveName
 $checksumPath = "$archivePath.sha256"
 foreach ($path in @($archivePath, $checksumPath)) {
@@ -306,11 +306,15 @@ No external compatibility overlay, frozen shader tree, or exclude list is used.
 "@
     [IO.File]::WriteAllText((Join-Path $stage 'RESOURCE-REPORT.txt'), $report + "`r`n", [Text.UTF8Encoding]::new($false))
     $readme = @"
-# Radiophobia OGSR $EngineSeries Engine Upgrade $Version
+# Radiophobia Unofficial Patch $Version
+
+Bug fixes, gameplay and UI improvements, and an updated OGSR engine for
+Radiophobia 3 1.20.
 
 Extract this archive directly into a backed-up vanilla Radiophobia 3 1.20 game
 folder and accept overwrite. The archive mirrors the game root.
 
+OGSR engine series: $EngineSeries
 Source commit reference: $sourceCommit
 Source tree at package time: $sourceTree
 Engine SHA-256: $engineHash
@@ -324,7 +328,15 @@ base game content. The scope compatibility XSQ stays packed under mods.
 Includes the engine and NVIDIA's retail DLSS runtime. Optional add-ons, saves,
 logs, PDBs, and development tools are not included.
 "@
-    [IO.File]::WriteAllText((Join-Path $stage 'README-OGSR-R3-CUSTOM.md'), $readme, [Text.UTF8Encoding]::new($false))
+    [IO.File]::WriteAllText((Join-Path $stage 'README-RADIOPHOBIA-UNOFFICIAL-PATCH.md'), $readme, [Text.UTF8Encoding]::new($false))
+    $meta = @"
+[General]
+gameName=S.T.A.L.K.E.R.: Radiophobia 3
+modid=0
+version=$Version
+comments=Radiophobia Unofficial Patch. Bug fixes, gameplay and UI improvements, and an updated OGSR engine for Radiophobia 3 1.20.
+"@
+    [IO.File]::WriteAllText((Join-Path $stage 'meta.ini'), $meta, [Text.UTF8Encoding]::new($false))
     Copy-Item -LiteralPath (Join-Path $repoRoot 'LICENSE.md') -Destination (Join-Path $stage 'LICENSE-OGSR.md')
     $sumLines = Get-ChildItem -LiteralPath $stage -File -Recurse | Sort-Object FullName | ForEach-Object {
         "$( (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant() )  $($_.FullName.Substring($stage.Length).TrimStart('\'))"

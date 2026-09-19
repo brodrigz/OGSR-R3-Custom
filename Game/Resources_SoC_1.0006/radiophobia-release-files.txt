@@ -12,11 +12,9 @@ gamedata/config/rspec_minimum.ltx
 gamedata/config/text/eng/ui_st_hud_interact.xml
 gamedata/config/text/eng/ui_st_keybinding.xml
 gamedata/config/text/eng/ui_st_mm.xml
-gamedata/config/text/eng/ui_st_ogsr_upscaler.xml
 gamedata/config/text/rus/ui_st_hud_interact.xml
 gamedata/config/text/rus/ui_st_keybinding.xml
 gamedata/config/text/rus/ui_st_mm.xml
-gamedata/config/text/rus/ui_st_ogsr_upscaler.xml
 gamedata/config/ui/maingame_16.xml
 gamedata/config/ui/maingame.xml
 gamedata/config/ui/pda_16.xml

@@ -72,14 +72,25 @@ try {
     [IO.File]::WriteAllText($keys, $keyText.Replace('exe="walk_toggle"', 'exe="removed_walk_toggle"'))
     Assert-Rejected 'missing walk_toggle'
     [IO.File]::WriteAllText($keys, $keyText)
-    $strings = "$fixture/gamedata/config/text/rus/ui_st_ogsr_upscaler.xml"
-    $stringText = [IO.File]::ReadAllText($strings)
-    [IO.File]::WriteAllText($strings, $stringText.Replace('id="video_settings_desc_73"', 'id="removed_desc_73"'))
+    $encoding = [Text.Encoding]::GetEncoding(1251)
+    $strings = "$fixture/gamedata/config/text/rus/ui_st_mm.xml"
+    $stringText = [IO.File]::ReadAllText($strings, $encoding)
+    [IO.File]::WriteAllText($strings, $stringText.Replace('id="video_settings_desc_73"', 'id="removed_desc_73"'), $encoding)
     Assert-Rejected 'Missing rus UI translation: video_settings_desc_73'
-    [IO.File]::WriteAllText($strings, $stringText)
-    [IO.File]::WriteAllText($strings, $stringText.Replace('id="st_opt_fsr3"', 'id="removed_fsr3"'))
+    [IO.File]::WriteAllText($strings, $stringText, $encoding)
+    [IO.File]::WriteAllText($strings, $stringText.Replace('id="st_opt_fsr3"', 'id="removed_fsr3"'), $encoding)
     Assert-Rejected 'Missing rus UI translation: st_opt_fsr3'
-    [IO.File]::WriteAllText($strings, $stringText)
+    [IO.File]::WriteAllText($strings, $stringText, $encoding)
+    $menuStrings = "$fixture/gamedata/config/text/eng/ui_st_mm.xml"
+    $menuText = [IO.File]::ReadAllText($menuStrings, $encoding)
+    $entry = [regex]::Match($menuText, '(?s)<string id="ui_mm_dlss_quality">.*?</string>').Value
+    if (-not $entry) { throw 'DLSS quality translation not found in menu table' }
+    [IO.File]::WriteAllText($menuStrings, $menuText.Replace($entry, ''), $encoding)
+    $unregistered = "$fixture/gamedata/config/text/eng/unregistered_options.xml"
+    [IO.File]::WriteAllText($unregistered, "<string_table>$entry</string_table>", $encoding)
+    Assert-Rejected 'Missing eng UI translation: ui_mm_dlss_quality'
+    [IO.File]::WriteAllText($menuStrings, $menuText, $encoding)
+    Remove-Item -LiteralPath $unregistered
     $hudStrings = "$fixture/gamedata/config/text/eng/ui_st_hud_interact.xml"
     $hudStringText = [IO.File]::ReadAllText($hudStrings)
     [IO.File]::WriteAllText($hudStrings, $hudStringText.Replace('id="st_minimap_pos_off"', 'id="removed_minimap_off"'))

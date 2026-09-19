@@ -103,7 +103,10 @@ function Assert-RadiophobiaUI {
 
     foreach ($language in @('eng', 'rus')) {
         $ids = [Collections.Generic.HashSet[string]]::new([StringComparer]::Ordinal)
-        foreach ($file in Get-ChildItem -LiteralPath (Join-Path $Root "gamedata\config\text\$language") -Filter '*.xml') {
+        # R3 registers the menu/keybinding tables; the engine loads the HUD table.
+        # Merely shipping another XML file does not register its translations.
+        foreach ($name in @('ui_st_mm.xml', 'ui_st_keybinding.xml', 'ui_st_hud_interact.xml')) {
+            $file = Get-Item -LiteralPath (Join-Path $Root "gamedata\config\text\$language\$name")
             # Some inherited string values contain engine-tolerated XML text
             # that System.Xml rejects. IDs have a simple, stable syntax, so
             # scan those directly while still catching cross-file duplicates.
