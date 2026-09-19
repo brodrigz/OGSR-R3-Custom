@@ -1032,7 +1032,7 @@
 		<text>This setting enables shader smoothing on dynamic lighting.</text>
 	</string>
 	<string id="video_settings_desc_19">
-        <text>This setting switches the anti-aliasing type. Available options are NVIDIA DLSS (Deep learning super sampling), AMD FSR2 (FidelityFX Super Resolution 2), TAA (Temporal anti-aliasing), SMAA (Subpixel Morphological AntiAliasing). \n \nNVIDIA DLSS (Deep Learning Super Sampling) is a revolutionary AI-powered rendering technology that improves graphics quality by using specialized tensor cores in GeForce RTX graphics cards. The technology became available in desktop and mobile graphics cards with the arrival of the RTX20 series. Anti-aliasing using DLSS produces results superior in quality to MSAA 8x, without causing performance drops. \n \nFSR is a less demanding and lower quality analogue from AMD. FSR 2.0 is supported by all AMD video cards from the RX 400 series and newer, as well as NVIDIA video cards from the 1000 series.</text>
+        <text>Selects anti-aliasing: Off, NVIDIA DLSS, AMD FSR 3, TAA or SMAA. DLSS requires a compatible NVIDIA RTX GPU. DLSS and FSR 3 have separate quality settings for native-resolution anti-aliasing or upscaling. The FSR 3 option controls upscaling, not frame generation. Applying a mode change recreates video resources.</text>
 	</string>
 	<string id="video_settings_desc_20">
 		<text>""</text>
@@ -1089,7 +1089,7 @@
 		<text>This setting adjusts the quality of AO in the game.. This effect, when enabled, calculates areas that are additionally shaded by the model geometry, making the lighting more similar to that in the real world, with partial shadows and shading from equipment elements, clothing, machine parts, grass, and other small parts of the geometry.</text>
 	</string>
 	<string id="video_settings_desc_38">
-		<text>This setting controls how the AO effect works in the game. GTAO (Ground Truth-based Ambient Occlusion) and SSDO (ScreenSpace Directional Occlusion) are available for selection.</text>
+		<text>Selects the ambient occlusion method: GTAO, SSDO or XeGTAO. Ambient occlusion adds shading around nearby surfaces and small details. Use AO Quality to enable the effect and set its quality. XeGTAO also supports the separate bent normals option.</text>
 	</string>
 	<string id="video_settings_desc_39">
 		<text>This setting adjusts the effect of improved surface relief using the Steep parallax mapping algorithm. This algorithm uses ray tracing in the space of the elevation map to calculate the relief, which gives a more realistic and high-quality effect.</text>

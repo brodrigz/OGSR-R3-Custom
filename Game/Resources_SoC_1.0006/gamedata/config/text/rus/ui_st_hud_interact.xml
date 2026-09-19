@@ -81,6 +81,9 @@
 	<string id="st_minimap_pos_tr">
 		<text>пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ</text>
 	</string>
+	<string id="st_minimap_pos_off">
+		<text>Выкл.</text>
+	</string>
 	<string id="ui_mm_compass_range">
 		<text>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ</text>
 	</string>
@@ -346,7 +349,7 @@
 		<text>пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.</text>
 	</string>
 	<string id="ui_mm_hint_minimap_pos">
-		<text>пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ.</text>
+		<text>Выберите угол экрана для мини-карты или «Выкл.», чтобы скрыть её.</text>
 	</string>
 	<string id="ui_mm_hint_minimap_scale">
 		<text>пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.</text>

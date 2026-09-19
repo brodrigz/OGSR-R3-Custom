@@ -81,6 +81,9 @@
 	<string id="st_minimap_pos_tr">
 		<text>Top right</text>
 	</string>
+	<string id="st_minimap_pos_off">
+		<text>Off</text>
+	</string>
 	<string id="ui_mm_compass_range">
 		<text>Compass range</text>
 	</string>
@@ -346,7 +349,7 @@
 		<text>Compass vertical offset.</text>
 	</string>
 	<string id="ui_mm_hint_minimap_pos">
-		<text>Minimap screen corner.</text>
+		<text>Choose the minimap screen corner, or Off to hide it.</text>
 	</string>
 	<string id="ui_mm_hint_minimap_scale">
 		<text>Minimap size.</text>

@@ -76,6 +76,14 @@ try {
     $stringText = [IO.File]::ReadAllText($strings)
     [IO.File]::WriteAllText($strings, $stringText.Replace('id="video_settings_desc_73"', 'id="removed_desc_73"'))
     Assert-Rejected 'Missing rus UI translation: video_settings_desc_73'
+    [IO.File]::WriteAllText($strings, $stringText)
+    [IO.File]::WriteAllText($strings, $stringText.Replace('id="st_opt_fsr3"', 'id="removed_fsr3"'))
+    Assert-Rejected 'Missing rus UI translation: st_opt_fsr3'
+    [IO.File]::WriteAllText($strings, $stringText)
+    $hudStrings = "$fixture/gamedata/config/text/eng/ui_st_hud_interact.xml"
+    $hudStringText = [IO.File]::ReadAllText($hudStrings)
+    [IO.File]::WriteAllText($hudStrings, $hudStringText.Replace('id="st_minimap_pos_off"', 'id="removed_minimap_off"'))
+    Assert-Rejected 'Missing eng UI translation: st_minimap_pos_off'
 }
 finally {
     $resolved = [IO.Path]::GetFullPath($fixture)
