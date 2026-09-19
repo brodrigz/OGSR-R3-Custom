@@ -6,21 +6,19 @@
 -- shader_param_5: x=legacy laser on, y=NVG on, z=hide in ADS, w=native laser.
 
 local HIDE_WHEN_AIMING = true
-local last_command = nil
+local last_on, last_nvg, last_hide, last_native = nil, nil, nil, nil
 local last_weapon_id = nil
 local last_laser = nil
 local snd_laser = sound_object("interface\\item_usage\\headflash_switch")
 
 local function publish(on, nvg, hide, native)
-    local command = string.format("shader_param_5 %d, %d, %d, %d", on, nvg, hide, native)
-    if command ~= last_command then
-        get_console():execute(command)
-        last_command = command
-    end
+    if on == last_on and nvg == last_nvg and hide == last_hide and native == last_native then return end
+    get_console():execute(string.format("shader_param_5 %d, %d, %d, %d", on, nvg, hide, native))
+    last_on, last_nvg, last_hide, last_native = on, nvg, hide, native
 end
 
 function reset()
-    last_command = nil
+    last_on, last_nvg, last_hide, last_native = nil, nil, nil, nil
     last_weapon_id = nil
     last_laser = nil
     publish(0, 0, 0, 0)
@@ -30,7 +28,7 @@ function actor_on_update()
     local actor = db.actor
     local weapon = actor and actor:alive() and actor:active_item()
     if not weapon or not weapon:is_weapon() then
-        if last_weapon_id ~= nil or last_command == nil then reset() end
+        if last_weapon_id ~= nil or last_on == nil then reset() end
         return
     end
 

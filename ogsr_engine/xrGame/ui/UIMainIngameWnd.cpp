@@ -836,17 +836,6 @@ void InitHudTex(CUIStatic& s, LPCSTR id, float w, float h)
     s.Show(false);
 }
 
-void FitText(CUIStatic& s, LPCSTR text, u32 color)
-{
-    s.SetText(text ? text : "");
-    s.SetTextColor(color);
-    if (s.GetFont() && text && text[0])
-    {
-        s.AdjustWidthToText();
-        s.AdjustHeightToText();
-    }
-}
-
 void PlaceAt(CUIStatic& s, float x, float y)
 {
     Fvector2 pos;
@@ -924,9 +913,9 @@ void ActionKeyLabel(LPCSTR action, char* buf, u32 sz, bool with_shift)
 
 void PrimaryUseKey(char* buf, u32 sz, bool with_shift) { ActionKeyLabel("use", buf, sz, with_shift); }
 
-float LayoutKeyCap(CUIStatic& single, CUIStatic& left, CUIStatic& center, CUIStatic& right, CUIStatic& bind, float x, float y, LPCSTR key, u32 key_clr, u32 tex_clr)
+float LayoutKeyCap(CUIStatic& single, CUIStatic& left, CUIStatic& center, CUIStatic& right, CUIStatic& bind, float x, float y, LPCSTR key, u32 tex_clr)
 {
-    FitText(bind, key, key_clr);
+    // The label has already been fitted by LayoutInteractPrompt.
     const bool one_char = key && xr_strlen(key) == 1;
     const float bind_w = bind.GetWidth();
     const float bind_h = bind.GetHeight();
@@ -1051,6 +1040,8 @@ bool HudInteractSuppressVanillaItemLabels() { return HudInteractEnabled(); }
 
 void CUIMainIngameWnd::InitInteractOverlay()
 {
+    for (auto& cache : m_interact_text)
+        cache.valid = false;
     InitTextClone(UIStaticQuickHelpSh, UIStaticQuickHelp);
     InitTextClone(UIStaticInteractName, UIStaticQuickHelp);
     InitTextClone(UIStaticInteractNameSh, UIStaticQuickHelp);
@@ -1122,6 +1113,9 @@ void CUIMainIngameWnd::InitInteractOverlay()
 
 void CUIMainIngameWnd::HideInteractPrompt()
 {
+    // Vanilla quick help can reuse these controls while this overlay is hidden.
+    for (auto& cache : m_interact_text)
+        cache.valid = false;
     UIStaticQuickHelp.Show(false);
     UIStaticQuickHelpSh.Show(false);
     UIStaticQuickHelp2.Show(false);
@@ -1358,22 +1352,60 @@ void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR ke
     const u32 tex_clr = color_rgba(255, 255, 255, alpha);
     const u32 drop_clr = color_rgba(255, 255, 255, u8(0.7f * float(alpha)));
 
-    ApplyLetterica(UIInteractKeyBind);
-    ApplyLetterica(UIStaticQuickHelp);
-    ApplyLetterica(UIStaticQuickHelpSh);
-    ApplyLetterica(UIInteractKeyBind2);
-    ApplyLetterica(UIStaticQuickHelp2);
-    ApplyLetterica(UIStaticQuickHelp2Sh);
-    ApplyLetterica(UIStaticInteractName);
-    ApplyLetterica(UIStaticInteractNameSh);
-    ApplyLetterica(UIStaticInteractFaction);
-    ApplyLetterica(UIStaticInteractFactionSh);
+    CGameFont* font = HUD().Font().pFontLetterica16Russian;
+    if (!font)
+        font = UIStaticQuickHelp.GetFont();
+    float ui_scale_x = 1.f, ui_scale_y = 1.f;
+    UI()->ClientToScreenScaledWidth(ui_scale_x);
+    UI()->ClientToScreenScaledHeight(ui_scale_y);
+    const std::array<float, 8> metrics{font ? font->GetWidthScale() : 0.f, font ? font->GetHeightScale() : 0.f,
+        font ? font->GetHeight() : 0.f, font ? font->GetInterval().x : 0.f, font ? font->GetInterval().y : 0.f,
+        ui_scale_x, ui_scale_y, font ? font->GetfXStep() : 0.f};
+    if (m_interact_font != font || m_interact_font_metrics != metrics)
+    {
+        m_interact_font = font;
+        m_interact_font_metrics = metrics;
+        for (auto& cache : m_interact_text)
+            cache.valid = false;
+    }
+
+    auto fit_text = [&](u32 index, CUIStatic& s, CUIStatic* shadow, LPCSTR text, u32 color) {
+        auto& cache = m_interact_text[index];
+        text = text ? text : "";
+        const bool changed = !cache.valid || cache.text != text || xr_strcmp(s.GetText(), text) ||
+            s.GetFont() != font || s.GetTextAlignment() != CGameFont::alLeft;
+        if (changed)
+        {
+            ApplyLetterica(s);
+            s.SetText(text);
+            if (s.GetFont() && text[0])
+            {
+                s.AdjustWidthToText();
+                s.AdjustHeightToText();
+            }
+            cache.text = text;
+            cache.size.set(s.GetWidth(), s.GetHeight());
+            cache.valid = true;
+        }
+        // Width can also be changed by the vanilla HUD when markers are toggled.
+        s.SetWndSize(cache.size);
+        s.SetTextColor(color);
+        if (shadow)
+        {
+            if (changed || shadow->GetFont() != font || shadow->GetTextAlignment() != CGameFont::alLeft || xr_strcmp(shadow->GetText(), text))
+            {
+                ApplyLetterica(*shadow);
+                shadow->SetText(text);
+            }
+            shadow->SetWndSize(cache.size);
+            shadow->SetTextColor(shadow_clr);
+        }
+    };
 
     const bool has_action = action && action[0] && key && key[0];
     if (has_action)
     {
-        FitText(UIStaticQuickHelp, action, action_clr);
-        FitText(UIStaticQuickHelpSh, action, shadow_clr);
+        fit_text(0, UIStaticQuickHelp, &UIStaticQuickHelpSh, action, action_clr);
     }
     else
     {
@@ -1386,8 +1418,7 @@ void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR ke
     const bool has_second = has_action && key2 && key2[0] && action2 && action2[0];
     if (has_second)
     {
-        FitText(UIStaticQuickHelp2, action2, action_clr);
-        FitText(UIStaticQuickHelp2Sh, action2, shadow_clr);
+        fit_text(1, UIStaticQuickHelp2, &UIStaticQuickHelp2Sh, action2, action_clr);
     }
     else
     {
@@ -1399,8 +1430,7 @@ void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR ke
     const bool has_name = name && name[0];
     if (has_name)
     {
-        FitText(UIStaticInteractName, name, name_clr);
-        FitText(UIStaticInteractNameSh, name, shadow_clr);
+        fit_text(2, UIStaticInteractName, &UIStaticInteractNameSh, name, name_clr);
     }
     else
     {
@@ -1411,8 +1441,7 @@ void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR ke
     const bool has_faction = faction && faction[0];
     if (has_faction)
     {
-        FitText(UIStaticInteractFaction, faction, faction_clr);
-        FitText(UIStaticInteractFactionSh, faction, shadow_clr);
+        fit_text(3, UIStaticInteractFaction, &UIStaticInteractFactionSh, faction, faction_clr);
     }
     else
     {
@@ -1453,11 +1482,11 @@ void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR ke
     float key2_w = 0.f;
     if (has_action)
     {
-        FitText(UIInteractKeyBind, key, key_clr);
+        fit_text(4, UIInteractKeyBind, nullptr, key, key_clr);
         key_w = (xr_strlen(key) == 1) ? kInteractKeySingleW : (kInteractKeySlice + _max(UIInteractKeyBind.GetWidth(), 9.f) + kInteractKeySlice);
         if (has_second)
         {
-            FitText(UIInteractKeyBind2, key2, key_clr);
+            fit_text(5, UIInteractKeyBind2, nullptr, key2, key_clr);
             key2_w = (xr_strlen(key2) == 1) ? kInteractKeySingleW : (kInteractKeySlice + _max(UIInteractKeyBind2.GetWidth(), 9.f) + kInteractKeySlice);
         }
     }
@@ -1508,7 +1537,7 @@ void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR ke
         UIInteractDrop.SetWndSize(drop_size);
         PlaceAt(UIInteractDrop, origin_x - kInteractDropPadX, origin_y - kInteractDropPadY);
 
-        LayoutKeyCap(UIInteractKey, UIInteractKeyL, UIInteractKeyC, UIInteractKeyR, UIInteractKeyBind, origin_x, origin_y, key, key_clr, tex_clr);
+        LayoutKeyCap(UIInteractKey, UIInteractKeyL, UIInteractKeyC, UIInteractKeyR, UIInteractKeyBind, origin_x, origin_y, key, tex_clr);
 
         const float action_x = origin_x + key_w + kInteractKeyGap;
         const float action_y = origin_y + (kInteractKeyH - action_h) * 0.5f;
@@ -1518,7 +1547,7 @@ void CUIMainIngameWnd::LayoutInteractPrompt(const Fvector2& projected, LPCSTR ke
         if (has_second)
         {
             const float y2 = origin_y + kInteractKeyH + row_gap;
-            LayoutKeyCap(UIInteractKey2, UIInteractKey2L, UIInteractKey2C, UIInteractKey2R, UIInteractKeyBind2, origin_x, y2, key2, key_clr, tex_clr);
+            LayoutKeyCap(UIInteractKey2, UIInteractKey2L, UIInteractKey2C, UIInteractKey2R, UIInteractKeyBind2, origin_x, y2, key2, tex_clr);
             const float action2_x = origin_x + key2_w + kInteractKeyGap;
             const float action2_y = y2 + (kInteractKeyH - action2_h) * 0.5f;
             PlaceAt(UIStaticQuickHelp2Sh, action2_x + shadow, action2_y + shadow);

@@ -13,6 +13,7 @@
 #include "UIMotionIcon.h"
 #include "../hudsound.h"
 #include "../script_export_space.h"
+#include <array>
 
 struct GAME_NEWS_DATA;
 
@@ -194,6 +195,17 @@ protected:
     CUIStatic UIInteractKey2C;
     CUIStatic UIInteractKey2R;
     CUIStatic UIInteractKeyBind2;
+
+    struct InteractTextCache
+    {
+        xr_string text;
+        Fvector2 size{};
+        bool valid{};
+    };
+    // Primary/secondary action, name, faction and the two binding labels.
+    InteractTextCache m_interact_text[6];
+    CGameFont* m_interact_font{};
+    std::array<float, 8> m_interact_font_metrics{};
 
     enum
     {

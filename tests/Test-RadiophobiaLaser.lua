@@ -71,11 +71,19 @@ signals.on_update()
 expect("shader_param_5 1, 0, 0, 0")
 check(sounds == 1 and camera_effects == 1, "one legacy toggle must play one set of effects")
 local before = #commands
+local format_calls, original_format = 0, string.format
+string.format = function(...)
+    format_calls = format_calls + 1
+    return original_format(...)
+end
 signals.on_update()
 check(#commands == before and sounds == 1, "unchanged frames must not spam commands/effects")
+check(format_calls == 0, "unchanged laser state must not format a console command")
 zoomed = true
 signals.on_actor_weapon_zoom_in()
 expect("shader_param_5 1, 0, 1, 0")
+check(format_calls == 1, "a changed laser state must format exactly one command")
+string.format = original_format
 active.alt = true
 signals.on_actor_weapon_alt_aim_switch(true)
 expect("shader_param_5 1, 0, 0, 0")
