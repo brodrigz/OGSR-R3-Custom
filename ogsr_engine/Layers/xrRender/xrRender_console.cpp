@@ -102,6 +102,13 @@ constexpr xr_token qpreset_token[] = {{"Minimum", 0}, {"Low", 1}, {"Default", 2}
 u32 ps_r_ao_mode = AO_MODE_SSDO;
 constexpr xr_token ao_mode_token[] = {{"st_gtao", AO_MODE_GTAO}, {"st_ssdo", AO_MODE_SSDO}, {"st_xegtao", AO_MODE_XEGTAO}, {nullptr, 0}};
 float ps_r_xegtao_radius = 0.5f;
+BOOL ps_r_rsm = FALSE;
+float ps_r_rsm_radius = 6.f;
+float ps_r_rsm_intensity = 1.f;
+float ps_r_rsm_thickness = 0.2f;
+u32 ps_r_rsm_quality = 2;
+int ps_r_rsm_debug = 0;
+constexpr xr_token rsm_quality_token[] = {{"low", 1}, {"medium", 2}, {"high", 3}, {nullptr, 0}};
 BOOL ps_r_xegtao_bent_normals = FALSE;
 
 u32 ps_r_ao_resolution = AO_RES_FULL;
@@ -830,6 +837,12 @@ void xrRender_initconsole()
     CMD4(CCC_Float, "r_SunShafts_Blend", &ps_r_prop_ss_blend, 0.01f, 1.0f);
 
     CMD3(CCC_Token, "r_ao_mode", &ps_r_ao_mode, ao_mode_token);
+    CMD2(CCC_Bool, "r_rsm", &ps_r_rsm); // Requires cfg_save and a full game restart.
+    CMD4(CCC_Float, "r_rsm_radius", &ps_r_rsm_radius, 0.5f, 12.f);
+    CMD4(CCC_Float, "r_rsm_intensity", &ps_r_rsm_intensity, 0.f, 4.f);
+    CMD4(CCC_Float, "r_rsm_thickness", &ps_r_rsm_thickness, 0.02f, 1.f);
+    CMD3(CCC_Token, "r_rsm_quality", &ps_r_rsm_quality, rsm_quality_token);
+    CMD4(CCC_Integer, "r_rsm_debug", &ps_r_rsm_debug, 0, 3);
     CMD4(CCC_Float, "r_xegtao_radius", &ps_r_xegtao_radius, 0.05f, 4.0f);
     CMD2(CCC_Bool, "r_xegtao_bent_normals", &ps_r_xegtao_bent_normals); // Requires vid_restart.
     CMD3(CCC_Token, "r2_ssao", &ps_r_ao_quality, qssao_token);

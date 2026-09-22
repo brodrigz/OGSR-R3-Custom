@@ -1,5 +1,13 @@
 #include "common.h"
 
+#ifdef USE_RSM
+#include "ogsr_rsm_capture.h"
+RSMCapture main(v2p_shadow_direct I)
+{
+    return CaptureRSM(s_base.Sample(smp_linear, I.tc0).rgb, I.rsm_world, I.hpos.z);
+}
+#else
+
 //////////////////////////////////////////////////////////////////////////////////////////
 // Pixel
 // float4 main ( v_shadow_direct I ) : SV_Target
@@ -11,3 +19,4 @@ float4 main() : SV_Target
     return I.depth;
 #endif
 }
+#endif

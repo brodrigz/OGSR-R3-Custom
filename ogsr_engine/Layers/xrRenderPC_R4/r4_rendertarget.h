@@ -5,6 +5,7 @@
 class light;
 struct ShaderElement;
 class XeGTAOResources;
+class RSMResources;
 
 static void dummy(){}
 
@@ -23,6 +24,13 @@ private:
     u32 m_ao_mode{}; // Method changes, like quality changes, require vid_restart.
     bool m_xegtao_bent_normals{}; // Latched with the AO shaders and texture formats.
     XeGTAOResources* m_xegtao{};
+    RSMResources* m_rsm{};
+    bool m_resetRSMHistory{true};
+    u32 m_rsm_frame{u32(-1)};
+    ref_shader s_rsm_debug;
+    void InitRSM();
+    void DestroyRSM();
+    void phase_rsm(CBackend& cmd_list);
     void InitXeGTAO();
     void DestroyXeGTAO();
     void phase_xegtao(CBackend& cmd_list);
@@ -112,6 +120,8 @@ public:
 
     // sun smap
     ref_rt rt_smap_sun_cascade[R__NUM_SUN_CASCADES];
+    ref_rt rt_rsm_albedo, rt_rsm_geometry;
+    void set_rsm_sun(const Fmatrix& transform, const Fvector& color, float size);
     // rain smap
     ref_rt rt_smap_rain;
     // lights smap

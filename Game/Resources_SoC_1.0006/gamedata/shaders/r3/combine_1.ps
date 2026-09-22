@@ -20,6 +20,11 @@ uniform float4 fakescope;
 #include "lmodel.h"
 #include "hmodel.h"
 
+#ifdef USE_RSM
+Texture2D<float4> s_rsm;
+uniform float4 rsm_params;
+#endif
+
 #ifdef SSAO_QUALITY
 #ifdef USE_AO_BUFFER
 #ifdef USE_XEGTAO_BENT_NORMALS
@@ -109,6 +114,10 @@ float4 main(p_screen I) : SV_Target
 #endif
 
     float3 color = L.rgb + hdiffuse.rgb;
+#ifdef USE_RSM
+    float giMaterial = abs(mtl - 0.95) <= 0.04 ? 0.0 : mtl;
+    color += s_rsm.Load(int3(I.hpos.xy, 0)).rgb * calc_albedo(D, giMaterial) * rsm_params.x;
+#endif
     color = LinearTosRGB(color); // gamma correct
 
 #ifdef SSFX_BEEFS_NVG

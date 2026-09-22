@@ -1,0 +1,17 @@
+#include "common.h"
+#include "ogsr_rsm_capture.h"
+
+RSMCapture main(v2p_shadow_direct I)
+{
+    float3 base = s_base.Sample(smp_linear, I.tc0).rgb;
+    // Match deffer_impl_flat's four-layer terrain diffuse material. The base
+    // texture alone omits the detail mask/tints used by the visible ground.
+    float4 mask = s_mask.Sample(smp_linear, I.tc0);
+    mask /= max(dot(mask, 1.0), 1e-6);
+    float2 uv = I.tc0 * dt_params.xy;
+    float3 detail = s_dt_r.Sample(smp_linear, uv).rgb * mask.r;
+    detail += s_dt_g.Sample(smp_linear, uv).rgb * mask.g;
+    detail += s_dt_b.Sample(smp_linear, uv).rgb * mask.b;
+    detail += s_dt_a.Sample(smp_linear, uv).rgb * mask.a;
+    return CaptureRSM(2.0 * base * detail, I.rsm_world, I.hpos.z);
+}

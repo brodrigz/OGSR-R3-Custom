@@ -46,6 +46,10 @@ v2p_shadow_direct main(v_tree I)
     float4 f_pos = float4(pos.xyz + wind_result.xyz, 1);
 
     O.hpos = mul(m_VP, f_pos);
+#ifdef USE_RSM
+    O.tc0 = (I.tc * consts).xy;
+    O.rsm_world = f_pos.xyz;
+#endif
 
 #ifndef USE_HWSMAP
     O.depth = O.hpos.z;

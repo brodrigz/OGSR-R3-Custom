@@ -112,7 +112,7 @@ void CBlender_Tree::Compile(CBlender_Compile& C)
     case SE_R2_SHADOW_LIGHTS:
         if (oBlend.value)
         {
-            C.r_Pass(tvs_s, "shadow_direct_base_aref", FALSE, TRUE, TRUE, TRUE, D3DBLEND_ZERO, D3DBLEND_ONE, TRUE, 200);
+            C.r_Pass(tvs_s, "shadow_direct_base_aref", FALSE, TRUE, TRUE, !RImplementation.o.rsm_enabled, D3DBLEND_ZERO, D3DBLEND_ONE, TRUE, 200);
             if (!oNotAnTree.value)
                 C.SH->flags.bTreeBranch = TRUE;
         }
@@ -125,7 +125,8 @@ void CBlender_Tree::Compile(CBlender_Compile& C)
         C.r_dx10Sampler("smp_linear");
         C.r_dx10Texture("s_waves", "fx\\wind_wave");
         C.r_dx10Sampler("smp_linear2");
-        C.r_ColorWriteEnable(false, false, false, false);
+        const bool rsm = RImplementation.o.rsm_enabled && C.iElement == SE_R2_SHADOW;
+        C.r_ColorWriteEnable(rsm, rsm, rsm, rsm);
         C.r_End();
         break;
     }

@@ -1,0 +1,37 @@
+#include "common.h"
+#include "lmodel.h"
+Texture2D<float4> s_rsm;
+Texture2D<float4> s_rsm_albedo;
+Texture2D<float4> s_rsm_diagnostics;
+uniform float4 rsm_params; // intensity, mode, current-frame capture valid
+
+float4 main(p_screen I) : SV_Target
+{
+    if (rsm_params.z < 0.5)
+        return float4(0, 0, 0, 1);
+    uint w, h;
+    if (rsm_params.y > 1.5 && rsm_params.y < 2.5)
+    {
+        s_rsm_albedo.GetDimensions(w, h);
+        // Source reflectance in the sun's view, including off-camera surfaces.
+        return float4(s_rsm_albedo.Load(int3(min(int2(I.tc0 * float2(w,h)), int2(w,h)-1),0)).rgb, 1);
+    }
+    if (rsm_params.y > 2.5)
+    {
+        s_rsm_diagnostics.GetDimensions(w,h);
+        // Red/green = rejected/accepted fractions of the same potential links.
+        float4 d = s_rsm_diagnostics.Load(int3(min(int2(I.tc0 * float2(w,h)), int2(w,h)-1),0));
+        return float4(d.rg, 0, 1);
+    }
+    s_rsm.GetDimensions(w,h);
+    int2 pixel = min(int2(I.tc0 * float2(w,h)), int2(w,h)-1);
+    float2 uv = (float2(pixel)+0.5)/float2(w,h);
+    gbuffer_data gbd = gbuffer_load_data(uv, float2(pixel)+0.5);
+    float mtl = gbd.mtl;
+#ifdef USE_R2_STATIC_SUN
+    mtl = xmaterial;
+#endif
+    mtl = abs(mtl-0.95) <= 0.04 ? 0.0 : mtl;
+    float3 bounce = s_rsm.Load(int3(pixel,0)).rgb * calc_albedo(float4(gbd.C,gbd.gloss),mtl) * rsm_params.x;
+    return float4(LinearTosRGB(bounce),1);
+}

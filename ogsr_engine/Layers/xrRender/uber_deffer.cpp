@@ -296,5 +296,5 @@ void uber_shadow(CBlender_Compile& C, LPCSTR _vspec)
             C.R().SetRS(D3DRS_FILLMODE, D3DFILL_WIREFRAME);
     }
     else*/
-        C.r_Pass("shadow_direct_base", "dumb", FALSE, TRUE, TRUE, FALSE);
+        C.r_Pass("shadow_direct_base", RImplementation.o.rsm_enabled ? "shadow_direct_base" : "dumb", FALSE, TRUE, TRUE, FALSE);
 }

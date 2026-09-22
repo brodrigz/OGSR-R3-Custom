@@ -398,11 +398,18 @@ struct v2p_shadow_direct_aref
 {
     float2 tc0 : TEXCOORD1; // Diffuse map for aref
     float4 hpos : SV_Position; // Clip-space position         (for rasterization)
+#ifdef USE_RSM
+    float3 rsm_world : TEXCOORD6;
+#endif
 };
 
 struct v2p_shadow_direct
 {
     float4 hpos : SV_Position; // Clip-space position         (for rasterization)
+#ifdef USE_RSM
+    float2 tc0 : TEXCOORD1;
+    float3 rsm_world : TEXCOORD6;
+#endif
 };
 
 struct p_shadow_direct_aref

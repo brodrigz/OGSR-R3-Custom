@@ -8,6 +8,9 @@ v2p_shadow_direct_aref _main(v_model I)
     v2p_shadow_direct_aref O;
     float4 hpos = mul(m_WVP, I.P);
     O.hpos = hpos;
+#ifdef USE_RSM
+    O.rsm_world = mul(m_W, I.P);
+#endif
     O.tc0 = I.tc;
 #ifndef USE_HWSMAP
     O.depth = O.hpos.z;

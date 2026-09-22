@@ -64,7 +64,9 @@ void FProgressive::Load(const char* N, IReader* data, u32 dwFlags)
 
 void FProgressive::Render(CBackend& cmd_list, float lod, bool use_fast_geo)
 {
-    if (m_fast && use_fast_geo)
+    // Match Fvisual: RSM needs the textured mesh, including its matching LOD
+    // windows. The reduced shadow mesh has no material texture coordinates.
+    if (m_fast && use_fast_geo && !RImplementation.o.rsm_enabled)
     {
         const int lod_id = iFloor((1.f - clampr(lod, 0.f, 1.f)) * float(xSWI->count - 1) + 0.5f);
         VERIFY(lod_id >= 0 && lod_id < int(xSWI->count));

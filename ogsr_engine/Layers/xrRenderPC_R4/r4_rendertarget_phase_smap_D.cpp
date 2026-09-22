@@ -11,7 +11,14 @@ void CRenderTarget::phase_smap_direct(CBackend& cmd_list, light* L, u32 sub_phas
     }
     else
     {
-        u_setrt(cmd_list, nullptr, nullptr, nullptr, nullptr, rt_smap_sun_cascade[sub_phase]->pZRT[cmd_list.context_id]);
+        if (m_rsm && sub_phase == 0)
+        {
+            u_setrt(cmd_list, rt_rsm_albedo, rt_rsm_geometry, nullptr, nullptr, rt_smap_sun_cascade[sub_phase]->pZRT[cmd_list.context_id]);
+            cmd_list.ClearRT(rt_rsm_albedo->pRT, {});
+            cmd_list.ClearRT(rt_rsm_geometry->pRT, {});
+        }
+        else
+            u_setrt(cmd_list, nullptr, nullptr, nullptr, nullptr, rt_smap_sun_cascade[sub_phase]->pZRT[cmd_list.context_id]);
         cmd_list.ClearZB(rt_smap_sun_cascade[sub_phase], 1.0f);
         cmd_list.SetViewport({0, 0, rt_smap_sun_cascade[sub_phase]->dwWidth, rt_smap_sun_cascade[sub_phase]->dwHeight, 0.0, 1.0});
     }

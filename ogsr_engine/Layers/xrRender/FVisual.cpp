@@ -153,7 +153,9 @@ void Fvisual::Render(CBackend& cmd_list, float, bool use_fast_geo)
 {
     ZoneScoped;
 
-    if (m_fast && use_fast_geo && !cmd_list.is_TessEnabled())
+    // RSM shadow shaders sample base color and unpack UVs from the full vertex
+    // layout. OGF_FASTPATH is depth-only and cannot supply those attributes.
+    if (m_fast && use_fast_geo && !RImplementation.o.rsm_enabled && !cmd_list.is_TessEnabled())
     {
         cmd_list.set_Geometry(m_fast->rm_geom);
         cmd_list.Render(D3DPT_TRIANGLELIST, m_fast->vBase, 0, m_fast->vCount, m_fast->iBase, m_fast->dwPrimitives);

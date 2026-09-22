@@ -1,11 +1,20 @@
 #include "common.h"
 #include "sload.h"
+#ifdef USE_RSM
+#include "ogsr_rsm_capture.h"
+RSMCapture main(v2p_shadow_direct_aref I)
+#else
 
 float4 main(p_shadow_direct_aref I) : SV_Target
+#endif
 {
     float4 C = s_base.Sample(smp_linear, I.tc0);
 
     calc_alpha_test(I.tc0.xy, C.a);
 
+#ifdef USE_RSM
+    return CaptureRSM(C.rgb, I.rsm_world, I.hpos.z);
+#else
     return C;
+#endif
 }

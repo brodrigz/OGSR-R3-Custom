@@ -120,7 +120,8 @@ void CBlender_deffer_aref::Compile(CBlender_Compile& C)
             C.r_dx10Texture("s_base", C.L_textures[0]);
             C.r_dx10Sampler("smp_base");
             C.r_dx10Sampler("smp_linear");
-            C.r_ColorWriteEnable(false, false, false, false);
+            const bool rsm = RImplementation.o.rsm_enabled && C.iElement == SE_R2_SHADOW;
+            C.r_ColorWriteEnable(rsm, rsm, rsm, rsm);
             C.r_End();
             break;
         }

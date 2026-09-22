@@ -64,6 +64,7 @@ public:
     struct _options
     {
         u32 rain_smapsize;
+        bool rsm_enabled{}; // Material shader variant, latched until full restart.
         u32 sun_cascades_smapsize[R__NUM_SUN_CASCADES];
         u32 lights_smapsize;
 

@@ -72,6 +72,7 @@ public:
 // Just two static storage
 void CRender::create()
 {
+    o.rsm_enabled = !!ps_r_rsm;
     particles_pool.init();
     light_pool.init();
     r_sun.sun_cascade_pool.init();
@@ -192,6 +193,8 @@ void CRender::reset_begin()
 
 void CRender::reset_end()
 {
+    if (!!ps_r_rsm != o.rsm_enabled)
+        Msg("! r_rsm change pending: cfg_save and restart the game; vid_restart retains the active material shader variant.");
     Target = xr_new<CRenderTarget>();
 
     // AVO: let's reload details while changed details options on vid_restart
@@ -718,6 +721,7 @@ HRESULT CRender::shader_compile(LPCSTR name, DWORD const* pSrcData, UINT SrcData
     appendShaderOption(ps_r2_ls_flags_ext.test(R2FLAGEXT_MOTION_BLUR), "USE_MBLUR", "1");
 
     appendShaderOption(ps_r_ao_mode == AO_MODE_GTAO, "USE_GTAO", "1");
+    appendShaderOption(o.rsm_enabled, "USE_RSM", "1");
     appendShaderOption(ps_r_ao_mode == AO_MODE_XEGTAO && ps_r_ao_quality && ps_r_xegtao_bent_normals,
         "USE_XEGTAO_BENT_NORMALS", "1");
 
@@ -784,7 +788,7 @@ HRESULT CRender::shader_compile(LPCSTR name, DWORD const* pSrcData, UINT SrcData
 
     appendShaderOption(ps_r2_ls_flags.test(R2FLAG_SSFX_SKY_DEBANDING), "SSFX_DEBAND", "1");
 
-    appendShaderOption(ps_r2_ls_flags.test(R2FLAG_SSFX_INDIRECT_LIGHT), "SSFX_INDIRECT_LIGHT", "1");
+    appendShaderOption(!o.rsm_enabled && ps_r2_ls_flags.test(R2FLAG_SSFX_INDIRECT_LIGHT), "SSFX_INDIRECT_LIGHT", "1");
 
     appendShaderOption(ps_r2_ls_flags.test(R2FLAG_SSFX_BLOOM), "SSFX_BLOOM", "1");
 

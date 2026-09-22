@@ -12,6 +12,8 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
     const bool separate_ao = m_ao_enabled && (m_ao_mode == AO_MODE_XEGTAO || ps_r_ao_resolution != AO_RES_LEGACY);
     if (separate_ao)
         phase_ao(cmd_list);
+    if (m_rsm)
+        phase_rsm(cmd_list);
 
     //*** exposure-pipeline
     {
@@ -92,6 +94,8 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
         cmd_list.set_c("Ldynamic_dir", sundir);
 
         cmd_list.set_c("env_color", envclr);
+        if (m_rsm)
+            cmd_list.set_c("rsm_params", ps_r_rsm_intensity, float(ps_r_rsm_debug), m_rsm_frame == Device.dwFrame ? 1.f : 0.f, 0.f);
         cmd_list.set_c("fog_color", fogclr);
 
         cmd_list.Render(D3DPT_TRIANGLELIST, 0, 0, 3, 0, 1);
@@ -305,6 +309,15 @@ void CRenderTarget::phase_combine(CBackend& cmd_list)
         PIX_EVENT(RenderFlares);
         cmd_list.set_Stencil(FALSE);
         g_pGamePersistent->Environment().RenderFlares(cmd_list, FALSE, ps_r2_ls_flags_ext.test(R2FLAGEXT_LENS_FLARE) && r_lens_flare_mode == old_style_flare, TRUE);
+    }
+
+    if (m_rsm && ps_r_rsm_debug)
+    {
+        PIX_EVENT(rsm_debug);
+        RenderScreenTriangle(cmd_list, pp_dst(), s_rsm_debug->E[0], [&]() {
+            cmd_list.set_c("rsm_params", ps_r_rsm_intensity, float(ps_r_rsm_debug), m_rsm_frame == Device.dwFrame ? 1.f : 0.f, 0.f);
+        });
+        pp_flip();
     }
 
     //	PP-if required

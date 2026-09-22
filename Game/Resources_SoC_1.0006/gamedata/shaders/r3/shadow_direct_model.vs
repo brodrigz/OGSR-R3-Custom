@@ -9,6 +9,10 @@ v2p_shadow_direct _main(v_model I)
     float4 hpos = mul(m_WVP, I.P);
 
     O.hpos = hpos;
+#ifdef USE_RSM
+    O.tc0 = I.tc;
+    O.rsm_world = mul(m_W, I.P);
+#endif
 #ifndef USE_HWSMAP
     O.depth = O.hpos.z;
 #endif

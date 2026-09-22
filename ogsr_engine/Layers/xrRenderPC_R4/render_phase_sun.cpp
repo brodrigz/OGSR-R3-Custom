@@ -270,8 +270,12 @@ void render_sun::render()
         // TracyD3D11Zone(HW.profiler_ctx, "render_sun::render_cascade");
 
         auto& dsgraph = RImplementation.get_context(contexts_ids[cascade_ind]);
+        PIX_EVENT_CTX(dsgraph.cmd_list, sun_shadow_capture);
 
         const bool bNormal = dsgraph.mapNormalCount > 0 || dsgraph.mapMatrixCount > 0;
+        // Clear an empty capture as well; its previous frame must never emit light.
+        if (RImplementation.o.rsm_enabled && cascade_ind == 0 && !bNormal)
+            RImplementation.Target->phase_smap_direct(dsgraph.cmd_list, sun, cascade_ind);
         if (bNormal)
         {
             RImplementation.Target->phase_smap_direct(dsgraph.cmd_list, sun, cascade_ind);
@@ -285,6 +289,14 @@ void render_sun::render()
             {
                 if (cascade_ind <= u32(ps_ssfx_grass_shadows.x)) // check cascade
                 {
+                    // Details reuse the normal G-buffer pixel shader for their
+                    // shadow draw. Its MRT outputs are not RSM capture data.
+                    // Preserve the capture and let grass update only sun depth.
+                    if (RImplementation.o.rsm_enabled && cascade_ind == 0)
+                    {
+                        dsgraph.cmd_list.set_RT(nullptr, 0);
+                        dsgraph.cmd_list.set_RT(nullptr, 1);
+                    }
                     RImplementation.Details->Render(dsgraph.cmd_list, true);
                 }
             }
@@ -332,6 +344,11 @@ void render_sun::flush()
     }
 
     auto& cmd_list_imm = RImplementation.get_imm_context().cmd_list;
+    if (RImplementation.o.rsm_enabled)
+    {
+        const Fvector color{sun->color.r, sun->color.g, sun->color.b};
+        RImplementation.Target->set_rsm_sun(m_sun_cascades[0].cull_xform, color, m_sun_cascades[0].size);
+    }
     cmd_list_imm.Invalidate();
 
     // Restore XForms

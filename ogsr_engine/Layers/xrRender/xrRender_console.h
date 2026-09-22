@@ -1,5 +1,10 @@
 #pragma once
 
+extern BOOL ps_r_rsm;
+extern float ps_r_rsm_radius, ps_r_rsm_intensity, ps_r_rsm_thickness;
+extern u32 ps_r_rsm_quality;
+extern int ps_r_rsm_debug;
+
 // Common
 extern ECORE_API u32 r2_SmapCascade0Size, /*r2_SmapCascade1Size,*/ r2_SmapCascade2Size, r2_SmapLightsSize, r2_SmapRainSize;
 

@@ -349,6 +349,8 @@ CRenderTarget::CRenderTarget()
     }
 
     s_ssfx_bloom.create("ogsr_bloom");
+    if (options.rsm_enabled)
+        InitRSM();
     s_ssfx_bloom_lens.create("ogsr_bloom_flares");
     s_ssfx_bloom_downsample.create("ogsr_bloom_downsample");
     s_ssfx_bloom_upsample.create("ogsr_bloom_upsample");
@@ -615,6 +617,7 @@ CRenderTarget::~CRenderTarget()
     DestroyDLSS();
     DestroyFSR();
     DestroyXeGTAO();
+    DestroyRSM();
 
     _RELEASE(m_ImguiSRV);
     _RELEASE(m_ImguiTex);

@@ -12,6 +12,9 @@ v2p_shadow_direct_aref main(v_static I)
 {
     v2p_shadow_direct_aref O;
     O.hpos = mul(m_WVP, I.P);
+#ifdef USE_RSM
+    O.rsm_world = mul(m_W, I.P);
+#endif
     O.tc0 = unpack_tc_base(I.tc, I.T.w, I.B.w); // copy tc
 #ifndef USE_HWSMAP
     O.depth = O.hpos.z;

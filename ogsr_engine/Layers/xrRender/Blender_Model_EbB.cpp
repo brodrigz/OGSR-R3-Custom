@@ -119,12 +119,13 @@ void CBlender_Model_EbB::Compile(CBlender_Compile& C)
             break;
         case SE_R2_SHADOW: // smap
         case SE_R2_SHADOW_LIGHTS:
-            C.r_Pass("shadow_direct_model", "dumb", FALSE, TRUE, TRUE, FALSE);
+            C.r_Pass("shadow_direct_model", RImplementation.o.rsm_enabled ? "shadow_direct_base" : "dumb", FALSE, TRUE, TRUE, FALSE);
             // C.r_Sampler		("s_base",C.L_textures[0]);
             C.r_dx10Texture("s_base", C.L_textures[0]);
             C.r_dx10Sampler("smp_base");
             C.r_dx10Sampler("smp_linear");
-            C.r_ColorWriteEnable(false, false, false, false);
+            const bool rsm = RImplementation.o.rsm_enabled && C.iElement == SE_R2_SHADOW;
+            C.r_ColorWriteEnable(rsm, rsm, rsm, rsm);
             C.r_End();
             break;
         }

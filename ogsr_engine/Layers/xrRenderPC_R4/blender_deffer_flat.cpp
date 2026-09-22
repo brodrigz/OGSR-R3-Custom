@@ -86,7 +86,8 @@ void CBlender_deffer_flat::Compile(CBlender_Compile& C)
         C.r_dx10Texture("s_base", C.L_textures[0]);
         C.r_dx10Sampler("smp_base");
         C.r_dx10Sampler("smp_linear");
-        C.r_ColorWriteEnable(false, false, false, false);
+        const bool rsm = RImplementation.o.rsm_enabled && C.iElement == SE_R2_SHADOW;
+        C.r_ColorWriteEnable(rsm, rsm, rsm, rsm);
         if (ps_r2_ls_flags.test(C.iElement == SE_R2_SHADOW_LIGHTS ? R2FLAG_SMAP_LIGHTS_2SIDE : R2FLAG_SMAP_2SIDE))
             C.r_CullMode(D3DCULL_NONE);
         C.r_End();

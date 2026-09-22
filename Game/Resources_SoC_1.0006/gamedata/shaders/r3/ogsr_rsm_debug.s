@@ -1,0 +1,11 @@
+function element_0(shader, t_base, t_second, t_detail)
+	shader:begin("stub_screen_space", "ogsr_rsm_debug")
+		:fog(false)
+		:zb(false, false)
+	shader:dx10texture("s_position", "$user$position")
+	shader:dx10texture("s_diffuse", "$user$albedo")
+	shader:dx10texture("s_rsm", "$user$rsm")
+	shader:dx10texture("s_rsm_albedo", "$user$rsm_albedo")
+	shader:dx10texture("s_rsm_diagnostics", "$user$rsm_diagnostics")
+	shader:dx10sampler("smp_nofilter")
+end
