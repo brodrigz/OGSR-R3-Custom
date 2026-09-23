@@ -328,8 +328,6 @@ _action* action_name_to_ptr(LPCSTR _name)
     LPCSTR migrated_action = nullptr;
     if (!_stricmp(_name, "night_vision"))
         migrated_action = "night_vision_rad";
-    else if (!_stricmp(_name, "torch_rad"))
-        migrated_action = "torch";
 
     if (migrated_action)
     {
@@ -556,6 +554,19 @@ bool actions_share_bind_group(LPCSTR action_a, LPCSTR action_b)
     return g_action_bind_group[id_a] == g_action_bind_group[id_b];
 }
 
+static _action* resolve_bind_action(LPCSTR name)
+{
+    // Earlier builds saved R3's scripted flashlight as the native torch action.
+    // Migrate only bind/bind_sec: dsh_torch intentionally unbinds native torch
+    // on spawn, and must not clear the scripted tap/hold action in doing so.
+    if (!_stricmp(name, "torch"))
+        for (auto& action : actions)
+            if (action.action_name && !_stricmp(action.action_name, "torch_rad"))
+                return &action;
+
+    return action_name_to_ptr(name);
+}
+
 class CCC_Bind : public IConsole_Command
 {
     int m_work_idx;
@@ -585,10 +596,11 @@ public:
             bRemapped = TRUE;
         }
 
-        if (!action_name_to_ptr(action))
+        const _action* resolved_action = resolve_bind_action(action);
+        if (!resolved_action)
             return;
 
-        int action_id = action_name_to_id(action);
+        int action_id = resolved_action->id;
         if (action_id == kNOTBINDED)
             return;
 
@@ -606,7 +618,7 @@ public:
                 continue;
             if (binding.m_keyboard[m_work_idx] != pkeyboard)
                 continue;
-            if (!actions_share_bind_group(action, binding.m_action->action_name))
+            if (!actions_share_bind_group(resolved_action->action_name, binding.m_action->action_name))
                 continue;
             binding.m_keyboard[m_work_idx] = NULL;
         }
