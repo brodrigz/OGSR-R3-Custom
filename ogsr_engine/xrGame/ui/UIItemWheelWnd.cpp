@@ -117,11 +117,6 @@ bool WeaponBusy(CWeapon* wpn)
     return wpn->GetState() != CHudItem::eIdle;
 }
 
-bool ItemVisible(CInventoryItem* item)
-{
-    return item && !item->m_flags.test(CInventoryItem::FIHiddenForInventory);
-}
-
 void PlaceCentered(CUIStatic* s, float cx, float cy)
 {
     const Fvector2 sz = s->GetWndSize();
@@ -148,7 +143,7 @@ float AngleDelta(float a, float b)
 
 bool ItemWheel_CanPin(CInventoryItem* item)
 {
-    if (!ItemVisible(item))
+    if (!item)
         return false;
     return smart_cast<CEatableItem*>(item) || smart_cast<CGrenade*>(item) || IsDetector(item);
 }
@@ -409,8 +404,10 @@ void CUIItemWheelWnd::Rebuild()
     };
     xr_vector<Group> groups;
 
+    // R3's inventory page filter leaves FIHiddenForInventory set after closing.
+    // The wheel uses all owned items and applies its own category/usability checks.
     auto add_item = [&](CInventoryItem* itm, bool as_grenade) {
-        if (!ItemVisible(itm) || !itm->Useful())
+        if (!itm || !itm->Useful())
             return;
         const shared_str sect = itm->object().cNameSect();
         for (Group& g : groups)
@@ -449,7 +446,7 @@ void CUIItemWheelWnd::Rebuild()
             bool detector = false;
             for (CInventoryItem* itm : inv.m_all)
             {
-                if (!ItemVisible(itm) || itm->object().cNameSect() != sect)
+                if (!itm || itm->object().cNameSect() != sect)
                     continue;
                 if (!itm->Useful())
                     continue;
@@ -478,7 +475,7 @@ void CUIItemWheelWnd::Rebuild()
 
             for (CInventoryItem* itm : inv.m_all)
             {
-                if (ItemVisible(itm) && itm->Useful() && wpn->CanAttach(itm))
+                if (itm && itm->Useful() && wpn->CanAttach(itm))
                     add_item(itm, false);
             }
         }
