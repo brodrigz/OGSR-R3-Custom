@@ -84,34 +84,32 @@ static const char* GetThreadName()
 
 void LogStackTrace(const char* header, const bool dump_lua_locals)
 {
-    __try
-    {
-        if (auto pCrashHandler = Debug.get_crashhandler())
-            pCrashHandler(dump_lua_locals);
-        Log("********************************************************************************");
-        Msg("!![" __FUNCTION__ "] Thread: [%s]", GetThreadName());
-        Log(BuildStackTrace(header));
-        Log("********************************************************************************");
-    }
-    __finally
-    {}
+    // Preserve the native stack even if optional script diagnostics fail.
+    Log("********************************************************************************");
+    Msg("!![" __FUNCTION__ "] Thread: [%s]", GetThreadName());
+    Log(BuildStackTrace(header));
+    Log("********************************************************************************");
+    if (auto pCrashHandler = Debug.get_crashhandler())
+        pCrashHandler(dump_lua_locals);
 }
 
-void LogStackTrace(const char* header, _EXCEPTION_POINTERS* pExceptionInfo, bool dump_lua_locals)
+void LogStackTrace(const char* header, _EXCEPTION_POINTERS* pExceptionInfo)
 {
-    __try
+    const auto& exception = *pExceptionInfo->ExceptionRecord;
+    // Log the original exception before stack walking or any other diagnostics.
+    Log("********************************************************************************");
+    Msg("!![" __FUNCTION__ "] Thread: [%s], ExceptionCode: [%08lx], ExceptionAddress: [%p]",
+        GetThreadName(), exception.ExceptionCode, exception.ExceptionAddress);
+    if ((exception.ExceptionCode == EXCEPTION_ACCESS_VIOLATION || exception.ExceptionCode == EXCEPTION_IN_PAGE_ERROR) && exception.NumberParameters >= 2)
     {
-        if (auto pCrashHandler = Debug.get_crashhandler())
-            pCrashHandler(dump_lua_locals);
-        Log("********************************************************************************");
-        Msg("!![" __FUNCTION__ "] Thread: [%s], ExceptionCode: [%x]", GetThreadName(), pExceptionInfo->ExceptionRecord->ExceptionCode);
-        auto save = *pExceptionInfo->ContextRecord;
-        Log(BuildStackTrace(header, pExceptionInfo->ContextRecord));
-        *pExceptionInfo->ContextRecord = save;
-        Log("********************************************************************************");
+        Msg("!! Memory operation: [%llu] (0=read, 1=write, 8=execute), Address: [%p]",
+            static_cast<unsigned long long>(exception.ExceptionInformation[0]), reinterpret_cast<void*>(exception.ExceptionInformation[1]));
     }
-    __finally
-    {}
+    // StackWalk64 can modify its context; leave the original exception intact.
+    auto context = *pExceptionInfo->ContextRecord;
+    Log(BuildStackTrace(header, &context));
+    Log("!! Lua diagnostics skipped after native exception: VM state may be invalid.");
+    Log("********************************************************************************");
 }
 
 LONG DbgLogExceptionFilter(const char* header, _EXCEPTION_POINTERS* pExceptionInfo)
@@ -421,7 +419,7 @@ static LONG WINAPI UnhandledFilter(PEXCEPTION_POINTERS pExceptionInfo)
         if (*error_message)
             Msg("\n%s", error_message);
 
-        LogStackTrace("!!Unhandled exception stack trace:\n", pExceptionInfo, true);
+        LogStackTrace("!!Unhandled exception stack trace:\n", pExceptionInfo);
 
         ShowErrorMessage("Fatal error occured\n\nPress OK to abort program execution");
     }

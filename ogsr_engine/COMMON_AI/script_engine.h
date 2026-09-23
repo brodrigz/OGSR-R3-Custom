@@ -38,7 +38,7 @@ class CScriptEngine
     int m_stack_level{};
 
     lua_State* m_virtual_machine{};
-    xr_set<void*> m_dumpedObjList;
+    u32 m_dumpVariablesRemaining{};
     bool do_file(const char* caScriptName, const char* caNameSpaceName);
     bool load_buffer(lua_State* L, const char* caBuffer, size_t tSize, const char* caScriptName, const char* caNameSpaceName);
     bool namespace_loaded(const char* caName, bool remove_from_stack = true);

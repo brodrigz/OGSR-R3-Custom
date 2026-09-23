@@ -348,14 +348,11 @@ void CScriptEngine::collect_all_garbage()
 //*********************************************************************************************
 void CScriptEngine::dump_state()
 {
-    static bool reentrantGuard = false;
-    if (reentrantGuard)
-        return;
-    reentrantGuard = true;
-
+    // Bound diagnostics even for very large or cyclic script tables.
+    m_dumpVariablesRemaining = 256;
     lua_State* L = lua();
     lua_Debug l_tDebugInfo;
-    for (int i = 0; lua_getstack(L, i, &l_tDebugInfo); ++i)
+    for (int i = 0; i < 32 && m_dumpVariablesRemaining && lua_getstack(L, i, &l_tDebugInfo); ++i)
     {
         lua_getinfo(L, "nSlu", &l_tDebugInfo);
 
@@ -377,16 +374,16 @@ void CScriptEngine::dump_state()
         Msg("\tLocals:");
         const char* name;
         int VarID = 1;
-        while ((name = lua_getlocal(L, &l_tDebugInfo, VarID++)) != NULL)
+        while (VarID <= 64 && m_dumpVariablesRemaining && (name = lua_getlocal(L, &l_tDebugInfo, VarID++)) != NULL)
         {
             LogVariable(L, name, 1);
 
             lua_pop(L, 1); /* remove variable value */
         }
-        m_dumpedObjList.clear();
         Msg("\tEnd");
     }
-    reentrantGuard = false;
+    if (!m_dumpVariablesRemaining)
+        Msg("!! Lua diagnostic variable limit reached.");
 }
 
 void CScriptEngine::LogTable(lua_State* l, LPCSTR S, int level)
@@ -396,8 +393,9 @@ void CScriptEngine::LogTable(lua_State* l, LPCSTR S, int level)
 
     u32 cnt = 0;
 
+    const int stackTop = lua_gettop(l);
     lua_pushnil(l); /* first key */
-    while (lua_next(l, -2) != 0)
+    while (cnt < 64 && m_dumpVariablesRemaining && lua_next(l, -2) != 0)
     {
         char sname[256];
 
@@ -408,7 +406,7 @@ void CScriptEngine::LogTable(lua_State* l, LPCSTR S, int level)
             // https://github.com/defold/defold/issues/9778
 
             const char* tk{};
-            string16 tmp;
+            char tmp[32];
 
             const int kt = lua_type(l, -2);
             switch (kt)
@@ -417,7 +415,8 @@ void CScriptEngine::LogTable(lua_State* l, LPCSTR S, int level)
                 tk = lua_toboolean(l, -2) ? "true" : "false"; 
                 break;
             case LUA_TNUMBER: 
-                tk = _itoa(lua_tointeger(l, -2), tmp, 10); 
+                std::snprintf(tmp, sizeof(tmp), "%.17g", lua_tonumber(l, -2));
+                tk = tmp;
                 break;
             case LUA_TSTRING:
                 tk = lua_tostring(l, -2);
@@ -427,26 +426,32 @@ void CScriptEngine::LogTable(lua_State* l, LPCSTR S, int level)
                 break;
             }
 
-            xr_sprintf(sname, "%s", tk);
+            std::snprintf(sname, sizeof(sname), "%s", tk);
         }
 
         char sFullName[256];
-        xr_sprintf(sFullName, "%s.%s", S, sname);
+        std::snprintf(sFullName, sizeof(sFullName), "%s.%s", S, sname);
         LogVariable(l, sFullName, level + 1);
 
         lua_pop(l, 1); /* removes `value'; keeps `key' for next iteration */
 
         cnt++;
     }
+    if (cnt == 64)
+        Msg("!! Lua table entry limit reached.");
+    lua_settop(l, stackTop); // Also discard the pending key when a limit ends traversal.
 }
 
 void CScriptEngine::LogVariable(lua_State* l, const char* name, int level)
 {
+    if (!m_dumpVariablesRemaining)
+        return;
+    --m_dumpVariablesRemaining;
     const int ntype = lua_type(l, -1);
     const char* type = lua_typename(l, ntype);
 
-    auto tabBuffer = std::make_unique<char[]>(level + 1);
-    memset(tabBuffer.get(), '\t', level);
+    char tabBuffer[16]{};
+    memset(tabBuffer, '\t', std::min(level, 15));
 
     string128 value{};
 
@@ -465,7 +470,7 @@ void CScriptEngine::LogVariable(lua_State* l, const char* name, int level)
     case LUA_TTABLE:
         if (level <= 3)
         {
-            Msg("%s Table: %s", tabBuffer.get(), name);
+            Msg("%s Table: %s", tabBuffer, name);
             LogTable(l, name, level + 1);
             return;
         }
@@ -475,63 +480,59 @@ void CScriptEngine::LogVariable(lua_State* l, const char* name, int level)
         }
         break;
 
-    case LUA_TUSERDATA: {
-        auto obj = static_cast<luabind::detail::object_rep*>(lua_touserdata(l, -1));
-
-        // Skip already dumped object
-        if (m_dumpedObjList.find(obj) != m_dumpedObjList.end())
-            return;
-        m_dumpedObjList.insert(obj);
-
-        auto& r = obj->get_lua_table();
-        if (r.is_valid())
-        {
-            r.get(l);
-            Msg("%s Userdata: %s", tabBuffer.get(), name);
-            LogTable(l, name, level + 1);
-            lua_pop(l, 1); // Remove userobject
-            return;
-        }
-        else
-        {
-            // Dump class and element pointer if available
-            if (const auto objectClass = obj->crep())
-            {
-                const char* cpp_name = objectClass->type()->name();
-                const char* class_name = objectClass->name();
-
-                std::snprintf(value, sizeof(value), "(%s): %p", cpp_name ? cpp_name : (class_name ? class_name : "nullptr"), obj->ptr());
-            }
-            else
-                xr_strcpy(value, "[not available]");
-        }
-    }
-    break;
+    // Userdata need not be a luabind object (e.g. Lua file handles).
+    // Never dereference an arbitrary native payload while reporting a failure.
+    case LUA_TUSERDATA:
+        std::snprintf(value, sizeof(value), "[%p]", lua_touserdata(l, -1));
+        break;
 
     default: xr_strcpy(value, "[not available]"); break;
     }
 
-    Msg("%s %s %s : %s", tabBuffer.get(), type, name, value);
+    Msg("%s %s %s : %s", tabBuffer, type, name, value);
 }
 //*********************************************************************************************
+
+static int DumpScriptDiagnostics(lua_State* L)
+{
+    ai().script_engine().print_stack();
+    if (lua_toboolean(L, 1))
+        ai().script_engine().dump_state();
+    return 0;
+}
 
 static void ScriptCrashHandler(bool dump_lua_locals)
 {
     if (!Device.OnMainThread())
         return;
 
+    static bool active = false;
+    lua_State* L = ai().script_engine().lua();
+    if (active || !L)
+        return;
+
+    active = true;
+    const int stackTop = lua_gettop(L);
     try
     {
         Msg("***************************[ScriptCrashHandler]**********************************");
-        ai().script_engine().print_stack();
-        if (dump_lua_locals)
-            ai().script_engine().dump_state();
+        // A secondary Lua error must not replace the original failure or invoke
+        // the engine's fatal Lua error callback recursively.
+        lua_pushcfunction(L, DumpScriptDiagnostics);
+        lua_pushboolean(L, dump_lua_locals);
+        if (lua_pcall(L, 1, 0, 0) != 0)
+        {
+            const char* error = lua_type(L, -1) == LUA_TSTRING ? lua_tostring(L, -1) : "non-string Lua error";
+            Msg("!! Lua diagnostics aborted: %s", error);
+        }
         Msg("*********************************************************************************");
     }
     catch (...)
     {
-        Msg("Can't dump script call stack - Engine corrupted");
+        Msg("!! Lua diagnostics aborted by a native exception.");
     }
+    lua_settop(L, stackTop);
+    active = false;
 }
 
 void CScriptEngine::close()
