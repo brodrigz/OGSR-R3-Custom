@@ -683,13 +683,13 @@ CPHSoundPlayer* CEntityAlive::ph_sound_player()
     }
 }
 
-ICollisionHitCallback* CEntityAlive::get_collision_hit_callback()
+std::weak_ptr<ICollisionHitCallback> CEntityAlive::get_collision_hit_callback()
 {
     CCharacterPhysicsSupport* pCPS = character_physics_support();
     if (pCPS)
         return pCPS->get_collision_hit_callback();
 
-    return nullptr;
+    return {};
 }
 
 void CEntityAlive::set_collision_hit_callback(ICollisionHitCallback* cc)

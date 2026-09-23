@@ -14,7 +14,7 @@ class CPhysicObject : public CPhysicsShellHolder, public CPHSkeleton
     typedef CPhysicsShellHolder inherited;
     EPOType m_type;
     float m_mass;
-    ICollisionHitCallback* m_collision_hit_callback;
+    std::shared_ptr<ICollisionHitCallback> m_collision_hit_callback;
 
 private:
     // Creating
@@ -35,7 +35,7 @@ public:
     virtual void net_Save(NET_Packet& P);
     virtual BOOL net_SaveRelevant();
     virtual BOOL UsedAI_Locations();
-    virtual ICollisionHitCallback* get_collision_hit_callback();
+    virtual std::weak_ptr<ICollisionHitCallback> get_collision_hit_callback();
     virtual void set_collision_hit_callback(ICollisionHitCallback* cc);
 
 protected:

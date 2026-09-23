@@ -90,7 +90,6 @@ CCharacterPhysicsSupport::CCharacterPhysicsSupport(EType atype, CEntityAlive* ae
     m_after_death_velocity_factor = 1.f;
     m_ik_controller = NULL;
     m_BonceDamageFactor = 1.f;
-    m_collision_hit_callback = NULL;
     m_Pred_Time = 0.0;
     m_was_wounded = false;
     switch (atype)
@@ -264,6 +263,7 @@ void CCharacterPhysicsSupport::SpawnInitPhysics(CSE_Abstract* e)
 }
 void CCharacterPhysicsSupport::in_NetDestroy()
 {
+    set_collision_hit_callback(nullptr);
     m_PhysicMovementControl->DestroyCharacter();
 
     if (m_physics_skeleton)
@@ -877,10 +877,15 @@ void CCharacterPhysicsSupport::in_NetRelcase(CObject* O)
 
 void CCharacterPhysicsSupport::set_collision_hit_callback(ICollisionHitCallback* cc)
 {
-    xr_delete(m_collision_hit_callback);
-    m_collision_hit_callback = cc;
+    if (cc == m_collision_hit_callback.get())
+        return;
+
+    if (cc)
+        m_collision_hit_callback.reset(cc, [](ICollisionHitCallback* callback) { xr_delete(callback); });
+    else
+        m_collision_hit_callback.reset();
 }
-ICollisionHitCallback* CCharacterPhysicsSupport::get_collision_hit_callback() { return m_collision_hit_callback; }
+std::weak_ptr<ICollisionHitCallback> CCharacterPhysicsSupport::get_collision_hit_callback() { return m_collision_hit_callback; }
 
 void StaticEnvironmentCB(bool& do_colide, bool bo1, dContact& c, SGameMtl* material_1, SGameMtl* material_2)
 {

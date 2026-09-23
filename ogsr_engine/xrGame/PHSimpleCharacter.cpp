@@ -1709,7 +1709,7 @@ void CPHSimpleCharacter::SCollisionDamageInfo::Reinit()
     // m_damege_contact;
 
     m_obj_id = u16(-1);
-    m_hit_callback = NULL;
+    m_hit_callback.reset();
     m_contact_velocity = 0;
     is_initiated = false;
     // float					m_dmc_signum;
@@ -1749,7 +1749,7 @@ ALife::EHitType CPHSimpleCharacter::HitType() const
 } //
 CElevatorState* CPHSimpleCharacter::ElevatorState() { return &m_elevator_state; }
 
-ICollisionHitCallback* CPHSimpleCharacter::HitCallback() const { return m_collision_damage_info.m_hit_callback; }
+std::shared_ptr<ICollisionHitCallback> CPHSimpleCharacter::HitCallback() const { return m_collision_damage_info.m_hit_callback.lock(); }
 const float resolve_depth = 0.05f;
 static float restrictor_depth = 0.f;
 void CPHSimpleCharacter::TestRestrictorContactCallbackFun(bool& do_colide, bool bo1, dContact& c, SGameMtl* material_1, SGameMtl* material_2)

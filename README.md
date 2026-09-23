@@ -9,7 +9,6 @@ is Radiophobia, not vanilla Shadow of Chernobyl.
   The inherited folder name is retained; its selected resources target Radiophobia.
 - Feature contracts: [R3_CUSTOMIZATION.md](R3_CUSTOMIZATION.md).
 - Packaging and verification: [release/README.md](release/README.md).
-- Release changes: [PATCH_NOTES.md](PATCH_NOTES.md).
 - Upstream background and engine build instructions: [.github/README.md](.github/README.md).
 
 Build `Engine.sln` for Release/x64 after obtaining the dependencies described in

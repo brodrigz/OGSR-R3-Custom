@@ -160,7 +160,8 @@ void CPHMovementControl::Calculate(Fvector& vAccel, const Fvector& camDir, float
 
     auto* cdi = CollisionDamageInfo();
 
-    if (auto* hcb = cdi->HitCallback())
+    // Lock the recorded callback for the whole call; cleanup may have expired it.
+    if (auto hcb = cdi->HitCallback())
     {
         hcb->call(nullptr, fMinCrashSpeed, fMaxCrashSpeed, fContactSpeed, gcontact_HealthLost, cdi);
     }

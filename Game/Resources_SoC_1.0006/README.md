@@ -44,5 +44,4 @@ validation. Run `tests/Test-RadiophobiaRelease.ps1` for UI regression checks and
 pass `-ArchivePath` to verify the ZIP, checksums, and exact resource selection.
 `-BaselineArchivePath` additionally proves runtime parity across packaging changes.
 
-See [PATCH_NOTES.md](../../PATCH_NOTES.md) for release changes and
-[release/README.md](../../release/README.md) for publishing details.
+See [release/README.md](../../release/README.md) for publishing details.

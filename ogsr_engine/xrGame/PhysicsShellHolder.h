@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 #include "GameObject.h"
 #include "ParticlesPlayer.h"
 
@@ -63,7 +65,7 @@ public:
     virtual CCharacterPhysicsSupport* character_physics_support() { return nullptr; }
     virtual CCharacterPhysicsSupport* character_physics_support() const { return nullptr; }
     virtual CIKLimbsController* character_ik_controller() { return nullptr; }
-    virtual ICollisionHitCallback* get_collision_hit_callback() { return nullptr; }
+    virtual std::weak_ptr<ICollisionHitCallback> get_collision_hit_callback() { return {}; }
     virtual void set_collision_hit_callback(ICollisionHitCallback* cc) { ; }
     virtual void enable_notificate() { ; }
 

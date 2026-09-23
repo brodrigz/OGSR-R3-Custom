@@ -16,7 +16,6 @@ CPhysicObject::CPhysicObject(void)
 {
     m_type = epotBox;
     m_mass = 10.f;
-    m_collision_hit_callback = NULL;
 }
 
 CPhysicObject::~CPhysicObject(void) {}
@@ -28,7 +27,7 @@ BOOL CPhysicObject::net_Spawn(CSE_Abstract* DC)
     R_ASSERT(po);
     m_type = EPOType(po->type);
     m_mass = po->mass;
-    m_collision_hit_callback = NULL;
+    m_collision_hit_callback.reset();
     inherited::net_Spawn(DC);
     xr_delete(collidable.model);
     switch (m_type)
@@ -89,6 +88,7 @@ void CPhysicObject::RunStartupAnim(CSE_Abstract* D)
 }
 void CPhysicObject::net_Destroy()
 {
+    set_collision_hit_callback(nullptr);
 #ifdef ANIMATED_PHYSICS_OBJECT_SUPPORT
     if (PPhysicsShell()->Animated())
     {
@@ -279,9 +279,14 @@ void CPhysicObject::InitServerObject(CSE_Abstract* D)
         return;
     l_tpALifePhysicObject->type = u32(m_type);
 }
-ICollisionHitCallback* CPhysicObject::get_collision_hit_callback() { return m_collision_hit_callback; }
+std::weak_ptr<ICollisionHitCallback> CPhysicObject::get_collision_hit_callback() { return m_collision_hit_callback; }
 void CPhysicObject::set_collision_hit_callback(ICollisionHitCallback* cc)
 {
-    xr_delete(m_collision_hit_callback);
-    m_collision_hit_callback = cc;
+    if (cc == m_collision_hit_callback.get())
+        return;
+
+    if (cc)
+        m_collision_hit_callback.reset(cc, [](ICollisionHitCallback* callback) { xr_delete(callback); });
+    else
+        m_collision_hit_callback.reset();
 }

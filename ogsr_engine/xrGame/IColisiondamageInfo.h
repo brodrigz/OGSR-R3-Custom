@@ -1,5 +1,7 @@
 #pragma once
 
+#include <memory>
+
 class ICollisionHitCallback;
 class ICollisionDamageInfo
 {
@@ -10,7 +12,7 @@ public:
     virtual u16 DamageInitiatorID() const = 0;
     virtual CObject* DamageInitiator() const = 0;
     virtual ALife::EHitType HitType() const = 0;
-    virtual ICollisionHitCallback* HitCallback() const = 0;
+    virtual std::shared_ptr<ICollisionHitCallback> HitCallback() const = 0;
     virtual void Reinit() = 0;
     virtual void SetInitiated() = 0;
     virtual bool IsInitiated() const = 0;
