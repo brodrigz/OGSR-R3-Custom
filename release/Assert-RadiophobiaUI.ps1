@@ -110,7 +110,14 @@ function Assert-RadiophobiaUI {
             # Some inherited string values contain engine-tolerated XML text
             # that System.Xml rejects. IDs have a simple, stable syntax, so
             # scan those directly while still catching cross-file duplicates.
-            $text = [Text.Encoding]::GetEncoding(1251).GetString([IO.File]::ReadAllBytes($file.FullName))
+            $bytes = [IO.File]::ReadAllBytes($file.FullName)
+            $encoding = [Text.Encoding]::GetEncoding(1251)
+            $text = $encoding.GetString($bytes)
+            # Catch lost Cyrillic text: UTF-8 replacement markers or undefined CP1251 bytes.
+            $replacementMarker = $encoding.GetString([byte[]](0xEF, 0xBF, 0xBD))
+            if ($text.Contains($replacementMarker) -or [Array]::IndexOf($bytes, [byte]0x98) -ge 0) {
+                throw "Corrupted $language UI translation encoding: $name"
+            }
             foreach ($match in [regex]::Matches($text, '<string\s+id="([^"]+)"')) {
                 $id = $match.Groups[1].Value
                 if (-not $ids.Add($id)) {
